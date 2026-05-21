@@ -98,11 +98,23 @@ export default function ConfidentialitePage() {
         <ul>
           <li>Adresse email uniquement</li>
           <li>Date et adresse IP de la saisie (preuve de consentement RGPD)</li>
+          <li>Source d&apos;inscription (formulaire footer, blog, achat ebook…) à des fins statistiques internes</li>
         </ul>
         <p className="text-sm text-[var(--color-ink-700)]">
           L&apos;inscription suit un mécanisme de <strong>double opt-in</strong> conforme aux recommandations de la CNIL :
           tant que vous ne cliquez pas sur le lien de confirmation envoyé dans votre boîte mail,
           votre inscription n&apos;est pas finalisée et aucun email commercial ne vous est adressé.
+        </p>
+        <p><strong>Lors de l&apos;envoi de chaque campagne newsletter :</strong></p>
+        <ul>
+          <li>Statut de remise de l&apos;email (envoyé, livré, ouvert, cliqué, bounce, plainte spam)</li>
+          <li>Horodatage de la première ouverture et du premier clic, nombre total d&apos;ouvertures et de clics</li>
+        </ul>
+        <p className="text-sm text-[var(--color-ink-700)]">
+          Ces données comportementales sont collectées via notre prestataire d&apos;envoi
+          <strong> Resend</strong> (pixel de tracking et liens taggués). Elles servent uniquement à
+          mesurer la pertinence de nos communications et améliorer leur contenu. Aucun profilage
+          publicitaire n&apos;est effectué, et ces données ne sont jamais cédées à un tiers.
         </p>
         <p><strong>Lors de l&apos;achat d&apos;un ebook :</strong></p>
         <ul>
@@ -134,7 +146,7 @@ export default function ConfidentialitePage() {
           <li><strong>Délivrance des ebooks</strong> : envoi du lien de téléchargement sécurisé après paiement, gestion des accès et tokens.</li>
           <li><strong>Émission et gestion des cartes cadeau</strong> : génération du code, envoi au bénéficiaire, suivi de l&apos;utilisation, contrôle de validité.</li>
           <li><strong>Réponse à vos demandes</strong> : traitement des messages adressés via le formulaire de contact.</li>
-          <li><strong>Newsletter</strong> (si vous y êtes abonnée) : envoi d&apos;informations commerciales.</li>
+          <li><strong>Newsletter</strong> (si vous y êtes abonnée) : envoi d&apos;informations commerciales, mesure d&apos;engagement (taux d&apos;ouverture / de clic agrégés) et segmentation simple par source d&apos;inscription ou ancienneté pour adapter la fréquence et le contenu.</li>
           <li><strong>Obligations légales</strong> : conservation des factures à des fins comptables et fiscales.</li>
         </ul>
       </LegalSection>
@@ -175,7 +187,8 @@ export default function ConfidentialitePage() {
           <li><strong>Cartes cadeau</strong> : durée de validité (12 mois) + 3 ans pour conservation de l&apos;historique d&apos;utilisation et obligations comptables.</li>
           <li><strong>Logs techniques (IP, user-agent)</strong> : 13 mois maximum (recommandation CNIL).</li>
           <li><strong>Demandes de contact</strong> : 3 ans à compter du dernier échange.</li>
-          <li><strong>Newsletter</strong> : jusqu&apos;à votre désinscription. Le lien de désinscription figure dans chaque email.</li>
+          <li><strong>Newsletter</strong> : jusqu&apos;à votre désinscription. Le lien de désinscription figure dans chaque email et fonctionne en un clic, sans connexion. Tout signalement spam (« mark as spam » dans votre boîte mail) entraîne également une désinscription automatique immédiate.</li>
+          <li><strong>Statistiques de campagnes newsletter</strong> (ouvertures, clics) : conservées tant que vous êtes abonnée, supprimées avec votre profil en cas de désinscription.</li>
           <li><strong>Cookies</strong> : 13 mois maximum (durée légale CNIL).</li>
         </ul>
       </LegalSection>
