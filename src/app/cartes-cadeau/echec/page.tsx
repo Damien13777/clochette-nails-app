@@ -7,6 +7,8 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteHeader } from "@/components/landing/site-header";
+import { SiteFooter } from "@/components/landing/site-footer";
 
 export const metadata: Metadata = {
   title: "Paiement non finalisé · Carte cadeau",
@@ -15,7 +17,9 @@ export const metadata: Metadata = {
 
 export default function GiftCardCancelPage() {
   return (
-    <main className="min-h-screen bg-[var(--color-cream)] grid place-items-center py-12 px-5">
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-[var(--color-cream)] grid place-items-center pt-32 pb-20 px-5">
       <div className="max-w-md w-full bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-8 md:p-10 text-center space-y-5">
         <div className="mx-auto w-14 h-14 rounded-full grid place-items-center bg-[var(--color-warning)]/15 text-[var(--color-warning)]">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -65,6 +69,8 @@ export default function GiftCardCancelPage() {
           </Link>
         </div>
       </div>
-    </main>
+      </main>
+      <SiteFooter />
+    </>
   );
 }

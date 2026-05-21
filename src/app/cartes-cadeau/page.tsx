@@ -9,6 +9,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { GiftCardPurchaseForm } from "./purchase-form";
+import { SiteHeader } from "@/components/landing/site-header";
+import { SiteFooter } from "@/components/landing/site-footer";
 
 export const metadata: Metadata = {
   title: "Cartes cadeau · Clochette Nails",
@@ -26,20 +28,24 @@ export default async function GiftCardsPublicPage() {
 
   if (settings && !settings.giftCardsEnabled) {
     return (
-      <main className="min-h-screen grid place-items-center p-6">
-        <div className="text-center max-w-md">
-          <h1
-            className="text-3xl mb-4"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            Cartes cadeau temporairement indisponibles
-          </h1>
-          <p className="text-[var(--color-ink-500)]">
-            La vente de cartes cadeau est suspendue. Contactez le salon par
-            téléphone pour toute demande exceptionnelle.
-          </p>
-        </div>
-      </main>
+      <>
+        <SiteHeader />
+        <main className="min-h-screen grid place-items-center p-6 pt-32">
+          <div className="text-center max-w-md">
+            <h1
+              className="text-3xl mb-4"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              Cartes cadeau temporairement indisponibles
+            </h1>
+            <p className="text-[var(--color-ink-500)]">
+              La vente de cartes cadeau est suspendue. Contactez le salon par
+              téléphone pour toute demande exceptionnelle.
+            </p>
+          </div>
+        </main>
+        <SiteFooter />
+      </>
     );
   }
 
@@ -48,51 +54,38 @@ export default async function GiftCardsPublicPage() {
   );
 
   return (
-    <main className="min-h-screen bg-[var(--color-cream)] py-12 md:py-20">
-      <div className="max-w-2xl mx-auto px-5 lg:px-8">
-        {/* Hero */}
-        <header className="text-center mb-10">
-          <p
-            className="text-xs uppercase tracking-[0.22em] text-[var(--color-violet-700)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Offrir une pause beauté
-          </p>
-          <h1
-            className="mt-4 text-[clamp(2rem,4vw,3rem)] leading-tight"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            Carte cadeau Clochette Nails
-          </h1>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 mt-4 text-sm text-[var(--color-ink-500)] hover:text-[var(--color-violet-700)] transition-colors"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
+    <>
+      <SiteHeader />
+      <main className="min-h-screen bg-[var(--color-cream)] pt-32 pb-20">
+        <div className="max-w-2xl mx-auto px-5 lg:px-8">
+          {/* Hero */}
+          <header className="text-center mb-10">
+            <p
+              className="text-xs uppercase tracking-[0.22em] text-[var(--color-violet-700)]"
+              style={{ fontFamily: "var(--font-display)" }}
             >
-              <path d="M19 12H5M12 5l-7 7 7 7" />
-            </svg>
-            Retour au site
-          </Link>
-          <p
-            className="mt-4 text-sm text-[var(--color-ink-700)] max-w-md mx-auto"
-            style={{ fontFamily: "var(--font-ui)" }}
-          >
-            Utilisable pour régler une réservation en ligne, acheter un ebook,
-            ou payer directement votre prestation au salon. Valable{" "}
-            {validityMonths} mois à compter de l&apos;achat.
-          </p>
-        </header>
+              Offrir une pause beauté
+            </p>
+            <h1
+              className="mt-4 text-[clamp(2rem,4vw,3rem)] leading-tight"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              Carte cadeau Clochette Nails
+            </h1>
+            <p
+              className="mt-4 text-sm text-[var(--color-ink-700)] max-w-md mx-auto"
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              Utilisable pour régler une réservation en ligne, acheter un ebook,
+              ou payer directement votre prestation au salon. Valable{" "}
+              {validityMonths} mois à compter de l&apos;achat.
+            </p>
+          </header>
 
-        <GiftCardPurchaseForm />
-      </div>
-    </main>
+          <GiftCardPurchaseForm />
+        </div>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
