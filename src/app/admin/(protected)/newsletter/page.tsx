@@ -18,6 +18,7 @@ import type { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { SubscriberRow } from "./subscriber-row";
+import { NewsletterTabs } from "./_tabs";
 
 export const metadata: Metadata = {
   title: "Newsletter · Admin",
@@ -141,6 +142,7 @@ export default async function AdminNewsletterPage({
 
   return (
     <div className="max-w-[1400px] px-5 lg:px-8 py-10">
+      <NewsletterTabs current="abonnes" />
       <header className="mb-8">
         <p
           className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"

@@ -94,8 +94,29 @@ enum NotificationType {
   CONTACT_MESSAGE
   REFUND_PROCESSED
   NEWSLETTER_SUBSCRIBE
+  NEWSLETTER_SENT
   GIFT_CARD_EXPIRING // Ajout integration-notes dashboard
   GIFT_CARD_PURCHASED
+}
+
+enum NewsletterCampaignStatus {
+  DRAFT
+  SCHEDULED // scheduledAt > now, cron va déclencher
+  SENDING // envoi en cours (worker)
+  SENT // envoi terminé
+  FAILED // erreur fatale au lancement (toutes les deliveries ont échoué)
+  CANCELLED // brouillon abandonné
+}
+
+enum NewsletterDeliveryStatus {
+  PENDING // pas encore envoyé
+  SENT // accepté par Resend
+  DELIVERED // confirmé livré (webhook delivered)
+  OPENED // ouvert au moins une fois
+  CLICKED // lien cliqué au moins une fois
+  BOUNCED // hard bounce (adresse invalide)
+  FAILED // erreur d'envoi Resend
+  COMPLAINED // marqué spam par le destinataire
 }
 
 enum ContactMessageStatus {
@@ -629,9 +650,85 @@ model NewsletterSubscriber {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  deliveries NewsletterDelivery[]
+
   @@index([confirmedAt])
   @@index([unsubscribedAt])
+  @@index([source])
   @@map("newsletter_subscribers")
+}
+
+// ════════════════════════════════════════════════════════════
+// Newsletter — Campagnes & livraisons
+// ════════════════════════════════════════════════════════════
+
+model NewsletterCampaign {
+  id          String                   @id @default(cuid())
+  subject     String                   @db.VarChar(200)
+  preheader   String?                  @db.VarChar(200) // Texte preview boîte mail
+  content     String                   @db.Text // HTML TipTap (sanitizé au render)
+  status      NewsletterCampaignStatus @default(DRAFT)
+
+  // Segmentation : filtres appliqués à NewsletterSubscriber au moment du calcul
+  // d'audience. JSON pour rester souple ({ sources?, createdAfter?, createdBefore? }).
+  audienceFilters Json?
+
+  // Programmation : si scheduledAt set + status SCHEDULED → cron déclenche
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  // Adresse de l'envoi test précédent (pour rappel dans l'UI)
+  lastTestSentTo String?
+  lastTestSentAt DateTime?
+
+  // Stats agrégées (remplies pendant l'envoi puis par les webhooks)
+  recipientCount Int @default(0)
+  sentCount      Int @default(0)
+  failedCount    Int @default(0)
+  deliveredCount Int @default(0)
+  openedCount    Int @default(0)
+  clickedCount   Int @default(0)
+  bouncedCount   Int @default(0)
+  complainedCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deliveries NewsletterDelivery[]
+
+  @@index([status, scheduledAt])
+  @@index([status, sentAt(sort: Desc)])
+  @@map("newsletter_campaigns")
+}
+
+model NewsletterDelivery {
+  id           String                   @id @default(cuid())
+  campaignId   String
+  campaign     NewsletterCampaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  subscriberId String
+  subscriber   NewsletterSubscriber     @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  // Snapshot email au moment de l'envoi (au cas où la cliente change après)
+  email  String
+  status NewsletterDeliveryStatus @default(PENDING)
+
+  // Tracking
+  resendMessageId String? @unique // ID retourné par Resend, utilisé pour matcher les webhooks
+  sentAt          DateTime?
+  deliveredAt     DateTime?
+  firstOpenedAt   DateTime?
+  firstClickedAt  DateTime?
+  bouncedAt       DateTime?
+  complainedAt    DateTime?
+  errorMessage    String? // Si FAILED
+
+  // Compteurs interactions (un même mail peut être ouvert plusieurs fois)
+  openCount  Int @default(0)
+  clickCount Int @default(0)
+
+  @@unique([campaignId, subscriberId]) // 1 envoi max par paire
+  @@index([campaignId, status])
+  @@index([resendMessageId])
+  @@map("newsletter_deliveries")
 }
 
 // ════════════════════════════════════════════════════════════
