@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { MAX_DOWNLOADS_PER_TOKEN } from "@/lib/ebook-download-token";
 import { EbooksTabs } from "../../_tabs";
 import { SalesActions } from "./sales-actions";
+import { RecalculateStripeFeeButton } from "@/components/admin/recalculate-stripe-fee";
 
 export const dynamic = "force-dynamic";
 
@@ -313,12 +314,21 @@ export default async function EbookSaleDetailPage({
                 value={formatCents(stripeCents)}
                 emphasis
               />
-              {purchase.stripeFeeCents != null && (
+              {purchase.stripePaymentId != null && (
                 <BreakdownRow
                   label="Frais Stripe"
                   hint="Déduits par Stripe à l'encaissement"
-                  value={`− ${formatCents(purchase.stripeFeeCents)}`}
+                  value={
+                    purchase.stripeFeeCents != null
+                      ? `− ${formatCents(purchase.stripeFeeCents)}`
+                      : "— (webhook charge.updated en attente)"
+                  }
                   valueClass="text-[var(--color-ink-500)]"
+                  action={
+                    purchase.stripeFeeCents == null ? (
+                      <RecalculateStripeFeeButton resource="ebook" id={purchase.id} />
+                    ) : null
+                  }
                 />
               )}
               {netStripeCents != null && (
@@ -535,12 +545,14 @@ function BreakdownRow({
   hint,
   valueClass,
   emphasis,
+  action,
 }: {
   label: React.ReactNode;
   value: string;
   hint?: string;
   valueClass?: string;
   emphasis?: boolean;
+  action?: React.ReactNode;
 }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2 first:pt-0 last:pb-0">
@@ -564,17 +576,20 @@ function BreakdownRow({
           </p>
         )}
       </div>
-      <p
-        className={`text-sm whitespace-nowrap tabular-nums ${
-          valueClass ??
-          (emphasis
-            ? "text-[var(--color-ink-900)]"
-            : "text-[var(--color-ink-700)]")
-        }`}
-        style={{ fontFamily: emphasis ? "var(--font-serif)" : "var(--font-ui)" }}
-      >
-        {value}
-      </p>
+      <div className="flex flex-col items-end gap-1 shrink-0">
+        <p
+          className={`text-sm whitespace-nowrap tabular-nums ${
+            valueClass ??
+            (emphasis
+              ? "text-[var(--color-ink-900)]"
+              : "text-[var(--color-ink-700)]")
+          }`}
+          style={{ fontFamily: emphasis ? "var(--font-serif)" : "var(--font-ui)" }}
+        >
+          {value}
+        </p>
+        {action}
+      </div>
     </div>
   );
 }

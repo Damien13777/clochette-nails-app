@@ -50,7 +50,7 @@ export default async function AdminDashboard() {
   const currentHHMM = currentTimeHHMMParis();
 
   const [
-    revenueAgg,
+    bookingsForRevenue,
     giftCardSalesAgg,
     ebookSalesRaw,
     bookingsThisWeek,
@@ -61,11 +61,23 @@ export default async function AdminDashboard() {
     awaitingBookings,
     pendingCompletion,
   ] = await Promise.all([
-    prisma.booking.aggregate({
-      _sum: { revenueCents: true },
+    // RDV honorés du mois — on ramène les champs nécessaires pour calculer
+    // le vrai CA (acompte Stripe net + complément cash), pas juste
+    // revenueCents qui ne couvre que la portion cash du complément.
+    prisma.booking.findMany({
       where: {
         status: "COMPLETED",
         completedAt: { gte: monthStart, lt: nextMonthStart },
+      },
+      select: {
+        depositCents: true,
+        revenueCents: true,
+        stripeFeeCents: true,
+        refundedAmount: true,
+        giftCardRedemptions: {
+          where: { reversedAt: null },
+          select: { amountUsedCents: true, type: true },
+        },
       },
     }),
     // Ventes de cartes cadeau du mois (achats site OU vente en salon).
@@ -188,7 +200,23 @@ export default async function AdminDashboard() {
   // Les cadeaux offerts par l'admin (ADMIN_GIFT) ne sont pas comptés.
   // Pour les ebooks, la portion carte cadeau est exclue car déjà comptée
   // à la vente de la carte (sinon double-comptage).
-  const bookingsRevenueCents = revenueAgg._sum.revenueCents ?? 0;
+  //
+  // Pour les bookings, on additionne :
+  //  - Net acompte    = depositCents − gcDeposit − stripeFee − refunded
+  //                     (la portion GC ne re-compte pas, elle a déjà été comptée
+  //                      à la vente initiale de la carte cadeau)
+  //  - Net complément = revenueCents
+  //                     (par définition, c'est déjà la portion cash/CB hors GC)
+  const bookingsRevenueCents = bookingsForRevenue.reduce((sum, b) => {
+    const gcDeposit = b.giftCardRedemptions
+      .filter((r) => r.type === "BOOKING_DEPOSIT")
+      .reduce((s, r) => s + r.amountUsedCents, 0);
+    const fee = b.stripeFeeCents ?? 0;
+    const refunded = b.refundedAmount ?? 0;
+    const netAcompte = Math.max(0, b.depositCents - gcDeposit - fee - refunded);
+    const netComplement = b.revenueCents ?? 0;
+    return sum + netAcompte + netComplement;
+  }, 0);
   const giftCardSalesCents = giftCardSalesAgg._sum.initialAmountCents ?? 0;
   const ebookRevenueCents = ebookSalesRaw.reduce((sum, p) => {
     const gc =

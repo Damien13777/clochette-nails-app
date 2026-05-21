@@ -26,6 +26,7 @@ import { BookingActions } from "./booking-actions";
 import { BookingNotes } from "./booking-notes";
 import { BookingReminders } from "./booking-reminders";
 import { PaymentBlock } from "./payment-block";
+import { RecalculateStripeFeeButton } from "@/components/admin/recalculate-stripe-fee";
 
 export const dynamic = "force-dynamic";
 
@@ -187,10 +188,19 @@ export default async function BookingDetailPage({
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Total prestation" value={formatCents(booking.totalPriceCents)} />
               <Field label="Acompte demandé" value={formatCents(booking.depositCents)} emphasized />
-              {booking.stripeFeeCents != null && (
+              {booking.stripePaymentId != null && (
                 <Field
-                  label="Frais Stripe"
-                  value={formatCents(booking.stripeFeeCents)}
+                  label="Frais Stripe (acompte)"
+                  value={
+                    booking.stripeFeeCents != null
+                      ? formatCents(booking.stripeFeeCents)
+                      : "— (webhook charge.updated en attente)"
+                  }
+                  action={
+                    booking.stripeFeeCents == null ? (
+                      <RecalculateStripeFeeButton resource="booking" id={booking.id} />
+                    ) : null
+                  }
                 />
               )}
               {booking.refundedAmount != null && booking.refundedAmount > 0 && (
@@ -565,12 +575,14 @@ function Field({
   emphasized,
   mono,
   truncate,
+  action,
 }: {
   label: string;
   value: string;
   emphasized?: boolean;
   mono?: boolean;
   truncate?: boolean;
+  action?: React.ReactNode;
 }) {
   return (
     <div className="min-w-0">
@@ -595,6 +607,7 @@ function Field({
       >
         {value}
       </dd>
+      {action && <div className="mt-1.5">{action}</div>}
     </div>
   );
 }

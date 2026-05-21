@@ -9,6 +9,7 @@ import type { GiftCardStatus } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { GiftCardActions } from "./gift-card-actions";
+import { RecalculateStripeFeeButton } from "@/components/admin/recalculate-stripe-fee";
 
 export const dynamic = "force-dynamic";
 
@@ -294,6 +295,34 @@ export default async function GiftCardDetailPage({
                 <Row
                   label="Mode de paiement"
                   value={paymentMethodLabel(card.paymentMethod)}
+                />
+              )}
+              {card.stripePaymentId != null && (
+                <Row
+                  label="Frais Stripe"
+                  value={
+                    <span className="inline-flex flex-col items-start gap-1">
+                      <span>
+                        {card.stripeFeeCents != null
+                          ? `− ${formatCents(card.stripeFeeCents)}`
+                          : "— (webhook charge.updated en attente)"}
+                      </span>
+                      {card.stripeFeeCents == null && (
+                        <RecalculateStripeFeeButton resource="gift_card" id={card.id} />
+                      )}
+                    </span>
+                  }
+                />
+              )}
+              {card.stripePaymentId != null && card.stripeFeeCents != null && (
+                <Row
+                  label="Net encaissé"
+                  value={formatCents(
+                    Math.max(
+                      0,
+                      card.initialAmountCents - (card.stripeFeeCents ?? 0),
+                    ),
+                  )}
                 />
               )}
               {card.refundedAmount !== null && card.refundedAmount > 0 && (
