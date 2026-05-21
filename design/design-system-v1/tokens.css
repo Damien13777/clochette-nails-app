@@ -1,0 +1,188 @@
+/* ============================================================
+ * CLOCHETTE NAILS — Design Tokens (Tailwind v4 @theme)
+ * Source : Design System v1.1 (Claude Design, mai 2026)
+ * À importer dans src/app/globals.css du projet Next.js
+ *
+ * HISTORIQUE :
+ *  v1.0 — Cormorant Garamond pour --font-serif
+ *  v1.1 — Cinzel adopté (validation après écran Landing) :
+ *         hero "LA MANUCURE" en caps Cinzel + fallback italique
+ *         vers Inria Serif (Cinzel n'a pas d'italique natif).
+ * ============================================================ */
+
+@theme {
+  /* ── Couleurs ──────────────────────────────────────────── */
+
+  /* Violet — principal (mauve doux) */
+  --color-violet-700: #5E4392;        /* hover, liens lisibles */
+  --color-violet-600: #8868B0;        /* PRINCIPAL — boutons, accents */
+  --color-violet-500: #A187C5;
+  --color-violet-300: #CCAAD2;        /* clair — surfaces secondaires */
+  --color-violet-100: #ece1f3;        /* backgrounds très subtils */
+  --color-violet-50:  #f6f1fa;        /* hover ghost */
+
+  /* Doré — accent premium */
+  --color-gold-600: #BF9F44;
+  --color-gold-500: #DEC264;          /* ACCENT — highlights premium */
+  --color-gold-300: #ECD68B;
+  --color-gold-200: #F7DC6F;          /* clair — backgrounds subtils */
+  --color-gold-50:  #fbf6e0;
+
+  /* Rose pastel */
+  --color-rose-100: #FCE0E3;          /* pastel doux — badges */
+  --color-rose-50:  #fdf1f3;
+
+  /* Backgrounds neutres */
+  --color-cream: #FCFBF7;             /* FOND GLOBAL — 15:1 vs ink-900 (AAA) */
+  --color-paper: #ffffff;             /* cards, inputs */
+  --color-bone:  #f4f1e8;             /* sections subtilement contrastées */
+
+  /* Encre (texte) */
+  --color-ink-900: #2A2A2A;           /* ANTHRACITE — titres, body (≠ noir pur) */
+  --color-ink-700: #4a3f44;           /* texte secondaire foncé, labels */
+  --color-ink-500: #7a5c65;           /* TEXTE SUPPORT — descriptions */
+  --color-ink-300: #b8a4ab;           /* placeholder */
+  --color-ink-200: #d8cdd1;           /* bordures hover input */
+  --color-line:    #ece5e7;           /* bordures par défaut, dividers */
+
+  /* Sémantiques */
+  --color-success: #2f8f5a;
+  --color-warning: #c98a2a;
+  --color-danger:  #b23a4a;
+  --color-info:    var(--color-violet-600);
+
+  /* ── Typographie ───────────────────────────────────────── */
+  /*
+   * Quatre familles, chacune avec un rôle précis :
+   *
+   *  --font-serif    : Cinzel 500               — h1/h2/h3 marketing (capitales romaines)
+   *                                                Cinzel n'a PAS d'italique natif → fallback
+   *                                                vers Inria Serif italic pour <em>/<i>
+   *  --font-display  : Julius Sans One 400      — eyebrows, badges, boutons, labels formulaire
+   *  --font-sans     : Inria Serif Light 300    — body éditorial + italiques des titres
+   *  --font-ui       : Manrope 400/500          — UI dense (inputs valeur, helper text, errors,
+   *                                                admin, tables, listes paginées, toasts)
+   *  --font-mono     : JetBrains Mono           — debug uniquement
+   */
+
+  --font-serif:   "Cinzel", "Trajan Pro", "Iowan Old Style", Georgia, serif;
+  --font-display: "Julius Sans One", "Manrope", ui-sans-serif, sans-serif;
+  --font-sans:    "Inria Serif", "Iowan Old Style", Georgia, serif;
+  --font-ui:      "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Espacements (rem) ─────────────────────────────────── */
+
+  --spacing-xs:  0.5rem;    /* 8px */
+  --spacing-sm:  1rem;      /* 16px */
+  --spacing-md:  1.5rem;    /* 24px */
+  --spacing-lg:  2rem;      /* 32px */
+  --spacing-xl:  3rem;      /* 48px */
+  --spacing-2xl: 4rem;      /* 64px */
+  --spacing-3xl: 6rem;      /* 96px */
+
+  /* ── Border radius ─────────────────────────────────────── */
+
+  --radius-sm:   8px;       /* inputs, textarea, select */
+  --radius-md:  15px;       /* cards, modals */
+  --radius-lg:  25px;       /* panels, drawer header */
+  --radius-pill: 50px;      /* BOUTONS — toujours pill */
+
+  /* ── Ombres (teintées violet) ──────────────────────────── */
+
+  --shadow-xs: 0 1px 2px 0 rgba(136, 104, 176, 0.06);
+  --shadow-sm: 0 2px 8px -2px rgba(136, 104, 176, 0.08);
+  --shadow-md: 0 8px 24px -8px rgba(136, 104, 176, 0.14);
+  --shadow-lg: 0 18px 40px -16px rgba(136, 104, 176, 0.18);
+  --shadow-focus: 0 0 0 4px rgba(136, 104, 176, 0.22);
+}
+
+/* ── Base styles ─────────────────────────────────────────── */
+
+@layer base {
+  /*
+   * Par défaut, l'app est en serif éditorial (Inria Serif Light 300).
+   * Les contextes denses (admin, forms, tables) overrident avec
+   * --font-ui (Manrope) via les classes ci-dessous.
+   */
+  html {
+    font-family: var(--font-sans);
+    font-weight: 300;
+    color: var(--color-ink-900);
+    background: var(--color-cream);
+  }
+  body {
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-violet-100);
+    color: var(--color-violet-700);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: 0.01em;  /* Cinzel respire mieux avec un léger tracking positif */
+  }
+
+  /*
+   * Fallback italique : Cinzel n'a pas d'italique natif.
+   * Quand un <em> ou <i> est dans un titre ou un élément .font-serif,
+   * on bascule sur Inria Serif italic (avec letter-spacing neutralisé
+   * et sentence-case implicite via l'italique).
+   */
+  .font-serif em, .font-serif i,
+  h1 em, h2 em, h3 em, h4 em,
+  h1 i, h2 i, h3 i, h4 i {
+    font-family: var(--font-sans);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+}
+
+/* ── Règles d'application Manrope ──────────────────────────
+ *
+ * Manrope (--font-ui) prend le pas sur Inria Serif dans les
+ * contextes où la densité d'information ou la saisie utilisateur
+ * exige une lisibilité maximale. Inria Serif reste pour les
+ * pages marketing (paragraphes longs, hero, blog).
+ *
+ * À appliquer dans le globals.css du projet Next.js :
+ */
+
+@layer components {
+  /*
+   * Les composants déjà couverts par Design System.html (input, select, textarea,
+   * field-help, field-error, toast) appliquent déjà --font-ui — voir le HTML source.
+   * Les extensions ci-dessous couvrent les contextes NON présents dans le DS v1
+   * mais qu'on aura besoin en Phase 1 (admin shell, data tables).
+   */
+
+  /* Shell admin — tout l'espace /admin en Manrope */
+  .admin-shell,
+  .admin-shell * {
+    font-family: var(--font-ui);
+    font-weight: 400;
+  }
+  /* Exception : les titres serif Cormorant restent dans l'admin (cohérence brand) */
+  .admin-shell h1,
+  .admin-shell h2,
+  .admin-shell h3,
+  .admin-shell h4 {
+    font-family: var(--font-serif);
+  }
+  /* Exception : eyebrows / badges / boutons / labels form gardent Julius Sans One */
+  .admin-shell .section-eyebrow,
+  .admin-shell .badge,
+  .admin-shell .btn,
+  .admin-shell .field-label {
+    font-family: var(--font-display);
+  }
+
+  /* Tables data-heavy (dans admin OU public) */
+  .data-table {
+    font-family: var(--font-ui);
+    font-weight: 400;
+  }
+}

@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Connexion · Clochette Nails — Admin</title>
+  <meta name="description" content="Espace d'administration Clochette Nails — accès réservé." />
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Julius+Sans+One&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    /* Fond crème garanti dès le premier paint */
+    html, body { background: #FCFBF7; }
+    html:fullscreen, body:fullscreen, *:fullscreen { background: #FCFBF7; }
+  </style>
+
+  <style type="text/tailwindcss">
+    @theme {
+      --color-violet-700: #5E4392; --color-violet-600: #8868B0; --color-violet-500: #A187C5;
+      --color-violet-300: #CCAAD2; --color-violet-100: #ece1f3; --color-violet-50: #f6f1fa;
+      --color-cream: #FCFBF7; --color-paper: #ffffff; --color-bone: #f4f1e8;
+      --color-ink-900: #2A2A2A; --color-ink-700: #4a3f44; --color-ink-500: #7a5c65;
+      --color-ink-300: #b8a4ab; --color-ink-200: #d8cdd1; --color-line: #ece5e7;
+      --color-success: #2f8f5a; --color-warning: #c98a2a; --color-danger: #b23a4a;
+      --font-serif: "Cinzel", "Trajan Pro", "Iowan Old Style", Georgia, serif;
+      --font-display: "Julius Sans One", "Manrope", ui-sans-serif, sans-serif;
+      --font-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --radius-sm: 8px; --radius-md: 15px; --radius-lg: 25px; --radius-pill: 50px;
+      --shadow-xs: 0 1px 2px 0 rgba(136,104,176,.06);
+      --shadow-sm: 0 2px 8px -2px rgba(136,104,176,.08);
+      --shadow-md: 0 8px 24px -8px rgba(136,104,176,.14);
+      --shadow-lg: 0 18px 40px -16px rgba(136,104,176,.18);
+      --shadow-focus: 0 0 0 4px rgba(136,104,176,.22);
+    }
+
+    @layer base {
+      /* L'admin est piloté par Manrope — Cinzel pour les titres, Julius Sans One pour eyebrows/labels/boutons */
+      html { font-family: var(--font-ui); font-weight: 400; color: var(--color-ink-900); background: var(--color-cream); }
+      body { -webkit-font-smoothing: antialiased; }
+      h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.01em; }
+    }
+
+    @layer components {
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.875rem 1.75rem; border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.875rem; font-weight: 400; letter-spacing: 0.06em;
+        transition: all 0.3s cubic-bezier(.2,.7,.3,1); cursor: pointer; border: 1px solid transparent; white-space: nowrap; }
+      .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .btn:disabled, .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+      .btn-primary { background: var(--color-violet-600); color: white; }
+      .btn-primary:hover:not(:disabled) { background: var(--color-violet-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+      .btn-primary:active:not(:disabled) { transform: translateY(0); }
+      .btn-block { width: 100%; }
+
+      .field { display: flex; flex-direction: column; gap: 0.4375rem; }
+      .field-label { font-family: var(--font-display); font-size: 0.75rem; font-weight: 400; color: var(--color-ink-700); letter-spacing: 0.14em; text-transform: uppercase; }
+      .field-help { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-ink-500); }
+      .field-error { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-danger); display: flex; align-items: center; gap: 0.375rem; }
+
+      .input { width: 100%; padding: 0.75rem 1rem; background: var(--color-paper); border: 1px solid var(--color-line);
+        border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 400; color: var(--color-ink-900);
+        transition: border-color 0.3s, box-shadow 0.3s; }
+      .input::placeholder { color: var(--color-ink-300); }
+      .input:hover { border-color: var(--color-ink-200); }
+      .input:focus { outline: none; border-color: var(--color-violet-600); box-shadow: var(--shadow-focus); }
+      .input.is-error { border-color: var(--color-danger); }
+      .input[disabled] { background: var(--color-bone); cursor: not-allowed; color: var(--color-ink-500); }
+
+      .input-icon-wrap { position: relative; }
+      .input-icon-wrap .icon-left { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--color-ink-500); pointer-events: none; }
+      .input-icon-wrap .icon-right { position: absolute; right: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--color-ink-500); display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 6px; background: transparent; border: 0; cursor: pointer; transition: color 0.2s, background 0.2s; }
+      .input-icon-wrap .icon-right:hover { color: var(--color-violet-700); background: var(--color-violet-50); }
+      .input-icon-wrap .icon-right:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .input-icon-wrap .has-icon-left { padding-left: 2.75rem; }
+      .input-icon-wrap .has-icon-right { padding-right: 3rem; }
+
+      .check { appearance: none; -webkit-appearance: none; width: 1.125rem; height: 1.125rem;
+        border: 1px solid var(--color-ink-300); background: var(--color-paper);
+        cursor: pointer; transition: all 0.2s; display: inline-grid; place-content: center; border-radius: 4px; flex-shrink: 0; }
+      .check:hover { border-color: var(--color-violet-600); }
+      .check:checked { background: var(--color-violet-600); border-color: var(--color-violet-600); }
+      .check:checked::after { content: ''; width: 0.625rem; height: 0.625rem; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat; }
+      .check:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+
+      .card { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+
+      .alert-error {
+        display: flex; align-items: flex-start; gap: 0.625rem;
+        padding: 0.75rem 0.875rem;
+        background: rgba(178, 58, 74, 0.06);
+        border: 1px solid rgba(178, 58, 74, 0.22);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-danger);
+      }
+
+      .spinner {
+        width: 1rem; height: 1rem; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.35); border-top-color: white;
+        animation: spin 0.8s linear infinite;
+      }
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-6px); }
+      30% { transform: translateX(6px); }
+      45% { transform: translateX(-4px); }
+      60% { transform: translateX(4px); }
+      75% { transform: translateX(-2px); }
+      90% { transform: translateX(2px); }
+    }
+    .anim-fade-up { animation: fadeUp 400ms cubic-bezier(.2,.7,.3,1) both; }
+    .anim-shake { animation: shake 0.32s cubic-bezier(.36,.07,.19,.97) both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .anim-fade-up, .anim-shake, .spinner { animation: none !important; }
+    }
+
+    /* Decor : trame pointillée discrète en fond, motif Aesop/Diptyque */
+    .bg-dots {
+      background-image: radial-gradient(rgba(136,104,176,0.07) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col bg-[var(--color-cream)] bg-dots">
+
+  <!-- Header minimal -->
+  <header class="px-6 md:px-10 h-16 flex items-center">
+    <a href="/" class="flex items-center gap-3" aria-label="Retour au site Clochette Nails">
+      <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+      <div class="leading-tight">
+        <div class="font-serif text-[15px]">Clochette Nails</div>
+        <div class="text-[10.5px] tracking-[0.18em] uppercase text-[var(--color-ink-500)]" style="font-family: var(--font-display);">Administration</div>
+      </div>
+    </a>
+  </header>
+
+  <!-- Main : card centrée -->
+  <main class="flex-1 flex items-center justify-center px-4 sm:px-6 py-10 md:py-16" data-screen-label="Admin · Connexion">
+    <section class="card w-full max-w-[440px] p-6 sm:p-10 md:p-12 anim-fade-up" id="login-card" aria-labelledby="login-title">
+
+      <!-- 1. Logo / Mark -->
+      <div class="flex justify-center mb-7">
+        <div class="w-12 h-12 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-lg shadow-[var(--shadow-md)]" aria-hidden="true">C</div>
+      </div>
+
+      <!-- 2. Titre + sous-titre -->
+      <div class="text-center mb-8">
+        <p class="text-[11px] tracking-[0.22em] uppercase text-[var(--color-ink-500)] mb-2" style="font-family: var(--font-display);">Espace administration</p>
+        <h1 id="login-title" class="text-2xl md:text-[26px] leading-tight">Bienvenue</h1>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2.5">Connectez-vous pour gérer le salon.</p>
+      </div>
+
+      <!-- 3. Form -->
+      <form id="login-form" novalidate autocomplete="on" class="space-y-5">
+
+        <!-- Email -->
+        <div class="field">
+          <label class="field-label" for="email">Adresse email</label>
+          <div class="input-icon-wrap">
+            <i data-lucide="mail" class="icon-left w-[18px] h-[18px]" stroke-width="1.5"></i>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              required
+              placeholder="chloe@clochette-nails.fr"
+              aria-describedby="email-error"
+              aria-invalid="false"
+              class="input has-icon-left"
+            />
+          </div>
+          <span id="email-error" class="field-error hidden" role="alert">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5" stroke-width="1.5"></i>
+            <span data-msg>Adresse email invalide.</span>
+          </span>
+        </div>
+
+        <!-- Password -->
+        <div class="field">
+          <label class="field-label" for="password">Mot de passe</label>
+          <div class="input-icon-wrap">
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              minlength="8"
+              placeholder="••••••••"
+              aria-describedby="password-help password-error"
+              aria-invalid="false"
+              class="input has-icon-right"
+            />
+            <button type="button" id="toggle-pw" class="icon-right" aria-label="Afficher le mot de passe" aria-pressed="false">
+              <i data-lucide="eye" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+            </button>
+          </div>
+          <span id="password-help" class="field-help">Minimum 8 caractères.</span>
+          <span id="password-error" class="field-error hidden" role="alert">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5" stroke-width="1.5"></i>
+            <span data-msg>Mot de passe trop court.</span>
+          </span>
+        </div>
+
+        <!-- Remember + forgot -->
+        <div class="flex items-center justify-between pt-1">
+          <label class="flex items-center gap-2.5 text-sm text-[var(--color-ink-700)] cursor-pointer select-none">
+            <input type="checkbox" name="remember" class="check" />
+            <span>Se souvenir de moi</span>
+          </label>
+          <a href="/admin/mot-de-passe-oublie" class="text-sm text-[var(--color-ink-500)] hover:text-[var(--color-violet-700)] transition-colors underline-offset-4 hover:underline">Mot de passe oublié&nbsp;?</a>
+        </div>
+
+        <!-- Honeypot anti-bot (invisible, hors flow visuel) -->
+        <input type="text" name="website" tabindex="-1" autocomplete="off"
+               class="absolute opacity-0 pointer-events-none -z-10" style="left:-9999px;" aria-hidden="true" />
+
+        <!-- Submit -->
+        <button id="submit-btn" type="submit" class="btn btn-primary btn-block mt-2" disabled>
+          <span data-state="idle">Se connecter</span>
+          <span data-state="loading" class="hidden items-center gap-2">
+            <span class="spinner" aria-hidden="true"></span>
+            <span>Connexion…</span>
+          </span>
+        </button>
+
+        <!-- Erreur globale -->
+        <div id="global-error" class="alert-error hidden" role="alert" aria-live="assertive">
+          <i data-lucide="alert-triangle" class="w-4 h-4 mt-px flex-shrink-0" stroke-width="1.6"></i>
+          <span data-msg>Adresse e-mail ou mot de passe incorrect.</span>
+        </div>
+      </form>
+
+      <!-- Footnote -->
+      <p class="text-center text-xs text-[var(--color-ink-500)] mt-8 leading-relaxed">
+        Accès réservé · <a href="mailto:contact@clochette-nails.fr" class="underline underline-offset-4 hover:text-[var(--color-violet-700)] transition-colors">contactez l'éditeur</a> pour un nouvel accès.
+      </p>
+    </section>
+  </main>
+
+  <!-- Footer minimaliste -->
+  <footer class="px-6 md:px-10 py-6 text-center text-xs text-[var(--color-ink-500)]" style="font-family: var(--font-ui);">
+    © Clochette Nails · Connexion sécurisée
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    const form = document.getElementById('login-form');
+    const card = document.getElementById('login-card');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const emailError = document.getElementById('email-error');
+    const passwordError = document.getElementById('password-error');
+    const globalError = document.getElementById('global-error');
+    const submitBtn = document.getElementById('submit-btn');
+    const submitIdle = submitBtn.querySelector('[data-state="idle"]');
+    const submitLoading = submitBtn.querySelector('[data-state="loading"]');
+    const togglePw = document.getElementById('toggle-pw');
+
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const validEmail = (v) => emailRe.test(v.trim());
+    const validPw = (v) => v.length >= 8;
+
+    function setFieldError(input, errEl, message) {
+      if (message) {
+        input.classList.add('is-error');
+        input.setAttribute('aria-invalid', 'true');
+        errEl.querySelector('[data-msg]').textContent = message;
+        errEl.classList.remove('hidden');
+      } else {
+        input.classList.remove('is-error');
+        input.setAttribute('aria-invalid', 'false');
+        errEl.classList.add('hidden');
+      }
+    }
+
+    function showGlobalError(message) {
+      globalError.querySelector('[data-msg]').textContent = message;
+      globalError.classList.remove('hidden');
+      card.classList.remove('anim-shake');
+      // Force reflow pour rejouer l'animation à chaque erreur
+      void card.offsetWidth;
+      card.classList.add('anim-shake');
+    }
+    function hideGlobalError() {
+      globalError.classList.add('hidden');
+    }
+
+    function updateSubmitState() {
+      const ok = validEmail(emailInput.value) && validPw(passwordInput.value);
+      submitBtn.disabled = !ok;
+    }
+
+    emailInput.addEventListener('input', () => {
+      hideGlobalError();
+      if (emailInput.classList.contains('is-error') && validEmail(emailInput.value)) {
+        setFieldError(emailInput, emailError, null);
+      }
+      updateSubmitState();
+    });
+    emailInput.addEventListener('blur', () => {
+      if (emailInput.value && !validEmail(emailInput.value)) {
+        setFieldError(emailInput, emailError, 'Adresse email invalide.');
+      }
+    });
+
+    passwordInput.addEventListener('input', () => {
+      hideGlobalError();
+      if (passwordInput.classList.contains('is-error') && validPw(passwordInput.value)) {
+        setFieldError(passwordInput, passwordError, null);
+      }
+      updateSubmitState();
+    });
+    passwordInput.addEventListener('blur', () => {
+      if (passwordInput.value && !validPw(passwordInput.value)) {
+        setFieldError(passwordInput, passwordError, 'Mot de passe trop court (8 caractères minimum).');
+      }
+    });
+
+    // Toggle show/hide password
+    togglePw.addEventListener('click', () => {
+      const showing = passwordInput.type === 'text';
+      passwordInput.type = showing ? 'password' : 'text';
+      togglePw.setAttribute('aria-pressed', String(!showing));
+      togglePw.setAttribute('aria-label', showing ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+      togglePw.innerHTML = '';
+      const icon = document.createElement('i');
+      icon.setAttribute('data-lucide', showing ? 'eye' : 'eye-off');
+      icon.setAttribute('stroke-width', '1.5');
+      icon.className = 'w-[18px] h-[18px]';
+      togglePw.appendChild(icon);
+      lucide.createIcons({ nameAttr: 'data-lucide' });
+    });
+
+    // Submit (démo : email "admin@clochette.fr" + mdp "password123" passe, sinon erreur)
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (submitBtn.disabled) return;
+
+      // Lock UI
+      submitBtn.disabled = true;
+      submitIdle.classList.add('hidden');
+      submitLoading.classList.remove('hidden');
+      submitLoading.classList.add('inline-flex');
+      [emailInput, passwordInput, togglePw].forEach(el => el.disabled = true);
+      hideGlobalError();
+
+      // Simu API latency
+      setTimeout(() => {
+        const ok = emailInput.value.trim() === 'admin@clochette.fr' && passwordInput.value === 'password123';
+
+        // Reset UI
+        submitIdle.classList.remove('hidden');
+        submitLoading.classList.add('hidden');
+        submitLoading.classList.remove('inline-flex');
+        [emailInput, passwordInput, togglePw].forEach(el => el.disabled = false);
+        updateSubmitState();
+
+        if (ok) {
+          // En prod : window.location.href = '/admin';
+          showGlobalError('Démo — connexion simulée. En production : redirection vers /admin.');
+          globalError.classList.remove('alert-error');
+          globalError.classList.add('alert-error');
+          globalError.style.background = 'rgba(47,143,90,0.08)';
+          globalError.style.borderColor = 'rgba(47,143,90,0.28)';
+          globalError.style.color = 'var(--color-success)';
+        } else {
+          showGlobalError('Adresse e-mail ou mot de passe incorrect.');
+          globalError.style.background = '';
+          globalError.style.borderColor = '';
+          globalError.style.color = '';
+        }
+      }, 850);
+    });
+
+    // Autofocus
+    requestAnimationFrame(() => emailInput.focus());
+  </script>
+</body>
+</html>

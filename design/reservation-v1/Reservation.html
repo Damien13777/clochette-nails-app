@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Réserver un rendez-vous · Clochette Nails</title>
+  <meta name="description" content="Réservez votre rendez-vous en quelques minutes — prestation, créneau, coordonnées, acompte sécurisé via Stripe." />
+  <meta name="robots" content="noindex,follow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inria+Serif:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Julius+Sans+One&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    /* Fond crème garanti dès le premier paint + en fullscreen (avant que Tailwind ne se charge) */
+    html, body { background: #FCFBF7; }
+    html:fullscreen, body:fullscreen, *:fullscreen { background: #FCFBF7; }
+    aside.recap-aside { max-width: 100%; min-width: 0; overflow-x: hidden; }
+    /* Empêche les grid-children (colonnes) d'imposer leur contenu et de pousser la grille au-delà du viewport */
+    #steps-col { min-width: 0; }
+    .presta-card { min-width: 0; }
+    .presta-card h3, .presta-card p { overflow-wrap: anywhere; }
+    /* Masquer la scrollbar des filtres de catégorie */
+    .chips-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+    .chips-scroll::-webkit-scrollbar { display: none; height: 0; width: 0; }
+  </style>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-violet-700: #5E4392; --color-violet-600: #8868B0; --color-violet-500: #A187C5;
+      --color-violet-300: #CCAAD2; --color-violet-100: #ece1f3; --color-violet-50: #f6f1fa;
+      --color-gold-600: #BF9F44; --color-gold-500: #DEC264; --color-gold-300: #ECD68B;
+      --color-gold-200: #F7DC6F; --color-gold-50: #fbf6e0;
+      --color-rose-100: #FCE0E3; --color-rose-50: #fdf1f3;
+      --color-cream: #FCFBF7; --color-paper: #ffffff; --color-bone: #f4f1e8;
+      --color-ink-900: #2A2A2A; --color-ink-700: #4a3f44; --color-ink-500: #7a5c65;
+      --color-ink-300: #b8a4ab; --color-ink-200: #d8cdd1; --color-line: #ece5e7;
+      --color-success: #2f8f5a; --color-warning: #c98a2a; --color-danger: #b23a4a;
+      --color-info: var(--color-violet-600);
+      --font-serif: "Cinzel", "Trajan Pro", "Iowan Old Style", Georgia, serif;
+      --font-display: "Julius Sans One", "Manrope", ui-sans-serif, sans-serif;
+      --font-sans: "Inria Serif", "Iowan Old Style", Georgia, serif;
+      --font-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+      --radius-sm: 8px; --radius-md: 15px; --radius-lg: 25px; --radius-pill: 50px;
+      --shadow-xs: 0 1px 2px 0 rgba(136,104,176,.06);
+      --shadow-sm: 0 2px 8px -2px rgba(136,104,176,.08);
+      --shadow-md: 0 8px 24px -8px rgba(136,104,176,.14);
+      --shadow-lg: 0 18px 40px -16px rgba(136,104,176,.18);
+      --shadow-focus: 0 0 0 4px rgba(136,104,176,.22);
+    }
+
+    @layer base {
+      html { font-family: var(--font-sans); font-weight: 300; color: var(--color-ink-900); background: var(--color-cream); }
+      body { -webkit-font-smoothing: antialiased; }
+      h1,h2,h3,h4 { font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.01em; }
+      .font-serif em, h1 em, h2 em, h3 em { font-family: var(--font-sans); font-style: italic; font-weight: 400; letter-spacing: 0; }
+    }
+
+    @layer components {
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.875rem 1.75rem; border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.875rem; font-weight: 400; letter-spacing: 0.06em;
+        transition: all 0.3s cubic-bezier(.2,.7,.3,1); cursor: pointer; border: 1px solid transparent; white-space: nowrap; }
+      .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .btn:disabled, .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+      .btn-primary { background: var(--color-violet-600); color: white; }
+      .btn-primary:hover:not(:disabled) { background: var(--color-violet-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+      .btn-secondary { background: transparent; color: var(--color-violet-700); border-color: var(--color-violet-600); }
+      .btn-secondary:hover:not(:disabled) { background: var(--color-violet-50); }
+      .btn-ghost { background: transparent; color: var(--color-ink-900); }
+      .btn-ghost:hover:not(:disabled) { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .btn-sm { padding: 0.625rem 1.25rem; font-size: 0.8125rem; }
+      .btn-lg { padding: 1.0625rem 2.25rem; font-size: 0.9375rem; }
+      .btn-icon-only { padding: 0.75rem; width: 2.75rem; height: 2.75rem; }
+
+      .field { display: flex; flex-direction: column; gap: 0.4375rem; }
+      .field-label { font-family: var(--font-display); font-size: 0.75rem; font-weight: 400; color: var(--color-ink-700); letter-spacing: 0.14em; text-transform: uppercase; }
+      .field-help { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-ink-500); }
+      .field-error { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-danger); display: flex; align-items: center; gap: 0.375rem; }
+      .input, .textarea { width: 100%; padding: 0.75rem 1rem; background: var(--color-paper); border: 1px solid var(--color-line);
+        border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 400; color: var(--color-ink-900);
+        transition: border-color 0.3s, box-shadow 0.3s; }
+      .input::placeholder, .textarea::placeholder { color: var(--color-ink-300); }
+      .input:hover, .textarea:hover { border-color: var(--color-ink-200); }
+      .input:focus, .textarea:focus { outline: none; border-color: var(--color-violet-600); box-shadow: var(--shadow-focus); }
+      .input.is-valid { border-color: var(--color-success); }
+      .input.is-invalid { border-color: var(--color-danger); }
+      .textarea { resize: vertical; min-height: 6rem; line-height: 1.55; }
+
+      .card { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md); transition: transform 0.3s cubic-bezier(.2,.7,.3,1), box-shadow 0.3s, border-color 0.3s; }
+      .card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--color-violet-100); }
+      .card-padded { padding: 1.5rem; }
+
+      .badge { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.3125rem 0.75rem;
+        border-radius: var(--radius-pill); font-family: var(--font-display); font-size: 0.6875rem; font-weight: 400;
+        letter-spacing: 0.16em; text-transform: uppercase; line-height: 1; }
+      .badge-rose { background: var(--color-rose-100); color: #8a3c4a; }
+      .badge-gold { background: var(--color-gold-200); color: #6b5413; }
+      .badge-violet { background: var(--color-violet-100); color: var(--color-violet-700); }
+      .badge-outline { background: transparent; border: 1px solid var(--color-ink-300); color: var(--color-ink-700); }
+      .badge-success { background: rgba(47,143,90,0.12); color: var(--color-success); }
+
+      .section-eyebrow { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--color-ink-500); font-weight: 400; }
+      .body-editorial { font-family: var(--font-sans); font-weight: 300; line-height: 1.6; color: var(--color-ink-700); }
+      .body-ui { font-family: var(--font-ui); font-weight: 400; }
+
+      .photo-placeholder { position: relative; overflow: hidden; background: var(--color-rose-50); }
+      .photo-placeholder::before { content:''; position:absolute; inset:0;
+        background-image: repeating-linear-gradient(45deg, transparent 0, transparent 11px, rgba(233,191,196,.55) 11px, rgba(233,191,196,.55) 12px); }
+
+      /* Chip catégorie */
+      .chip {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.5rem 1rem; border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+        background: var(--color-paper); border: 1px solid var(--color-line); color: var(--color-ink-700);
+        cursor: pointer; transition: all 0.25s; white-space: nowrap;
+      }
+      .chip:hover { border-color: var(--color-violet-300); color: var(--color-violet-700); }
+      .chip.is-active { background: var(--color-violet-600); border-color: var(--color-violet-600); color: white; }
+
+      /* Step accordion */
+      .step { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md);
+        margin-bottom: 1rem; transition: border-color 0.3s, box-shadow 0.3s; overflow: hidden; }
+      .step.is-active { border-color: var(--color-violet-300); box-shadow: var(--shadow-sm); }
+      .step.is-complete { border-color: var(--color-line); background: var(--color-paper); }
+      .step.is-disabled .step-header { opacity: 0.6; cursor: not-allowed; }
+      .step-header { display: flex; align-items: center; gap: 1rem; padding: 1.125rem 1.5rem;
+        background: transparent; border: none; cursor: pointer; width: 100%; text-align: left; }
+      .step-num {
+        width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+        display: grid; place-items: center;
+        font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.1em;
+        background: var(--color-violet-50); color: var(--color-violet-700);
+        border: 1px solid var(--color-violet-100);
+      }
+      .step.is-active .step-num { background: var(--color-violet-600); color: white; border-color: var(--color-violet-600); }
+      .step.is-complete .step-num { background: var(--color-violet-600); color: white; border-color: var(--color-violet-600); }
+      .step-title { flex: 1; font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.02em;
+        text-transform: uppercase; font-size: 0.9375rem; color: var(--color-ink-900); }
+      .step-summary { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-ink-500); font-weight: 400; }
+      .step-chevron { color: var(--color-ink-500); transition: transform 0.3s; }
+      .step.is-active .step-chevron { transform: rotate(180deg); color: var(--color-violet-700); }
+      .step-body { display: none; padding: 0 1.5rem 1.5rem; }
+      .step.is-active .step-body { display: block; animation: slideDown 0.4s cubic-bezier(.2,.7,.3,1); }
+
+      @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-6px); }
+        to { opacity: 1; transform: none; }
+      }
+
+      /* Prestation card (radio) */
+      .presta-card {
+        position: relative; display: flex; flex-direction: column;
+        background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+        overflow: hidden; cursor: pointer; transition: all 0.25s;
+      }
+      .presta-card:hover { border-color: var(--color-violet-300); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+      .presta-card.is-selected { border-color: var(--color-violet-600); box-shadow: 0 0 0 2px var(--color-violet-600), var(--shadow-md); }
+      .presta-card .ph { aspect-ratio: 4/3; }
+      .presta-card .check {
+        position: absolute; top: 10px; right: 10px;
+        width: 24px; height: 24px; border-radius: 50%; background: white; border: 1px solid var(--color-line);
+        display: grid; place-items: center; transition: all 0.25s;
+      }
+      .presta-card.is-selected .check { background: var(--color-violet-600); border-color: var(--color-violet-600); color: white; }
+
+      /* Tooltip discret pour la durée estimée */
+      .tt { position: relative; cursor: help; }
+      .tt::after {
+        content: attr(data-tt);
+        position: absolute; bottom: calc(100% + 8px); right: 0;
+        background: var(--color-ink-900); color: var(--color-cream);
+        font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 400;
+        letter-spacing: 0.01em; line-height: 1.4;
+        padding: 0.4375rem 0.625rem; border-radius: 6px;
+        white-space: nowrap; pointer-events: none;
+        opacity: 0; transform: translateY(4px); transition: opacity 0.18s, transform 0.18s;
+        z-index: 30; box-shadow: var(--shadow-md);
+      }
+      .tt::before {
+        content: ''; position: absolute; bottom: calc(100% + 3px); right: 12px;
+        width: 0; height: 0; border: 5px solid transparent; border-top-color: var(--color-ink-900);
+        pointer-events: none; opacity: 0; transition: opacity 0.18s;
+        z-index: 30;
+      }
+      .tt:hover::after, .tt:focus-visible::after { opacity: 1; transform: translateY(0); }
+      .tt:hover::before, .tt:focus-visible::before { opacity: 1; }
+
+      /* Option checkbox row */
+      .opt-row {
+        display: flex; align-items: center; gap: 0.875rem;
+        padding: 0.875rem 1rem; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+        cursor: pointer; transition: all 0.25s; background: var(--color-paper);
+      }
+      .opt-row:hover { border-color: var(--color-violet-300); }
+      .opt-row.is-checked { border-color: var(--color-violet-600); background: var(--color-violet-50); }
+      .opt-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--color-violet-100);
+        color: var(--color-violet-700); display: grid; place-items: center; flex-shrink: 0; }
+      .opt-check {
+        width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--color-ink-300);
+        display: grid; place-items: center; flex-shrink: 0; transition: all 0.25s;
+        background: var(--color-paper); color: transparent;
+      }
+      .opt-check > * { opacity: 0; transition: opacity 0.2s; }
+      .opt-row.is-checked .opt-check { background: var(--color-violet-600); border-color: var(--color-violet-600); color: white; }
+      .opt-row.is-checked .opt-check > * { opacity: 1; }
+
+      /* Calendar */
+      .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+      .cal-dow { font-family: var(--font-display); font-size: 0.625rem; letter-spacing: 0.18em;
+        text-transform: uppercase; color: var(--color-ink-500); text-align: center; padding: 8px 0; }
+      .cal-day {
+        aspect-ratio: 1; display: grid; place-items: center;
+        font-family: var(--font-ui); font-size: 0.875rem; font-weight: 400;
+        color: var(--color-ink-900); background: transparent; border: 1px solid transparent;
+        border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;
+      }
+      .cal-day:hover:not(:disabled) { background: var(--color-violet-50); border-color: var(--color-violet-100); }
+      .cal-day.is-today { border-color: var(--color-violet-300); }
+      .cal-day.is-other { color: var(--color-ink-300); }
+      .cal-day:disabled, .cal-day.is-unavailable { color: var(--color-ink-300); cursor: not-allowed; }
+      .cal-day:disabled:hover, .cal-day.is-unavailable:hover { background: transparent; border-color: transparent; }
+      .cal-day.is-selected { background: var(--color-violet-600); color: white; border-color: var(--color-violet-600); font-weight: 500; }
+      .cal-day.is-selected:hover { background: var(--color-violet-700); }
+      .cal-day:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+      .slot {
+        font-family: var(--font-ui); font-size: 0.875rem; font-weight: 400;
+        padding: 0.5rem 1rem; border-radius: var(--radius-pill);
+        border: 1px solid var(--color-line); background: var(--color-paper);
+        color: var(--color-ink-700); cursor: pointer; transition: all 0.25s;
+      }
+      .slot:hover { border-color: var(--color-violet-600); color: var(--color-violet-700); }
+      .slot.is-selected { background: var(--color-violet-600); border-color: var(--color-violet-600); color: white; }
+
+      /* Dropzone */
+      .dropzone {
+        border: 1.5px dashed var(--color-ink-200); border-radius: var(--radius-md);
+        padding: 1.75rem 1rem; text-align: center; background: var(--color-bone);
+        cursor: pointer; transition: all 0.25s;
+      }
+      .dropzone:hover, .dropzone.is-drag { border-color: var(--color-violet-600); background: var(--color-violet-50); }
+
+      .thumb {
+        position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden;
+        border: 1px solid var(--color-line);
+      }
+      .thumb-remove {
+        position: absolute; top: 4px; right: 4px;
+        width: 22px; height: 22px; border-radius: 50%; background: rgba(42,42,42,0.7); color: white;
+        display: grid; place-items: center; cursor: pointer; border: none;
+      }
+      .thumb-remove:hover { background: var(--color-danger); }
+
+      /* Skip link */
+      .skip-link {
+        position: absolute; top: -100px; left: 1rem;
+        background: var(--color-violet-600); color: white;
+        padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+        font-family: var(--font-ui); font-size: 0.875rem; z-index: 100;
+        transition: top 0.2s;
+      }
+      .skip-link:focus { top: 1rem; }
+    }
+
+    /* Spinner */
+    .spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent;
+      border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Mobile recap drawer */
+    @media (max-width: 767px) {
+      .recap-mobile-trigger { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+        background: var(--color-paper); border-top: 1px solid var(--color-line);
+        padding: 0.875rem 1rem; box-shadow: 0 -8px 24px -8px rgba(42,42,42,0.08); }
+      .recap-mobile-drawer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+        background: var(--color-paper); border-radius: var(--radius-md) var(--radius-md) 0 0;
+        transform: translateY(100%); transition: transform 0.4s cubic-bezier(.2,.7,.3,1);
+        max-height: 85vh; overflow-y: auto; padding: 1.25rem; box-shadow: 0 -20px 40px -16px rgba(42,42,42,0.18); }
+      .recap-mobile-drawer.is-open { transform: none; }
+      .recap-backdrop { position: fixed; inset: 0; background: rgba(42,42,42,0.4); z-index: 55;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+      .recap-backdrop.is-open { opacity: 1; pointer-events: auto; }
+    }
+  </style>
+</head>
+
+<body class="bg-[var(--color-cream)] text-[var(--color-ink-900)] pb-24 lg:pb-12">
+
+  <a href="#form-coordonnees" class="skip-link">Passer au formulaire</a>
+
+  <!-- ─────────── HEADER (réduit) ─────────── -->
+  <header class="sticky top-0 z-30 bg-[var(--color-cream)]/85 backdrop-blur border-b border-[var(--color-line)]">
+    <div class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 h-[64px] flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+        <span class="font-serif text-[15px] tracking-[0.02em]">CLOCHETTE NAILS</span>
+      </a>
+      <a href="/" class="body-ui text-sm text-[var(--color-ink-500)] inline-flex items-center gap-1.5 hover:text-[var(--color-violet-700)] transition-colors">
+        <i data-lucide="x" class="w-4 h-4" stroke-width="1.5"></i>
+        <span class="hidden sm:inline">Annuler</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- ─────────── INTRO ─────────── -->
+  <section class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pt-10 pb-6">
+    <p class="section-eyebrow">Étape par étape · 2 minutes</p>
+    <h1 class="font-serif text-[clamp(1.75rem,3.5vw,2.5rem)] mt-3 leading-tight">
+      Réserver votre <span class="text-[var(--color-violet-700)]">rendez-vous</span>
+    </h1>
+    <p class="body-editorial text-base mt-3 max-w-[58ch]">
+      Choisissez votre prestation, votre créneau et vos coordonnées. Un acompte sécurisé valide la réservation.
+    </p>
+  </section>
+
+  <!-- ─────────── BOOKING LAYOUT ─────────── -->
+  <section class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pb-10">
+    <div class="grid md:grid-cols-[1fr_20rem] lg:grid-cols-[1fr_22rem] gap-8 lg:gap-10 items-start">
+
+      <!-- ═══════ COLONNE GAUCHE — STEPS ═══════ -->
+      <div id="steps-col">
+
+        <!-- ─── STEP 1 — Prestation ─── -->
+        <article class="step is-active" data-step="1" id="step-1" aria-expanded="true">
+          <button class="step-header" aria-controls="step-1-body" type="button">
+            <span class="step-num">01</span>
+            <div class="flex-1 min-w-0">
+              <div class="step-title">Choisissez votre prestation</div>
+              <div class="step-summary mt-1" id="sum-1">Toutes catégories · sélectionnez une prestation</div>
+            </div>
+            <i data-lucide="chevron-down" class="step-chevron w-4 h-4" stroke-width="1.5"></i>
+          </button>
+          <div class="step-body" id="step-1-body">
+
+            <!-- Chips catégories -->
+            <div class="chips-scroll overflow-x-auto -mx-1.5 px-1.5 mb-5">
+              <div class="flex gap-2 w-max">
+                <button class="chip is-active" data-cat="all">Toutes</button>
+                <button class="chip" data-cat="naturels">Pose naturels</button>
+                <button class="chip" data-cat="rallongement">Rallongements</button>
+                <button class="chip" data-cat="pack">Pack spécial</button>
+                <button class="chip" data-cat="mains">Soin mains</button>
+                <button class="chip" data-cat="pieds">Soin pieds</button>
+                <button class="chip" data-cat="depose">Dépose</button>
+              </div>
+            </div>
+
+            <!-- Prestations grid -->
+            <div class="grid sm:grid-cols-2 gap-3" id="presta-grid">
+              <!-- 1 -->
+              <button class="presta-card" data-presta="semi-reflet" data-cat="naturels" data-name="Semi-permanent &laquo; Reflet &raquo;" data-duration="75">
+                <div class="ph photo-placeholder"></div>
+                <div class="check"><i data-lucide="check" class="w-3 h-3" stroke-width="2"></i></div>
+                <div class="p-3 flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="badge badge-rose">Signature</span>
+                    <span class="tt body-ui text-xs text-[var(--color-ink-500)] inline-flex items-center gap-1" data-tt="Durée estimée — peut varier selon l'état de vos ongles"><i data-lucide="clock" class="w-3 h-3" stroke-width="1.5"></i> ≈ 1h15</span>
+                  </div>
+                  <h3 class="font-serif text-sm leading-snug">Semi-permanent « Reflet »</h3>
+                </div>
+              </button>
+
+              <!-- 2 -->
+              <button class="presta-card" data-presta="rallongement-couture" data-cat="rallongement" data-name="Rallongement &laquo; Couture &raquo;" data-duration="150">
+                <div class="ph photo-placeholder"></div>
+                <div class="check"><i data-lucide="check" class="w-3 h-3" stroke-width="2"></i></div>
+                <div class="p-3 flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="badge badge-gold">Premium</span>
+                    <span class="tt body-ui text-xs text-[var(--color-ink-500)] inline-flex items-center gap-1" data-tt="Durée estimée — peut varier selon l'état de vos ongles"><i data-lucide="clock" class="w-3 h-3" stroke-width="1.5"></i> ≈ 2h30</span>
+                  </div>
+                  <h3 class="font-serif text-sm leading-snug">Rallongement « Couture »</h3>
+                </div>
+              </button>
+
+              <!-- 3 -->
+              <button class="presta-card" data-presta="french-moderne" data-cat="naturels" data-name="French &laquo; Moderne &raquo;" data-duration="90">
+                <div class="ph photo-placeholder"></div>
+                <div class="check"><i data-lucide="check" class="w-3 h-3" stroke-width="2"></i></div>
+                <div class="p-3 flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="badge badge-rose">Signature</span>
+                    <span class="tt body-ui text-xs text-[var(--color-ink-500)] inline-flex items-center gap-1" data-tt="Durée estimée — peut varier selon l'état de vos ongles"><i data-lucide="clock" class="w-3 h-3" stroke-width="1.5"></i> ≈ 1h30</span>
+                  </div>
+                  <h3 class="font-serif text-sm leading-snug">French « Moderne »</h3>
+                </div>
+              </button>
+
+              <!-- 4 -->
+              <button class="presta-card" data-presta="nailart-atelier" data-cat="pack" data-name="Nail-art &laquo; Atelier &raquo;" data-duration="105">
+                <div class="ph photo-placeholder"></div>
+                <div class="check"><i data-lucide="check" class="w-3 h-3" stroke-width="2"></i></div>
+                <div class="p-3 flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="badge badge-violet">Sur mesure</span>
+                    <span class="tt body-ui text-xs text-[var(--color-ink-500)] inline-flex items-center gap-1" data-tt="Durée estimée — peut varier selon l'état de vos ongles"><i data-lucide="clock" class="w-3 h-3" stroke-width="1.5"></i> ≈ 1h45</span>
+                  </div>
+                  <h3 class="font-serif text-sm leading-snug">Nail-art « Atelier »</h3>
+                </div>
+              </button>
+
+              <!-- 5 -->
+              <button class="presta-card" data-presta="beaute-mains" data-cat="mains" data-name="Beaut&eacute; des mains" data-duration="45">
+                <div class="ph photo-placeholder"></div>
+                <div class="check"><i data-lucide="check" class="w-3 h-3" stroke-width="2"></i></div>
+                <div class="p-3 flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="badge badge-outline">Soin</span>
+                    <span class="tt body-ui text-xs text-[var(--color-ink-500)] inline-flex items-center gap-1" data-tt="Durée estimée — peut varier selon l'état de vos ongles"><i data-lucide="clock" class="w-3 h-3" stroke-width="1.5"></i> ≈ 45 min</span>
+                  </div>
+                  <h3 class="font-serif text-sm leading-snug">Beauté des mains</h3>
+                </div>
+              </button>
+
+              <!-- 6 -->
+              <button class="presta-card" data-presta="depose-simple" data-cat="depose" data-name="D&eacute;pose compl&egrave;te" data-duration="30">
+                <div class="ph photo-placeholder"></div>
+                <div class="check"><i data-lucide="check" class="w-3 h-3" stroke-width="2"></i></div>
+                <div class="p-3 flex flex-col gap-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="badge badge-outline">Dépose</span>
+                    <span class="tt body-ui text-xs text-[var(--color-ink-500)] inline-flex items-center gap-1" data-tt="Durée estimée — peut varier selon l'état de vos ongles"><i data-lucide="clock" class="w-3 h-3" stroke-width="1.5"></i> ≈ 30 min</span>
+                  </div>
+                  <h3 class="font-serif text-sm leading-snug">Dépose complète</h3>
+                </div>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- ─── STEP 2 — Options ─── -->
+        <article class="step is-disabled" data-step="2" id="step-2" aria-expanded="false">
+          <button class="step-header" aria-controls="step-2-body" type="button" disabled>
+            <span class="step-num">02</span>
+            <div class="flex-1 min-w-0">
+              <div class="step-title">Personnalisez</div>
+              <div class="step-summary mt-1" id="sum-2">Options et finitions · facultatif</div>
+            </div>
+            <i data-lucide="chevron-down" class="step-chevron w-4 h-4" stroke-width="1.5"></i>
+          </button>
+          <div class="step-body" id="step-2-body">
+            <p class="body-editorial text-sm text-[var(--color-ink-500)] mb-4">Ajoutez des finitions à votre prestation. Chaque option allonge la durée du rendez-vous.</p>
+            <div class="flex flex-col gap-2.5" id="options-list">
+              <label class="opt-row" data-opt="nailart" data-mins="45">
+                <div class="opt-icon"><i data-lucide="palette" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <div class="font-serif text-sm">Nail-art sur mesure</div>
+                  <div class="field-help">Création unique, peinture à main levée</div>
+                </div>
+                <span class="body-ui text-xs text-[var(--color-ink-500)] mr-2">+ 45 min</span>
+                <span class="opt-check"><i data-lucide="check" class="w-3 h-3" stroke-width="2.5"></i></span>
+              </label>
+              <label class="opt-row" data-opt="strass" data-mins="15">
+                <div class="opt-icon"><i data-lucide="sparkles" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <div class="font-serif text-sm">Pose de strass / chrome</div>
+                  <div class="field-help">Détails brillants posés à la main</div>
+                </div>
+                <span class="body-ui text-xs text-[var(--color-ink-500)] mr-2">+ 15 min</span>
+                <span class="opt-check"><i data-lucide="check" class="w-3 h-3" stroke-width="2.5"></i></span>
+              </label>
+              <label class="opt-row" data-opt="cuticules" data-mins="15">
+                <div class="opt-icon"><i data-lucide="droplets" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <div class="font-serif text-sm">Soin cuticules approfondi</div>
+                  <div class="field-help">Modelage et hydratation profonde</div>
+                </div>
+                <span class="body-ui text-xs text-[var(--color-ink-500)] mr-2">+ 15 min</span>
+                <span class="opt-check"><i data-lucide="check" class="w-3 h-3" stroke-width="2.5"></i></span>
+              </label>
+            </div>
+          </div>
+        </article>
+
+        <!-- ─── STEP 3 — Créneau ─── -->
+        <article class="step is-disabled" data-step="3" id="step-3" aria-expanded="false">
+          <button class="step-header" aria-controls="step-3-body" type="button" disabled>
+            <span class="step-num">03</span>
+            <div class="flex-1 min-w-0">
+              <div class="step-title">Choisissez votre créneau</div>
+              <div class="step-summary mt-1" id="sum-3">Date et heure du rendez-vous</div>
+            </div>
+            <i data-lucide="chevron-down" class="step-chevron w-4 h-4" stroke-width="1.5"></i>
+          </button>
+          <div class="step-body" id="step-3-body">
+            <!-- Calendar nav -->
+            <div class="flex items-center justify-between mb-4">
+              <button class="btn btn-ghost btn-icon-only" id="cal-prev" aria-label="Mois précédent"><i data-lucide="chevron-left" class="w-4 h-4" stroke-width="1.5"></i></button>
+              <div class="font-serif text-base tracking-[0.04em] uppercase" id="cal-title">Mai 2026</div>
+              <button class="btn btn-ghost btn-icon-only" id="cal-next" aria-label="Mois suivant"><i data-lucide="chevron-right" class="w-4 h-4" stroke-width="1.5"></i></button>
+            </div>
+            <div class="cal-grid mb-1">
+              <div class="cal-dow">Lun</div><div class="cal-dow">Mar</div><div class="cal-dow">Mer</div><div class="cal-dow">Jeu</div><div class="cal-dow">Ven</div><div class="cal-dow">Sam</div><div class="cal-dow">Dim</div>
+            </div>
+            <div class="cal-grid" id="cal-days" role="grid" aria-label="Calendrier de réservation"></div>
+            <p class="field-help mt-3 flex items-center gap-4">
+              <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[var(--color-violet-600)]"></span> Sélectionné</span>
+              <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[var(--color-ink-300)]"></span> Indisponible</span>
+            </p>
+
+            <!-- Slots -->
+            <div id="slots-wrap" class="hidden mt-6 pt-6 border-t border-[var(--color-line)]">
+              <p class="field-label mb-3" id="slots-title">Créneaux disponibles</p>
+              <div class="flex flex-wrap gap-2" id="slots-grid"></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ─── STEP 4 — Coordonnées ─── -->
+        <article class="step is-disabled" data-step="4" id="step-4" aria-expanded="false">
+          <button class="step-header" aria-controls="step-4-body" type="button" disabled>
+            <span class="step-num">04</span>
+            <div class="flex-1 min-w-0">
+              <div class="step-title">Vos coordonnées</div>
+              <div class="step-summary mt-1" id="sum-4">Prénom, nom, email, téléphone</div>
+            </div>
+            <i data-lucide="chevron-down" class="step-chevron w-4 h-4" stroke-width="1.5"></i>
+          </button>
+          <div class="step-body" id="step-4-body">
+            <form id="form-coordonnees" class="grid sm:grid-cols-2 gap-4" novalidate>
+              <div class="field">
+                <label class="field-label" for="f-firstname">Prénom</label>
+                <input id="f-firstname" class="input" type="text" placeholder="Chloé" required autocomplete="given-name" />
+              </div>
+              <div class="field">
+                <label class="field-label" for="f-lastname">Nom</label>
+                <input id="f-lastname" class="input" type="text" placeholder="Martin" required autocomplete="family-name" />
+              </div>
+              <div class="field sm:col-span-2">
+                <label class="field-label" for="f-email">Email</label>
+                <input id="f-email" class="input" type="email" placeholder="vous@exemple.fr" required autocomplete="email" aria-describedby="f-email-err" />
+                <p class="field-error hidden" id="f-email-err" role="alert"><i data-lucide="alert-circle" class="w-3.5 h-3.5" stroke-width="1.5"></i> Adresse email invalide</p>
+              </div>
+              <div class="field sm:col-span-2">
+                <label class="field-label" for="f-phone">Téléphone</label>
+                <input id="f-phone" class="input" type="tel" placeholder="06 12 34 56 78" required autocomplete="tel" aria-describedby="f-phone-err" />
+                <p class="field-error hidden" id="f-phone-err" role="alert"><i data-lucide="alert-circle" class="w-3.5 h-3.5" stroke-width="1.5"></i> Numéro français invalide</p>
+              </div>
+              <div class="field sm:col-span-2">
+                <label class="field-label" for="f-msg">Message (optionnel)</label>
+                <textarea id="f-msg" class="textarea" placeholder="Une demande particulière, une inspiration…" maxlength="500"></textarea>
+                <p class="field-help text-right"><span id="msg-count">0</span> / 500</p>
+              </div>
+            </form>
+          </div>
+        </article>
+
+        <!-- ─── STEP 5 — Photos ─── -->
+        <article class="step is-disabled" data-step="5" id="step-5" aria-expanded="false">
+          <button class="step-header" aria-controls="step-5-body" type="button" disabled>
+            <span class="step-num">05</span>
+            <div class="flex-1 min-w-0">
+              <div class="step-title">Photos <span class="body-ui normal-case tracking-normal text-xs text-[var(--color-ink-500)] ml-1">(optionnel)</span></div>
+              <div class="step-summary mt-1" id="sum-5">Inspirations ou ongles actuels · max 5 fichiers</div>
+            </div>
+            <i data-lucide="chevron-down" class="step-chevron w-4 h-4" stroke-width="1.5"></i>
+          </button>
+          <div class="step-body" id="step-5-body">
+            <label class="dropzone block" id="dropzone">
+              <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/heic" multiple class="hidden" />
+              <i data-lucide="image-up" class="w-8 h-8 text-[var(--color-violet-600)] mx-auto mb-2" stroke-width="1.25"></i>
+              <p class="font-serif text-sm uppercase tracking-[0.04em]">Déposez vos photos</p>
+              <p class="field-help mt-1">JPG, PNG, WebP, HEIC · max 5 fichiers de 5 Mo</p>
+            </label>
+            <p class="field-help mt-3">Partagez des photos de vos ongles actuels ou d'inspirations.</p>
+            <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4" id="thumbs"></div>
+          </div>
+        </article>
+
+        <!-- ─── STEP 6 — Carte cadeau ─── -->
+        <article class="step is-disabled" data-step="6" id="step-6" aria-expanded="false">
+          <button class="step-header" aria-controls="step-6-body" type="button" disabled>
+            <span class="step-num">06</span>
+            <div class="flex-1 min-w-0">
+              <div class="step-title">Code carte cadeau <span class="body-ui normal-case tracking-normal text-xs text-[var(--color-ink-500)] ml-1">(optionnel)</span></div>
+              <div class="step-summary mt-1" id="sum-6">Si vous avez reçu une carte cadeau</div>
+            </div>
+            <i data-lucide="chevron-down" class="step-chevron w-4 h-4" stroke-width="1.5"></i>
+          </button>
+          <div class="step-body" id="step-6-body">
+            <div class="flex gap-2 items-end">
+              <div class="field flex-1">
+                <label class="field-label" for="f-gift">Code carte cadeau</label>
+                <input id="f-gift" class="input font-mono uppercase tracking-[0.2em]" placeholder="XXXX-XXXX-XXXX" aria-describedby="gift-status" />
+              </div>
+              <button class="btn btn-secondary btn-sm" id="gift-check" type="button">Vérifier</button>
+            </div>
+            <div id="gift-status" class="mt-3" aria-live="polite"></div>
+          </div>
+        </article>
+      </div>
+
+      <!-- ═══════ COLONNE DROITE — RÉCAP STICKY ═══════ -->
+      <aside class="recap-aside hidden md:block sticky top-[88px] self-start max-h-[calc(100vh-104px)] overflow-y-auto">
+        <div class="card card-padded" style="background: rgba(246,241,250,0.5);">
+          <p class="section-eyebrow">Votre réservation</p>
+          <h2 class="font-serif text-base tracking-[0.04em] uppercase mt-3">Récapitulatif</h2>
+
+          <dl id="recap-list" class="mt-5 space-y-3 text-sm">
+            <div class="flex justify-between gap-3">
+              <dt class="body-ui text-[var(--color-ink-500)]">Prestation</dt>
+              <dd class="font-serif text-[var(--color-ink-900)] text-right" id="r-presta">—</dd>
+            </div>
+            <div class="flex justify-between gap-3 hidden" id="r-opts-row">
+              <dt class="body-ui text-[var(--color-ink-500)]">Options</dt>
+              <dd class="body-ui text-[var(--color-ink-900)] text-right text-xs" id="r-opts">—</dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt class="body-ui text-[var(--color-ink-500)]">Durée totale estimée</dt>
+              <dd class="body-ui text-[var(--color-ink-900)]" id="r-duration">—</dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt class="body-ui text-[var(--color-ink-500)]">Date</dt>
+              <dd class="body-ui text-[var(--color-ink-900)] text-right" id="r-date">—</dd>
+            </div>
+            <div class="flex justify-between gap-3">
+              <dt class="body-ui text-[var(--color-ink-500)]">Horaire</dt>
+              <dd class="body-ui text-[var(--color-ink-900)]" id="r-time">—</dd>
+            </div>
+          </dl>
+
+          <div class="my-5 border-t border-[var(--color-line)]"></div>
+
+          <div class="space-y-1">
+            <div class="flex items-baseline justify-between">
+              <span class="section-eyebrow">Acompte à payer</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-1">
+              <span class="font-serif text-[2rem] leading-none tracking-[0.02em] text-[var(--color-violet-700)]" id="r-deposit">— €</span>
+              <span class="body-ui text-xs text-[var(--color-ink-500)]" id="r-deposit-note">30 % du total</span>
+            </div>
+            <p class="body-ui text-xs text-[var(--color-success) hidden mt-2" id="r-gift-covered">
+              <i data-lucide="check-circle-2" class="w-3.5 h-3.5 inline" stroke-width="1.5"></i>
+              Couvert par votre carte cadeau
+            </p>
+          </div>
+
+          <button class="btn btn-primary w-full mt-5" id="cta-pay" disabled>
+            <span id="cta-pay-label">Valider et payer</span>
+            <i data-lucide="lock" class="w-3.5 h-3.5" stroke-width="1.5"></i>
+          </button>
+
+          <p class="field-help text-center mt-3 leading-relaxed">
+            Paiement sécurisé via Stripe<br/>
+            Annulation gratuite jusqu'à 72 h avant
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ═══════ MOBILE STICKY RECAP TRIGGER ═══════ -->
+  <div class="recap-mobile-trigger md:hidden">
+    <div class="flex items-center justify-between gap-3">
+      <div>
+        <p class="section-eyebrow text-[10px]">Acompte</p>
+        <p class="font-serif text-[1.5rem] leading-none mt-0.5 text-[var(--color-violet-700)]" id="r-deposit-mobile">— €</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-sm" id="open-recap-mobile" type="button" aria-label="Voir le récapitulatif">
+          <i data-lucide="receipt" class="w-3.5 h-3.5" stroke-width="1.5"></i>
+          Récap
+        </button>
+        <button class="btn btn-primary btn-sm" id="cta-pay-mobile" disabled>
+          <span>Valider</span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile recap drawer -->
+  <div class="recap-backdrop md:hidden" id="recap-backdrop"></div>
+  <div class="recap-mobile-drawer md:hidden" id="recap-drawer">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-serif text-base tracking-[0.04em] uppercase">Votre réservation</h2>
+      <button class="btn btn-ghost btn-icon-only" id="close-recap-mobile" aria-label="Fermer"><i data-lucide="x" class="w-4 h-4" stroke-width="1.5"></i></button>
+    </div>
+    <dl class="space-y-3 text-sm">
+      <div class="flex justify-between gap-3"><dt class="body-ui text-[var(--color-ink-500)]">Prestation</dt><dd class="font-serif text-right" data-mirror="r-presta">—</dd></div>
+      <div class="flex justify-between gap-3"><dt class="body-ui text-[var(--color-ink-500)]">Durée estimée</dt><dd class="body-ui" data-mirror="r-duration">—</dd></div>
+      <div class="flex justify-between gap-3"><dt class="body-ui text-[var(--color-ink-500)]">Date</dt><dd class="body-ui text-right" data-mirror="r-date">—</dd></div>
+      <div class="flex justify-between gap-3"><dt class="body-ui text-[var(--color-ink-500)]">Horaire</dt><dd class="body-ui" data-mirror="r-time">—</dd></div>
+    </dl>
+    <div class="mt-5 pt-5 border-t border-[var(--color-line)]">
+      <p class="section-eyebrow">Acompte à payer</p>
+      <p class="font-serif text-[2rem] leading-none mt-2 text-[var(--color-violet-700)]" data-mirror="r-deposit">— €</p>
+      <p class="field-help mt-2">Paiement sécurisé via Stripe · Annulation gratuite jusqu'à 72 h avant</p>
+    </div>
+  </div>
+
+  <!-- ─────────── SCRIPT ─────────── -->
+  <script>
+    if (window.lucide) window.lucide.createIcons({ attrs: { 'stroke-width': 1.5 }});
+
+    // ──── State ────
+    const state = {
+      presta: null, prestaName: null, baseDuration: 0,
+      cat: null,
+      options: [], optionsDuration: 0,
+      date: null, time: null,
+      contact: { firstname:'', lastname:'', email:'', phone:'', msg:'' },
+      photos: [],
+      giftCard: null, // { code, value, valid, expired }
+    };
+
+    // Demo settings
+    const DEPOSIT_RATIO = 0.3;
+    const PRICE_PER_MIN = 0.95; // demo price computation (NEVER shown to client)
+
+    // ──── Step navigation ────
+    const steps = document.querySelectorAll('.step');
+
+    function openStep(n) {
+      steps.forEach(s => {
+        const idx = +s.dataset.step;
+        s.classList.toggle('is-active', idx === n);
+        s.setAttribute('aria-expanded', idx === n);
+      });
+      const target = document.getElementById(`step-${n}`);
+      if (target && window.innerWidth < 1024) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function enableStep(n) {
+      const s = document.getElementById(`step-${n}`);
+      if (s) {
+        s.classList.remove('is-disabled');
+        s.querySelector('.step-header').disabled = false;
+      }
+    }
+
+    function completeStep(n) {
+      const s = document.getElementById(`step-${n}`);
+      if (s) s.classList.add('is-complete');
+    }
+
+    document.querySelectorAll('.step-header').forEach(h => {
+      h.addEventListener('click', () => {
+        const n = +h.parentElement.dataset.step;
+        if (!h.disabled) openStep(n);
+      });
+    });
+
+    // ──── Step 1 — chips + presta cards ────
+    document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(x => x.classList.remove('is-active'));
+      c.classList.add('is-active');
+      const cat = c.dataset.cat;
+      document.querySelectorAll('.presta-card').forEach(p => {
+        p.style.display = (cat === 'all' || p.dataset.cat === cat) ? '' : 'none';
+      });
+    }));
+
+    document.querySelectorAll('.presta-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.presta-card').forEach(x => x.classList.remove('is-selected'));
+        card.classList.add('is-selected');
+        state.presta = card.dataset.presta;
+        state.prestaName = card.dataset.name;
+        state.cat = card.dataset.cat;
+        state.baseDuration = +card.dataset.duration;
+        document.getElementById('sum-1').textContent = card.dataset.name;
+        document.getElementById('step-1').classList.add('has-recap');
+        completeStep(1);
+        enableStep(2); enableStep(3);
+        updateRecap();
+        // Auto-advance: si la catégorie a des options pertinentes → step 2, sinon step 3
+        const hasOptions = ['naturels','rallongement','pack'].includes(state.cat);
+        openStep(hasOptions ? 2 : 3);
+      });
+    });
+
+    // ──── Step 2 — options ────
+    document.querySelectorAll('.opt-row').forEach(row => {
+      row.addEventListener('click', () => {
+        row.classList.toggle('is-checked');
+        const opt = row.dataset.opt; const mins = +row.dataset.mins;
+        if (row.classList.contains('is-checked')) {
+          state.options.push({ opt, mins, label: row.querySelector('.font-serif').textContent });
+          state.optionsDuration += mins;
+        } else {
+          state.options = state.options.filter(o => o.opt !== opt);
+          state.optionsDuration -= mins;
+        }
+        document.getElementById('sum-2').textContent = state.options.length
+          ? `${state.options.length} option${state.options.length>1?'s':''} · +${state.optionsDuration} min`
+          : 'Aucune option — passez à l\'étape suivante';
+        updateRecap();
+      });
+    });
+
+    // ──── Step 3 — Calendar ────
+    let calMonth = new Date(2026, 4, 1); // mai 2026
+    const today = new Date(); today.setHours(0,0,0,0);
+    const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+    // mock: sundays + a few random days unavailable, anything before today unavailable
+    function isUnavailable(d) {
+      if (d < today) return true;
+      if (d.getDay() === 0) return true; // dimanche fermé
+      if (d.getDay() === 1 && d.getDate() % 7 === 0) return true;
+      // demo: pattern
+      return [3, 11, 17, 25].includes(d.getDate()) && d.getMonth() === calMonth.getMonth();
+    }
+
+    function renderCalendar() {
+      const y = calMonth.getFullYear(), m = calMonth.getMonth();
+      document.getElementById('cal-title').textContent = `${monthNames[m]} ${y}`;
+      const first = new Date(y, m, 1);
+      const last = new Date(y, m+1, 0);
+      let startDow = (first.getDay() + 6) % 7; // lundi-based
+      const days = document.getElementById('cal-days');
+      days.innerHTML = '';
+      // prev month tail
+      const prevLast = new Date(y, m, 0).getDate();
+      for (let i = startDow - 1; i >= 0; i--) {
+        const d = document.createElement('button');
+        d.className = 'cal-day is-other'; d.disabled = true; d.textContent = prevLast - i;
+        days.appendChild(d);
+      }
+      // current month
+      for (let i = 1; i <= last.getDate(); i++) {
+        const d = document.createElement('button');
+        const date = new Date(y, m, i);
+        d.className = 'cal-day'; d.textContent = i;
+        d.setAttribute('aria-label', date.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }));
+        if (date.getTime() === today.getTime()) d.classList.add('is-today');
+        if (isUnavailable(date)) { d.classList.add('is-unavailable'); d.disabled = true; }
+        if (state.date && state.date.getTime() === date.getTime()) d.classList.add('is-selected');
+        d.addEventListener('click', () => selectDay(date));
+        days.appendChild(d);
+      }
+      // trailing
+      const totalCells = startDow + last.getDate();
+      const trail = (7 - totalCells % 7) % 7;
+      for (let i = 1; i <= trail; i++) {
+        const d = document.createElement('button');
+        d.className = 'cal-day is-other'; d.disabled = true; d.textContent = i;
+        days.appendChild(d);
+      }
+    }
+
+    function selectDay(date) {
+      state.date = date; state.time = null;
+      renderCalendar();
+      const wrap = document.getElementById('slots-wrap');
+      const grid = document.getElementById('slots-grid');
+      wrap.classList.remove('hidden');
+      document.getElementById('slots-title').textContent =
+        `Créneaux disponibles · ${date.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' })}`;
+      grid.innerHTML = '';
+      const slots = ['09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+      slots.forEach(t => {
+        const b = document.createElement('button');
+        b.className = 'slot'; b.type = 'button'; b.textContent = t;
+        b.addEventListener('click', () => {
+          grid.querySelectorAll('.slot').forEach(x => x.classList.remove('is-selected'));
+          b.classList.add('is-selected');
+          state.time = t;
+          document.getElementById('sum-3').textContent =
+            `${date.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' })} · ${t}`;
+          completeStep(3); enableStep(4); enableStep(5); enableStep(6);
+          updateRecap();
+          openStep(4);
+        });
+        grid.appendChild(b);
+      });
+    }
+
+    document.getElementById('cal-prev').addEventListener('click', () => { calMonth.setMonth(calMonth.getMonth()-1); renderCalendar(); });
+    document.getElementById('cal-next').addEventListener('click', () => { calMonth.setMonth(calMonth.getMonth()+1); renderCalendar(); });
+
+    // Calendar keyboard nav
+    document.getElementById('cal-days').addEventListener('keydown', e => {
+      if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) return;
+      e.preventDefault();
+      const buttons = [...document.querySelectorAll('#cal-days .cal-day:not(:disabled)')];
+      const i = buttons.indexOf(document.activeElement);
+      if (i < 0) return;
+      const move = { ArrowLeft:-1, ArrowRight:1, ArrowUp:-7, ArrowDown:7 }[e.key];
+      const next = buttons[i + move];
+      if (next) next.focus();
+    });
+
+    renderCalendar();
+
+    // ──── Step 4 — form validation ────
+    const emailIn = document.getElementById('f-email'), emailErr = document.getElementById('f-email-err');
+    const phoneIn = document.getElementById('f-phone'), phoneErr = document.getElementById('f-phone-err');
+    const fnIn = document.getElementById('f-firstname'), lnIn = document.getElementById('f-lastname');
+    const msgIn = document.getElementById('f-msg');
+
+    function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+    function validPhone(v) { return /^(?:\+33|0)\s?[1-9](?:[\s.-]?\d{2}){4}$/.test(v.replace(/\s/g,'')); }
+
+    [emailIn, phoneIn].forEach(el => el.addEventListener('blur', validateContact));
+    [fnIn, lnIn, emailIn, phoneIn].forEach(el => el.addEventListener('input', () => {
+      state.contact[el.id.replace('f-','')] = el.value;
+      validateContact(false);
+    }));
+
+    msgIn.addEventListener('input', () => {
+      document.getElementById('msg-count').textContent = msgIn.value.length;
+      state.contact.msg = msgIn.value;
+    });
+
+    function validateContact(showErrors = true) {
+      let ok = true;
+      if (emailIn.value && !validEmail(emailIn.value)) {
+        if (showErrors) { emailErr.classList.remove('hidden'); emailIn.classList.add('is-invalid'); }
+        ok = false;
+      } else { emailErr.classList.add('hidden'); emailIn.classList.remove('is-invalid'); if (emailIn.value) emailIn.classList.add('is-valid'); }
+      if (phoneIn.value && !validPhone(phoneIn.value)) {
+        if (showErrors) { phoneErr.classList.remove('hidden'); phoneIn.classList.add('is-invalid'); }
+        ok = false;
+      } else { phoneErr.classList.add('hidden'); phoneIn.classList.remove('is-invalid'); if (phoneIn.value) phoneIn.classList.add('is-valid'); }
+
+      const filled = fnIn.value && lnIn.value && emailIn.value && phoneIn.value;
+      if (filled && ok) {
+        document.getElementById('sum-4').textContent = `${fnIn.value} ${lnIn.value} · ${emailIn.value}`;
+        completeStep(4);
+      }
+      updatePayButton();
+    }
+
+    // ──── Step 5 — photos ────
+    const dz = document.getElementById('dropzone'), fi = document.getElementById('file-input'), thumbs = document.getElementById('thumbs');
+    dz.addEventListener('click', e => { if (e.target.tagName !== 'BUTTON') fi.click(); });
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('is-drag'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('is-drag'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('is-drag'); handleFiles(e.dataTransfer.files); });
+    fi.addEventListener('change', () => handleFiles(fi.files));
+
+    function handleFiles(fl) {
+      [...fl].forEach(f => {
+        if (state.photos.length >= 5) return;
+        if (f.size > 5 * 1024 * 1024) return;
+        if (!f.type.startsWith('image/')) return;
+        const url = URL.createObjectURL(f);
+        state.photos.push({ file: f, url });
+      });
+      renderThumbs();
+      document.getElementById('sum-5').textContent = state.photos.length ? `${state.photos.length} photo${state.photos.length>1?'s':''} ajoutée${state.photos.length>1?'s':''}` : 'Aucune photo — étape facultative';
+    }
+
+    function renderThumbs() {
+      thumbs.innerHTML = '';
+      state.photos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.innerHTML = `<img src="${p.url}" alt="" style="width:100%;height:100%;object-fit:cover;" /><button class="thumb-remove" aria-label="Retirer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg></button>`;
+        div.querySelector('button').addEventListener('click', () => { state.photos.splice(i,1); renderThumbs(); });
+        thumbs.appendChild(div);
+      });
+    }
+
+    // ──── Step 6 — gift card ────
+    document.getElementById('gift-check').addEventListener('click', () => {
+      const code = document.getElementById('f-gift').value.trim().toUpperCase();
+      const status = document.getElementById('gift-status');
+      const btn = document.getElementById('gift-check');
+      btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+      setTimeout(() => {
+        btn.innerHTML = 'Vérifier'; btn.disabled = false;
+        // demo logic
+        if (!code) { status.innerHTML = ''; return; }
+        if (code === 'EXPIREE') {
+          status.innerHTML = `<div class="field-error"><i data-lucide="alert-triangle" class="w-3.5 h-3.5" stroke-width="1.5"></i> Carte cadeau expirée le 12 janvier 2026.</div>`;
+          state.giftCard = { code, expired: true, valid: false };
+        } else if (code === 'INVALIDE' || code.length < 4) {
+          status.innerHTML = `<div class="field-error"><i data-lucide="x-circle" class="w-3.5 h-3.5" stroke-width="1.5"></i> Code non reconnu. Vérifiez la saisie.</div>`;
+          state.giftCard = { code, valid: false };
+        } else {
+          // valid demo card 100€
+          state.giftCard = { code, valid: true, value: 100 };
+          status.innerHTML = `<div class="flex items-center gap-2 body-ui text-sm" style="color: var(--color-success);"><span class="badge badge-success"><i data-lucide="check-circle-2" class="w-3 h-3 mr-1" stroke-width="1.5"></i> Valide</span> Carte 100 € disponible — acompte entièrement couvert.</div>`;
+          document.getElementById('sum-6').textContent = `Carte ${code} · 100 € disponible`;
+        }
+        if (window.lucide) window.lucide.createIcons({ attrs: { 'stroke-width': 1.5 }});
+        updateRecap();
+      }, 700);
+    });
+
+    // ──── Recap ────
+    function fmtDuration(mins) {
+      const h = Math.floor(mins/60); const m = mins%60;
+      if (h && m) return `${h} h ${String(m).padStart(2,'0')}`;
+      if (h) return `${h} h`;
+      return `${m} min`;
+    }
+
+    function updateRecap() {
+      const totalDuration = state.baseDuration + state.optionsDuration;
+      const total = totalDuration * PRICE_PER_MIN; // never shown
+      let deposit = Math.round(total * DEPOSIT_RATIO);
+      const giftCovers = state.giftCard?.valid && state.giftCard.value >= deposit;
+
+      const set = (id, val) => {
+        document.getElementById(id) && (document.getElementById(id).innerHTML = val);
+        document.querySelectorAll(`[data-mirror="${id}"]`).forEach(el => el.innerHTML = val);
+      };
+
+      set('r-presta', state.prestaName || '—');
+      const optsRow = document.getElementById('r-opts-row');
+      if (state.options.length) {
+        optsRow.classList.remove('hidden');
+        document.getElementById('r-opts').textContent = state.options.map(o => o.label).join(' · ');
+      } else { optsRow.classList.add('hidden'); }
+      set('r-duration', totalDuration ? fmtDuration(totalDuration) : '—');
+      set('r-date', state.date ? state.date.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'long' }) : '—');
+      set('r-time', state.time || '—');
+
+      const giftEl = document.getElementById('r-gift-covered');
+      if (giftCovers) {
+        set('r-deposit', `<s style="opacity:.55">${deposit} €</s>`);
+        giftEl.classList.remove('hidden');
+        document.getElementById('cta-pay-label').textContent = 'Valider la réservation';
+      } else {
+        set('r-deposit', `${deposit ? deposit + ' €' : '— €'}`);
+        giftEl.classList.add('hidden');
+        document.getElementById('cta-pay-label').textContent = deposit ? `Valider et payer ${deposit} €` : 'Valider et payer';
+      }
+      document.getElementById('r-deposit-note').textContent = giftCovers ? 'Pris en charge' : `${Math.round(DEPOSIT_RATIO*100)} % du total`;
+
+      updatePayButton(giftCovers);
+    }
+
+    function updatePayButton(giftCovers = false) {
+      const ok = state.presta && state.date && state.time && validEmail(emailIn.value || '') && validPhone(phoneIn.value || '') && fnIn.value && lnIn.value;
+      const ctaPay = document.getElementById('cta-pay');
+      const ctaMobile = document.getElementById('cta-pay-mobile');
+      [ctaPay, ctaMobile].forEach(b => { if (b) b.disabled = !ok; });
+    }
+
+    // ──── Mobile recap drawer ────
+    document.getElementById('open-recap-mobile').addEventListener('click', () => {
+      document.getElementById('recap-drawer').classList.add('is-open');
+      document.getElementById('recap-backdrop').classList.add('is-open');
+    });
+    function closeMobileRecap(){ document.getElementById('recap-drawer').classList.remove('is-open'); document.getElementById('recap-backdrop').classList.remove('is-open'); }
+    document.getElementById('close-recap-mobile').addEventListener('click', closeMobileRecap);
+    document.getElementById('recap-backdrop').addEventListener('click', closeMobileRecap);
+
+    // CTA submit demo
+    function submitDemo(btn) {
+      const label = btn.querySelector('span') || btn;
+      const original = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner"></span> Redirection vers Stripe…';
+      btn.disabled = true;
+      setTimeout(() => { btn.innerHTML = original; btn.disabled = false; alert('Démo : redirection vers Stripe Checkout'); }, 1400);
+    }
+    document.getElementById('cta-pay').addEventListener('click', e => submitDemo(e.currentTarget));
+    document.getElementById('cta-pay-mobile').addEventListener('click', e => submitDemo(e.currentTarget));
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileRecap(); });
+  </script>
+</body>
+</html>

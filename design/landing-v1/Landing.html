@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clochette Nails · Prothésiste ongulaire à Moncoutant-sur-Sèvre</title>
+  <meta name="description" content="Studio de prothésie ongulaire à Moncoutant-sur-Sèvre (79). Manucure russe, pose semi-permanente, nail-art. Sur rendez-vous." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inria+Serif:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Julius+Sans+One&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      --color-violet-700: #5E4392;
+      --color-violet-600: #8868B0;
+      --color-violet-500: #A187C5;
+      --color-violet-300: #CCAAD2;
+      --color-violet-100: #ece1f3;
+      --color-violet-50:  #f6f1fa;
+
+      --color-gold-600: #BF9F44;
+      --color-gold-500: #DEC264;
+      --color-gold-300: #ECD68B;
+      --color-gold-200: #F7DC6F;
+      --color-gold-50:  #fbf6e0;
+
+      --color-rose-100: #FCE0E3;
+      --color-rose-50:  #fdf1f3;
+
+      --color-cream: #FCFBF7;
+      --color-paper: #ffffff;
+      --color-bone:  #f4f1e8;
+
+      --color-ink-900: #2A2A2A;
+      --color-ink-700: #4a3f44;
+      --color-ink-500: #7a5c65;
+      --color-ink-300: #b8a4ab;
+      --color-ink-200: #d8cdd1;
+      --color-line:    #ece5e7;
+
+      --color-success: #2f8f5a;
+      --color-warning: #c98a2a;
+      --color-danger:  #b23a4a;
+      --color-info:    var(--color-violet-600);
+
+      --font-serif:   "Cinzel", "Trajan Pro", "Iowan Old Style", Georgia, serif;
+      --font-display: "Julius Sans One", "Manrope", ui-sans-serif, sans-serif;
+      --font-sans:    "Inria Serif", "Iowan Old Style", Georgia, serif;
+      --font-ui:      "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+      --radius-sm:   8px;
+      --radius-md:  15px;
+      --radius-lg:  25px;
+      --radius-pill: 50px;
+
+      --shadow-xs: 0 1px 2px 0 rgba(136, 104, 176, 0.06);
+      --shadow-sm: 0 2px 8px -2px rgba(136, 104, 176, 0.08);
+      --shadow-md: 0 8px 24px -8px rgba(136, 104, 176, 0.14);
+      --shadow-lg: 0 18px 40px -16px rgba(136, 104, 176, 0.18);
+      --shadow-focus: 0 0 0 4px rgba(136, 104, 176, 0.22);
+    }
+
+    @layer base {
+      html { font-family: var(--font-sans); font-weight: 300; color: var(--color-ink-900); background: var(--color-cream); scroll-behavior: smooth; }
+      body { -webkit-font-smoothing: antialiased; }
+      ::selection { background: var(--color-violet-100); color: var(--color-violet-700); }
+      h1,h2,h3,h4 { font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.01em; }
+      /* Cinzel n'a pas d'italique — bascule les emphases italiques sur Inria Serif italic */
+      .font-serif em, .font-serif i, h1 em, h2 em, h3 em, h4 em, h1 i, h2 i, h3 i, h4 i {
+        font-family: var(--font-sans); font-style: italic; font-weight: 400; letter-spacing: 0;
+      }
+    }
+
+    @layer components {
+      /* Buttons */
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.875rem 1.75rem;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.875rem; font-weight: 400;
+        letter-spacing: 0.06em;
+        transition: all 0.3s cubic-bezier(.2,.7,.3,1);
+        cursor: pointer; border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .btn[disabled], .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .btn-primary { background: var(--color-violet-600); color: white; }
+      .btn-primary:hover:not(:disabled) { background: var(--color-violet-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+      .btn-secondary { background: transparent; color: var(--color-violet-700); border-color: var(--color-violet-600); }
+      .btn-secondary:hover:not(:disabled) { background: var(--color-violet-50); border-color: var(--color-violet-700); }
+      .btn-ghost { background: transparent; color: var(--color-ink-900); }
+      .btn-ghost:hover:not(:disabled) { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .btn-sm { padding: 0.625rem 1.25rem; font-size: 0.8125rem; }
+      .btn-lg { padding: 1.0625rem 2.25rem; font-size: 0.9375rem; }
+      .btn-icon-only { padding: 0.75rem; width: 2.75rem; height: 2.75rem; }
+
+      /* Inputs */
+      .field { display: flex; flex-direction: column; gap: 0.4375rem; }
+      .field-label { font-family: var(--font-display); font-size: 0.75rem; font-weight: 400; color: var(--color-ink-700); letter-spacing: 0.14em; text-transform: uppercase; }
+      .field-help { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-ink-500); }
+      .input, .textarea {
+        width: 100%; padding: 0.75rem 1rem;
+        background: var(--color-paper); border: 1px solid var(--color-line);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 400; color: var(--color-ink-900);
+        transition: border-color 0.3s, box-shadow 0.3s;
+      }
+      .input::placeholder, .textarea::placeholder { color: var(--color-ink-300); }
+      .input:hover, .textarea:hover { border-color: var(--color-ink-200); }
+      .input:focus, .textarea:focus { outline: none; border-color: var(--color-violet-600); box-shadow: var(--shadow-focus); }
+      .textarea { resize: vertical; min-height: 7rem; line-height: 1.55; }
+
+      /* Cards */
+      .card { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md); transition: transform 0.3s cubic-bezier(.2,.7,.3,1), box-shadow 0.3s, border-color 0.3s; }
+      .card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--color-violet-100); }
+      .card-padded { padding: 1.5rem; }
+
+      /* Badges */
+      .badge {
+        display: inline-flex; align-items: center; gap: 0.375rem;
+        padding: 0.3125rem 0.75rem;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-display);
+        font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.16em;
+        text-transform: uppercase; line-height: 1;
+      }
+      .badge-rose { background: var(--color-rose-100); color: #8a3c4a; }
+      .badge-gold { background: var(--color-gold-200); color: #6b5413; }
+      .badge-violet { background: var(--color-violet-100); color: var(--color-violet-700); }
+      .badge-outline { background: transparent; border: 1px solid var(--color-ink-300); color: var(--color-ink-700); }
+
+      /* Section */
+      .section-eyebrow { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--color-ink-500); font-weight: 400; }
+
+      /* Nav links */
+      .nav-link {
+        position: relative; padding: 0.5rem 0;
+        font-family: var(--font-ui); font-size: 0.875rem; font-weight: 400;
+        color: var(--color-ink-700); transition: color 0.3s;
+      }
+      .nav-link::after { content: ''; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: var(--color-violet-600); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+      .nav-link:hover { color: var(--color-violet-700); }
+      .nav-link:hover::after { transform: scaleX(1); }
+
+      /* Editorial body */
+      .body-editorial { font-family: var(--font-sans); font-weight: 300; line-height: 1.6; color: var(--color-ink-700); }
+      .body-ui { font-family: var(--font-ui); font-weight: 400; }
+
+      /* Pill tab */
+      .tab {
+        font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.18em;
+        text-transform: uppercase; color: var(--color-ink-500);
+        padding: 0.625rem 0.25rem; cursor: pointer;
+        border-bottom: 1px solid transparent;
+        transition: color 0.3s, border-color 0.3s;
+        background: transparent; white-space: nowrap;
+      }
+      .tab:hover { color: var(--color-ink-900); }
+      .tab.is-active { color: var(--color-violet-700); border-bottom-color: var(--color-violet-600); }
+
+      /* Photo placeholder (rose hachuré) */
+      .photo-placeholder {
+        position: relative; overflow: hidden; background: var(--color-rose-50);
+      }
+      .photo-placeholder::before {
+        content: ''; position: absolute; inset: 0;
+        background-image: repeating-linear-gradient(45deg, transparent 0, transparent 11px, rgba(233, 191, 196, 0.55) 11px, rgba(233, 191, 196, 0.55) 12px);
+      }
+      .photo-placeholder > .ph-label {
+        position: absolute; left: 12px; bottom: 10px;
+        font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+        text-transform: uppercase; color: var(--color-ink-500);
+        background: rgba(252, 251, 247, 0.9); padding: 4px 8px; border-radius: 3px;
+      }
+
+      .gallery-tile {
+        position: relative; overflow: hidden; border-radius: var(--radius-sm);
+        aspect-ratio: 1 / 1;
+        cursor: pointer;
+        transition: transform 0.4s cubic-bezier(.2,.7,.3,1);
+      }
+      .gallery-tile > .ph-img { transition: transform 0.5s cubic-bezier(.2,.7,.3,1); position: absolute; inset: 0; }
+      .gallery-tile:hover > .ph-img { transform: scale(1.05); }
+      .gallery-tile::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(180deg, transparent 60%, rgba(42, 42, 42, 0.35));
+        opacity: 0; transition: opacity 0.4s;
+      }
+      .gallery-tile:hover::after { opacity: 1; }
+    }
+
+    /* Reveal-on-scroll */
+    .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.7s cubic-bezier(.2,.7,.3,1), transform 0.7s cubic-bezier(.2,.7,.3,1); }
+    .reveal.is-in { opacity: 1; transform: none; }
+
+    /* Header scroll state */
+    .site-header { transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s; }
+    .site-header.is-scrolled { background: rgba(252, 251, 247, 0.82); backdrop-filter: blur(16px); border-bottom-color: var(--color-line); }
+
+    /* Sticky mobile CTA */
+    .mobile-cta { position: fixed; left: 1rem; right: 1rem; bottom: 1rem; z-index: 50; transform: translateY(120%); transition: transform 0.4s cubic-bezier(.2,.7,.3,1); }
+    .mobile-cta.is-visible { transform: none; }
+
+    /* Drawer mobile menu */
+    .mobile-menu { position: fixed; inset: 0; background: var(--color-cream); transform: translateX(100%); transition: transform 0.4s cubic-bezier(.2,.7,.3,1); z-index: 70; padding: 1.5rem; display: flex; flex-direction: column; }
+    .mobile-menu.is-open { transform: translateX(0); }
+
+    /* Stars */
+    .star { width: 14px; height: 14px; color: var(--color-gold-500); fill: currentColor; stroke: none; }
+
+    /* Hero ornament line */
+    .ornament { width: 36px; height: 1px; background: var(--color-violet-300); display: inline-block; vertical-align: middle; }
+
+    /* Prevent FOUC for tabs */
+    [data-cat]:not(.is-visible) { display: none; }
+  </style>
+</head>
+
+<body class="bg-[var(--color-cream)] text-[var(--color-ink-900)]">
+
+  <!-- ─────────── 1. HEADER ─────────── -->
+  <header id="site-header" class="site-header fixed top-0 left-0 right-0 z-40 border-b border-transparent">
+    <div class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 h-[68px] grid grid-cols-[auto_1fr_auto] md:grid-cols-3 items-center gap-4">
+      <!-- Logo / Brand -->
+      <div class="flex items-center gap-2 md:gap-3 md:order-1 md:justify-self-start order-2 justify-self-center md:col-start-1">
+        <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+        <span class="font-serif text-[15px] md:text-base">Clochette Nails</span>
+      </div>
+
+      <!-- Nav (desktop) -->
+      <nav class="hidden md:flex items-center justify-center gap-7 order-2">
+        <a href="#accueil" class="nav-link">Accueil</a>
+        <a href="#prestations" class="nav-link">Prestations</a>
+        <a href="#portfolio" class="nav-link">Portfolio</a>
+        <a href="#avis" class="nav-link">Avis</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+
+      <!-- Burger (mobile) -->
+      <button onclick="document.getElementById('mobile-menu').classList.add('is-open')" class="md:hidden btn btn-ghost btn-icon-only order-1 justify-self-start" aria-label="Ouvrir le menu">
+        <i data-lucide="menu" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+      </button>
+
+      <!-- CTA (desktop only) -->
+      <div class="hidden md:flex justify-self-end order-3">
+        <a href="#contact" class="btn btn-primary btn-sm">Prendre RDV</a>
+      </div>
+
+      <!-- Spacer mobile -->
+      <span class="md:hidden order-3"></span>
+    </div>
+  </header>
+
+  <!-- Spacer header -->
+  <div class="h-[68px]"></div>
+
+  <main id="accueil">
+
+    <!-- ─────────── 2. HERO ─────────── -->
+    <section class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pt-12 md:pt-20 pb-20 md:pb-32">
+      <div class="grid lg:grid-cols-[1.5fr_1fr] gap-10 lg:gap-16 items-stretch">
+        <div class="flex flex-col">
+          <p class="section-eyebrow flex items-center gap-3">
+            <span class="ornament"></span>
+            Studio · Moncoutant-sur-Sèvre
+          </p>
+
+          <h1 class="font-serif text-[clamp(2.27rem,5.5vw,3.63rem)] leading-[1.05] tracking-[0.02em] mt-6">
+            LA MANUCURE
+          </h1>
+          <p class="font-serif italic text-[var(--color-violet-700)] text-[clamp(1.25rem,2.4vw,1.75rem)] -mt-1" style="font-family: var(--font-sans); font-style: italic; font-weight: 400;">Avec passion et précision</p>
+
+          <p class="body-editorial text-sm md:text-base mt-6 max-w-[48ch]">
+            Prenez soin de vous, je m'occupe du reste. Manucure russe, pose semi-permanente
+            et nail-art en cabine privée à Moncoutant — sur rendez-vous.
+          </p>
+
+          <div class="mt-auto pt-10 flex flex-nowrap items-center gap-3">
+            <a href="#contact" class="btn btn-primary btn-sm">
+              Prendre rendez-vous
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i>
+            </a>
+            <a href="#prestations" class="btn btn-secondary btn-sm">Découvrir les prestations</a>
+          </div>
+
+          <div class="mt-12 hidden md:flex items-center gap-8 text-[var(--color-ink-500)] body-ui text-[13px]">
+            <div class="flex items-center gap-2">
+              <i data-lucide="map-pin" class="w-4 h-4" stroke-width="1.5"></i>
+              <span>12 rue des Tilleuls, 79320</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i data-lucide="clock" class="w-4 h-4" stroke-width="1.5"></i>
+              <span>Mar–Sam · 9h–19h</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex gap-0.5">
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+              </div>
+              <span>4,9 · 87 avis Google</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero photo placeholder -->
+        <div class="hidden lg:block">
+          <div class="photo-placeholder rounded-[var(--radius-md)] aspect-[4/5] relative">
+            <span class="ph-label">Photo · gros plan mains soignées</span>
+            <span class="absolute top-4 right-4 badge badge-violet">Studio Clochette</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── 3. ENGAGEMENT ─────────── -->
+    <section class="bg-[var(--color-bone)]/40 border-y border-[var(--color-line)]">
+      <div class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28">
+        <div class="text-center max-w-[36rem] mx-auto mb-14">
+          <p class="section-eyebrow reveal">Mon engagement</p>
+          <h2 class="font-serif text-[clamp(1.5rem,2.8vw,2rem)] mt-4 reveal">Une attention sur mesure, à chaque rendez-vous.</h2>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          <article class="card card-padded reveal">
+            <div class="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5">
+              <i data-lucide="sparkles" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+            </div>
+            <h3 class="font-serif text-xl">Écoute</h3>
+            <p class="body-editorial text-[15px] mt-2">Diagnostic en début de séance — état de l'ongle, attentes, mode de vie.</p>
+          </article>
+
+          <article class="card card-padded reveal">
+            <div class="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5">
+              <i data-lucide="shield-check" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+            </div>
+            <h3 class="font-serif text-xl">Hygiène stricte</h3>
+            <p class="body-editorial text-[15px] mt-2">Stérilisation à 134°C, instruments à usage unique, protocole salon médical.</p>
+          </article>
+
+          <article class="card card-padded reveal">
+            <div class="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5">
+              <i data-lucide="heart-handshake" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+            </div>
+            <h3 class="font-serif text-xl">Produits doux</h3>
+            <p class="body-editorial text-[15px] mt-2">Marques pro non testées sur les animaux, sans HEMA, vegan-friendly.</p>
+          </article>
+
+          <article class="card card-padded reveal">
+            <div class="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5">
+              <i data-lucide="gem" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+            </div>
+            <h3 class="font-serif text-xl">Manucure russe</h3>
+            <p class="body-editorial text-[15px] mt-2">Technique précise pour un rendu parfaitement net, sans débord, longue tenue.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── 4. PRESTATIONS ─────────── -->
+    <section id="prestations" class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28">
+      <header class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 md:mb-16">
+        <div>
+          <p class="section-eyebrow reveal">Nos savoir-faire</p>
+          <h2 class="font-serif text-[clamp(1.5rem,2.8vw,2rem)] mt-3 reveal">Prestations</h2>
+        </div>
+        <a href="#" class="text-[var(--color-violet-700)] body-ui text-sm inline-flex items-center gap-1.5 hover:gap-2.5 transition-all">
+          Voir tout le catalogue <i data-lucide="arrow-right" class="w-4 h-4" stroke-width="1.5"></i>
+        </a>
+      </header>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+        <!-- 1 -->
+        <article class="card card-hover overflow-hidden reveal">
+          <div class="photo-placeholder aspect-[4/3]">
+            <span class="ph-label">Pose semi-permanente</span>
+            <span class="absolute top-3 left-3 badge badge-rose">Signature</span>
+          </div>
+          <div class="p-5 flex flex-col gap-4">
+            <div>
+              <h3 class="font-serif text-lg leading-tight">Semi-permanent “Reflet”</h3>
+              <p class="body-editorial text-sm mt-1.5 text-[var(--color-ink-500)]">Pose, finition mate ou brillante, soin cuticules.</p>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="body-ui text-[13px] text-[var(--color-ink-500)] inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5" stroke-width="1.5"></i> 1 h 15
+              </span>
+              <a href="#" class="text-[var(--color-violet-700)] body-ui text-sm inline-flex items-center gap-1 hover:gap-1.5 transition-all">Découvrir <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 2 -->
+        <article class="card card-hover overflow-hidden reveal">
+          <div class="photo-placeholder aspect-[4/3]">
+            <span class="ph-label">Rallongement gel</span>
+            <span class="absolute top-3 left-3 badge badge-gold">Premium</span>
+          </div>
+          <div class="p-5 flex flex-col gap-4">
+            <div>
+              <h3 class="font-serif text-lg leading-tight">Rallongement “Couture”</h3>
+              <p class="body-editorial text-sm mt-1.5 text-[var(--color-ink-500)]">Sculpture en gel, forme amande ou ballerine, finition au choix.</p>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="body-ui text-[13px] text-[var(--color-ink-500)] inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5" stroke-width="1.5"></i> 2 h 30
+              </span>
+              <a href="#" class="text-[var(--color-violet-700)] body-ui text-sm inline-flex items-center gap-1 hover:gap-1.5 transition-all">Découvrir <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3 -->
+        <article class="card card-hover overflow-hidden reveal">
+          <div class="photo-placeholder aspect-[4/3]">
+            <span class="ph-label">Beauté des mains</span>
+          </div>
+          <div class="p-5 flex flex-col gap-4">
+            <div>
+              <h3 class="font-serif text-lg leading-tight">Beauté des mains</h3>
+              <p class="body-editorial text-sm mt-1.5 text-[var(--color-ink-500)]">Modelage, gommage doux, soin cuticules et hydratation profonde.</p>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="body-ui text-[13px] text-[var(--color-ink-500)] inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5" stroke-width="1.5"></i> 45 min
+              </span>
+              <a href="#" class="text-[var(--color-violet-700)] body-ui text-sm inline-flex items-center gap-1 hover:gap-1.5 transition-all">Découvrir <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 4 -->
+        <article class="card card-hover overflow-hidden reveal">
+          <div class="photo-placeholder aspect-[4/3]">
+            <span class="ph-label">Nail-art sur mesure</span>
+            <span class="absolute top-3 left-3 badge badge-violet">Sur mesure</span>
+          </div>
+          <div class="p-5 flex flex-col gap-4">
+            <div>
+              <h3 class="font-serif text-lg leading-tight">Nail-art “Atelier”</h3>
+              <p class="body-editorial text-sm mt-1.5 text-[var(--color-ink-500)]">Création unique, peinture à main levée, pose de strass et chrome.</p>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="body-ui text-[13px] text-[var(--color-ink-500)] inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5" stroke-width="1.5"></i> 1 h 45
+              </span>
+              <a href="#" class="text-[var(--color-violet-700)] body-ui text-sm inline-flex items-center gap-1 hover:gap-1.5 transition-all">Découvrir <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 5 -->
+        <article class="card card-hover overflow-hidden reveal">
+          <div class="photo-placeholder aspect-[4/3]">
+            <span class="ph-label">Remplissage gel</span>
+          </div>
+          <div class="p-5 flex flex-col gap-4">
+            <div>
+              <h3 class="font-serif text-lg leading-tight">Remplissage</h3>
+              <p class="body-editorial text-sm mt-1.5 text-[var(--color-ink-500)]">Entretien des poses gel, repose de la base, finition complète.</p>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="body-ui text-[13px] text-[var(--color-ink-500)] inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5" stroke-width="1.5"></i> 1 h 30
+              </span>
+              <a href="#" class="text-[var(--color-violet-700)] body-ui text-sm inline-flex items-center gap-1 hover:gap-1.5 transition-all">Découvrir <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i></a>
+            </div>
+          </div>
+        </article>
+
+        <!-- 6 -->
+        <article class="card card-hover overflow-hidden reveal">
+          <div class="photo-placeholder aspect-[4/3]">
+            <span class="ph-label">French moderne</span>
+            <span class="absolute top-3 left-3 badge badge-rose">Signature</span>
+          </div>
+          <div class="p-5 flex flex-col gap-4">
+            <div>
+              <h3 class="font-serif text-lg leading-tight">French “Moderne”</h3>
+              <p class="body-editorial text-sm mt-1.5 text-[var(--color-ink-500)]">Lunule fine, coloris au choix, finition couture et pose semi-permanente.</p>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="body-ui text-[13px] text-[var(--color-ink-500)] inline-flex items-center gap-1.5">
+                <i data-lucide="clock" class="w-3.5 h-3.5" stroke-width="1.5"></i> 1 h 30
+              </span>
+              <a href="#" class="text-[var(--color-violet-700)] body-ui text-sm inline-flex items-center gap-1 hover:gap-1.5 transition-all">Découvrir <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.5"></i></a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ─────────── 5. PORTFOLIO ─────────── -->
+    <section id="portfolio" class="bg-[var(--color-rose-50)]/50 border-y border-[var(--color-line)]">
+      <div class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28">
+        <header class="text-center max-w-[36rem] mx-auto mb-10">
+          <p class="section-eyebrow reveal">Galerie</p>
+          <h2 class="font-serif text-[clamp(1.5rem,2.8vw,2rem)] mt-3 reveal">Quelques poses récentes</h2>
+        </header>
+
+        <div class="overflow-x-auto -mx-5 px-5 md:overflow-visible md:mx-0 md:px-0 mb-8">
+          <div class="flex gap-7 md:gap-9 md:justify-center border-b border-[var(--color-line)] w-max md:w-auto mx-auto">
+            <button class="tab is-active" data-tab="all">Tous</button>
+            <button class="tab" data-tab="naturel">Ongles naturels</button>
+            <button class="tab" data-tab="rallonge">Rallongements</button>
+            <button class="tab" data-tab="art">Nail-art</button>
+            <button class="tab" data-tab="soin">Soins</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4" id="gallery">
+          <!-- 12 tiles, varied categories -->
+          <div class="gallery-tile is-visible" data-cat="naturel"><div class="ph-img photo-placeholder"><span class="ph-label">Naturel · nude</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="rallonge"><div class="ph-img photo-placeholder"><span class="ph-label">Amande · couture</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="art"><div class="ph-img photo-placeholder"><span class="ph-label">Nail-art · floral</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="soin"><div class="ph-img photo-placeholder"><span class="ph-label">Soin · main</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="naturel"><div class="ph-img photo-placeholder"><span class="ph-label">French moderne</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="rallonge"><div class="ph-img photo-placeholder"><span class="ph-label">Ballerine</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="art"><div class="ph-img photo-placeholder"><span class="ph-label">Nail-art · chrome</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="naturel"><div class="ph-img photo-placeholder"><span class="ph-label">Mauve poudré</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="rallonge"><div class="ph-img photo-placeholder"><span class="ph-label">Square soft</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="art"><div class="ph-img photo-placeholder"><span class="ph-label">Nail-art · strass</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="soin"><div class="ph-img photo-placeholder"><span class="ph-label">Pose simple</span></div></div>
+          <div class="gallery-tile is-visible" data-cat="naturel"><div class="ph-img photo-placeholder"><span class="ph-label">Nude reflet</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── 6. TÉMOIGNAGES ─────────── -->
+    <section id="avis" class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28">
+      <header class="text-center max-w-[36rem] mx-auto mb-14">
+        <p class="section-eyebrow reveal">Avis clientes</p>
+        <h2 class="font-serif text-[clamp(1.5rem,2.8vw,2rem)] mt-3 reveal">Ce qu'elles en disent</h2>
+        <div class="mt-5 inline-flex items-center gap-2.5 body-ui text-sm text-[var(--color-ink-500)]">
+          <div class="flex gap-0.5">
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+          </div>
+          <span>4,9 / 5 sur 87 avis Google</span>
+        </div>
+      </header>
+
+      <div class="md:grid md:grid-cols-3 md:gap-5 flex md:flex-none gap-4 overflow-x-auto md:overflow-visible -mx-5 px-5 md:mx-0 md:px-0 snap-x snap-mandatory">
+        <article class="card card-padded shrink-0 w-[85%] md:w-auto snap-center reveal">
+          <i data-lucide="quote" class="w-5 h-5 text-[var(--color-violet-300)] mb-4" stroke-width="1.5"></i>
+          <p class="text-[0.9375rem] leading-relaxed italic" style="font-family: var(--font-ui); font-style: italic;">Une parenthèse hors du temps. Chloé prend soin de chaque détail, du diagnostic à la finition. Mes ongles n'ont jamais été aussi beaux.</p>
+          <div class="flex gap-0.5 mt-5">
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+          </div>
+          <div class="mt-5 pt-5 border-t border-[var(--color-line)] flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] body-ui text-sm">M</div>
+            <div>
+              <div class="body-ui text-sm font-medium leading-tight">Marie L.</div>
+              <div class="body-ui text-xs text-[var(--color-ink-500)] mt-0.5">Cliente fidèle · 2024</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-padded shrink-0 w-[85%] md:w-auto snap-center reveal">
+          <i data-lucide="quote" class="w-5 h-5 text-[var(--color-violet-300)] mb-4" stroke-width="1.5"></i>
+          <p class="text-[0.9375rem] leading-relaxed italic" style="font-family: var(--font-ui); font-style: italic;">Le studio est apaisant, l'accueil chaleureux. La technique manucure russe fait toute la différence — tenue impeccable trois semaines plus tard.</p>
+          <div class="flex gap-0.5 mt-5">
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+          </div>
+          <div class="mt-5 pt-5 border-t border-[var(--color-line)] flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] body-ui text-sm">A</div>
+            <div>
+              <div class="body-ui text-sm font-medium leading-tight">Aurélie B.</div>
+              <div class="body-ui text-xs text-[var(--color-ink-500)] mt-0.5">Nouvelle cliente · 2025</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card card-padded shrink-0 w-[85%] md:w-auto snap-center reveal">
+          <i data-lucide="quote" class="w-5 h-5 text-[var(--color-violet-300)] mb-4" stroke-width="1.5"></i>
+          <p class="text-[0.9375rem] leading-relaxed italic" style="font-family: var(--font-ui); font-style: italic;">Je viens de loin pour les rendez-vous, et ça vaut chaque kilomètre. Conseils précieux, hygiène irréprochable, finition couture.</p>
+          <div class="flex gap-0.5 mt-5">
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+            <svg class="star" viewBox="0 0 24 24"><path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z"/></svg>
+          </div>
+          <div class="mt-5 pt-5 border-t border-[var(--color-line)] flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] body-ui text-sm">S</div>
+            <div>
+              <div class="body-ui text-sm font-medium leading-tight">Sophie R.</div>
+              <div class="body-ui text-xs text-[var(--color-ink-500)] mt-0.5">Cliente fidèle · 2023</div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ─────────── 7. CONTACT ─────────── -->
+    <section id="contact" class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pb-20 md:pb-28">
+      <header class="text-center max-w-[36rem] mx-auto mb-14">
+        <p class="section-eyebrow reveal">Nous écrire</p>
+        <h2 class="font-serif text-[clamp(1.5rem,2.8vw,2rem)] mt-3 reveal">Une question ? Un mot ?</h2>
+      </header>
+
+      <!-- 3 info cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12">
+        <a href="https://maps.google.com" target="_blank" rel="noopener" class="card card-hover card-padded reveal block">
+          <div class="w-10 h-10 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-4">
+            <i data-lucide="map-pin" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+          </div>
+          <p class="field-label mb-2">Adresse</p>
+          <p class="font-serif text-base leading-snug">12 rue des Tilleuls<br/>79320 Moncoutant-sur-Sèvre</p>
+          <span class="body-ui text-xs text-[var(--color-violet-700)] mt-3 inline-flex items-center gap-1">Voir sur Google Maps <i data-lucide="external-link" class="w-3 h-3" stroke-width="1.5"></i></span>
+        </a>
+
+        <a href="tel:0612345678" class="card card-hover card-padded reveal block">
+          <div class="w-10 h-10 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-4">
+            <i data-lucide="phone" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+          </div>
+          <p class="field-label mb-2">Téléphone</p>
+          <p class="font-serif text-base leading-snug">06 12 34 56 78</p>
+          <span class="body-ui text-xs text-[var(--color-ink-500)] mt-3 block">Du mardi au samedi · 9h–19h</span>
+        </a>
+
+        <a href="mailto:bonjour@clochette-nails.fr" class="card card-hover card-padded reveal block">
+          <div class="w-10 h-10 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-4">
+            <i data-lucide="mail" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+          </div>
+          <p class="field-label mb-2">Email</p>
+          <p class="font-serif text-base leading-snug break-all">bonjour@clochette-nails.fr</p>
+          <span class="body-ui text-xs text-[var(--color-ink-500)] mt-3 block">Réponse sous 24h</span>
+        </a>
+      </div>
+
+      <!-- Form -->
+      <div class="max-w-[640px] mx-auto card card-padded reveal" style="padding: 2rem;">
+        <p class="body-ui text-xs text-[var(--color-ink-500)] mb-6 inline-flex items-center gap-2">
+          <i data-lucide="info" class="w-3.5 h-3.5" stroke-width="1.5"></i>
+          Pour réserver un rendez-vous, utilisez le bouton dédié →
+          <a href="#" class="text-[var(--color-violet-700)] underline-offset-4 hover:underline">Prendre RDV</a>
+        </p>
+
+        <form class="grid sm:grid-cols-2 gap-4" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Message envoyé ✓';">
+          <div class="field">
+            <label class="field-label">Prénom</label>
+            <input class="input" placeholder="Chloé" required />
+          </div>
+          <div class="field">
+            <label class="field-label">Email</label>
+            <input class="input" type="email" placeholder="vous@exemple.fr" required />
+          </div>
+          <div class="field sm:col-span-2">
+            <label class="field-label">Message</label>
+            <textarea class="textarea" placeholder="Quelques mots…" required></textarea>
+          </div>
+          <div class="sm:col-span-2 flex justify-end mt-2">
+            <button type="submit" class="btn btn-primary">Envoyer un message</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ─────────── 8. CTA FINAL ─────────── -->
+    <section class="bg-[var(--color-violet-100)]/55 border-y border-[var(--color-violet-100)]">
+      <div class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28 text-center">
+        <p class="section-eyebrow reveal">Réservation</p>
+        <h2 class="font-serif text-[clamp(1.375rem,2.8vw,2rem)] leading-tight mt-4 mx-auto reveal whitespace-nowrap" style="text-transform: uppercase; letter-spacing: 0.04em;">
+          Prête à <span class="text-[var(--color-violet-700)]">prendre rendez-vous</span> ?
+        </h2>
+        <p class="body-editorial text-lg mt-6 max-w-[44ch] mx-auto reveal">
+          Quelques minutes suffisent. Confirmation par SMS, rappel la veille, accueil tout en douceur.
+        </p>
+        <div class="mt-10 reveal">
+          <a href="#" class="btn btn-primary btn-lg">
+            Prendre rendez-vous
+            <i data-lucide="arrow-right" class="w-4 h-4" stroke-width="1.5"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────── 9. FOOTER ─────────── -->
+    <footer class="bg-[var(--color-cream)]">
+      <div class="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pt-16 pb-8">
+        <div class="grid lg:grid-cols-12 gap-10">
+          <div class="lg:col-span-4">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+              <span class="font-serif text-lg">Clochette Nails</span>
+            </div>
+            <p class="body-editorial text-sm max-w-[36ch] text-[var(--color-ink-500)]">Salon de prothésie ongulaire à Moncoutant-sur-Sèvre. Manucure russe, semi-permanent, nail-art. Sur rendez-vous.</p>
+          </div>
+          <div class="lg:col-span-2">
+            <p class="section-eyebrow mb-4">Salon</p>
+            <ul class="space-y-2.5 body-ui text-sm">
+              <li><a href="#prestations" class="hover:text-[var(--color-violet-700)] transition-colors">Prestations</a></li>
+              <li><a href="#portfolio" class="hover:text-[var(--color-violet-700)] transition-colors">Portfolio</a></li>
+              <li><a href="#avis" class="hover:text-[var(--color-violet-700)] transition-colors">Avis</a></li>
+              <li><a href="#" class="hover:text-[var(--color-violet-700)] transition-colors">Réserver</a></li>
+            </ul>
+          </div>
+          <div class="lg:col-span-3">
+            <p class="section-eyebrow mb-4">Contact</p>
+            <ul class="space-y-2.5 body-ui text-sm text-[var(--color-ink-700)]">
+              <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-[var(--color-ink-500)]" stroke-width="1.5"></i> 12 rue des Tilleuls, 79320</li>
+              <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-[var(--color-ink-500)]" stroke-width="1.5"></i> 06 12 34 56 78</li>
+              <li class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4 text-[var(--color-ink-500)]" stroke-width="1.5"></i> bonjour@clochette-nails.fr</li>
+            </ul>
+          </div>
+          <div class="lg:col-span-3">
+            <p class="section-eyebrow mb-4">Lettre du salon</p>
+            <p class="body-editorial text-sm text-[var(--color-ink-500)] mb-3">Une attention par mois — pas plus.</p>
+            <form class="flex gap-2" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Inscrite ✓';">
+              <input type="email" class="input flex-1" placeholder="vous@exemple.fr" />
+              <button class="btn btn-primary btn-sm">OK</button>
+            </form>
+          </div>
+        </div>
+        <div class="mt-12 pt-6 border-t border-[var(--color-line)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 body-ui text-xs text-[var(--color-ink-500)]">
+          <p>© 2026 Clochette Nails — Tous droits réservés.</p>
+          <div class="flex items-center gap-5">
+            <a href="#" class="hover:text-[var(--color-ink-900)]">Mentions légales</a>
+            <a href="#" class="hover:text-[var(--color-ink-900)]">Confidentialité</a>
+            <a href="#" class="hover:text-[var(--color-ink-900)]" aria-label="Instagram"><i data-lucide="instagram" class="w-4 h-4" stroke-width="1.5"></i></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- Mobile sticky CTA -->
+  <div id="mobile-cta" class="mobile-cta md:hidden">
+    <a href="#contact" class="btn btn-primary btn-lg w-full" style="box-shadow: var(--shadow-lg);">
+      <i data-lucide="calendar" class="w-4 h-4" stroke-width="1.5"></i>
+      Prendre rendez-vous
+    </a>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="flex items-center justify-between mb-10">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-xs">C</div>
+        <span class="font-serif text-sm">Clochette Nails</span>
+      </div>
+      <button onclick="document.getElementById('mobile-menu').classList.remove('is-open')" class="btn btn-ghost btn-icon-only" aria-label="Fermer">
+        <i data-lucide="x" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+      </button>
+    </div>
+    <nav class="flex flex-col gap-1">
+      <a href="#accueil" onclick="closeMenu()" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Accueil</a>
+      <a href="#prestations" onclick="closeMenu()" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Prestations</a>
+      <a href="#portfolio" onclick="closeMenu()" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Portfolio</a>
+      <a href="#avis" onclick="closeMenu()" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Avis</a>
+      <a href="#contact" onclick="closeMenu()" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Contact</a>
+    </nav>
+    <div class="mt-auto pt-6">
+      <a href="#contact" onclick="closeMenu()" class="btn btn-primary w-full btn-lg">
+        <i data-lucide="calendar" class="w-4 h-4" stroke-width="1.5"></i>
+        Prendre rendez-vous
+      </a>
+    </div>
+  </div>
+
+  <!-- Schema.org JSON-LD placeholder -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BeautySalon",
+    "name": "Clochette Nails",
+    "description": "Studio de prothésie ongulaire à Moncoutant-sur-Sèvre. Manucure russe, pose semi-permanente, nail-art.",
+    "image": "https://clochette-nails.fr/og.jpg",
+    "@id": "https://clochette-nails.fr",
+    "url": "https://clochette-nails.fr",
+    "telephone": "+33-6-12-34-56-78",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "12 rue des Tilleuls",
+      "addressLocality": "Moncoutant-sur-Sèvre",
+      "postalCode": "79320",
+      "addressCountry": "FR"
+    },
+    "openingHoursSpecification": [{
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Tuesday","Wednesday","Thursday","Friday","Saturday"],
+      "opens": "09:00",
+      "closes": "19:00"
+    }],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "87"
+    }
+  }
+  </script>
+
+  <script>
+    if (window.lucide) window.lucide.createIcons({ attrs: { 'stroke-width': 1.5 }});
+
+    function closeMenu(){ document.getElementById('mobile-menu').classList.remove('is-open'); }
+
+    // Header scroll-triggered backdrop
+    const header = document.getElementById('site-header');
+    const onScroll = () => {
+      header.classList.toggle('is-scrolled', window.scrollY > 8);
+      // Mobile sticky CTA visible after hero
+      const heroH = window.innerHeight * 0.6;
+      document.getElementById('mobile-cta').classList.toggle('is-visible', window.scrollY > heroH);
+    };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // Reveal-on-scroll
+    const reveals = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('is-in'), i * 60);
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => obs.observe(el));
+
+    // Portfolio tabs
+    const tabs = document.querySelectorAll('.tab');
+    const tiles = document.querySelectorAll('#gallery .gallery-tile');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('is-active'));
+      t.classList.add('is-active');
+      const cat = t.dataset.tab;
+      tiles.forEach(tile => {
+        const match = cat === 'all' || tile.dataset.cat === cat;
+        tile.classList.toggle('is-visible', match);
+      });
+    }));
+
+    // Esc closes mobile menu
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  </script>
+
+</body>
+</html>

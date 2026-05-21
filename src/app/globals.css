@@ -1,0 +1,341 @@
+@import "tailwindcss";
+
+/* ============================================================
+ * CLOCHETTE NAILS — Design Tokens (Tailwind v4 @theme)
+ * Source : Design System v1.1 (Cinzel + Manrope + Julius + Inria italic)
+ * Référence canonique : design/design-system-v1/tokens.css
+ * ============================================================ */
+
+@theme {
+  /* ── Couleurs ──────────────────────────────────────────── */
+
+  /* Violet — principal (mauve doux) */
+  --color-violet-700: #5E4392;
+  --color-violet-600: #8868B0;
+  --color-violet-500: #A187C5;
+  --color-violet-300: #CCAAD2;
+  --color-violet-100: #ece1f3;
+  --color-violet-50:  #f6f1fa;
+
+  /* Doré — accent premium */
+  --color-gold-600: #BF9F44;
+  --color-gold-500: #DEC264;
+  --color-gold-300: #ECD68B;
+  --color-gold-200: #F7DC6F;
+  --color-gold-50:  #fbf6e0;
+
+  /* Rose pastel */
+  --color-rose-100: #FCE0E3;
+  --color-rose-50:  #fdf1f3;
+
+  /* Backgrounds neutres */
+  --color-cream: #FCFBF7;
+  --color-paper: #ffffff;
+  --color-bone:  #f4f1e8;
+
+  /* Encre (texte) */
+  --color-ink-900: #2A2A2A;
+  --color-ink-700: #4a3f44;
+  --color-ink-500: #7a5c65;
+  --color-ink-300: #b8a4ab;
+  --color-ink-200: #d8cdd1;
+  --color-line:    #ece5e7;
+
+  /* Sémantiques */
+  --color-success: #2f8f5a;
+  --color-warning: #c98a2a;
+  --color-danger:  #b23a4a;
+  --color-info:    var(--color-violet-600);
+
+  /* ── Typographie ───────────────────────────────────────── */
+  /* Les variables --font-* sont définies via next/font dans layout.tsx
+   * (CSS variables injectées sur <html> par next/font).
+   * On les réexpose ici pour l'usage Tailwind via classes utilitaires. */
+
+  --font-serif:   var(--font-cinzel), "Trajan Pro", "Iowan Old Style", Georgia, serif;
+  --font-display: var(--font-julius), "Manrope", ui-sans-serif, sans-serif;
+  --font-sans:    var(--font-inria), "Iowan Old Style", Georgia, serif;
+  --font-ui:      var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    ui-monospace, "JetBrains Mono", monospace;
+
+  /* ── Espacements ────────────────────────────────────────
+   * Note Tailwind v4 : on n'ajoute PAS de --spacing-xs/sm/md/lg/xl/2xl/3xl
+   * ici car en v4 ces tokens écrasent les utilities nommées (max-w-2xl,
+   * w-xl, etc.) qui partagent la même scale. Les espacements DS v1.1
+   * (0.5/1/1.5/2/3/4/6 rem) sont accessibles via les utilities Tailwind :
+   *   p-2 = 0.5rem · p-4 = 1rem · p-6 = 1.5rem · p-8 = 2rem
+   *   p-12 = 3rem · p-16 = 4rem · p-24 = 6rem
+   * ─────────────────────────────────────────────────────── */
+
+  /* ── Border radius ─────────────────────────────────────── */
+
+  --radius-sm:   8px;
+  --radius-md:  15px;
+  --radius-lg:  25px;
+  --radius-pill: 50px;
+
+  /* ── Ombres (teintées violet) ──────────────────────────── */
+
+  --shadow-xs: 0 1px 2px 0 rgba(136, 104, 176, 0.06);
+  --shadow-sm: 0 2px 8px -2px rgba(136, 104, 176, 0.08);
+  --shadow-md: 0 8px 24px -8px rgba(136, 104, 176, 0.14);
+  --shadow-lg: 0 18px 40px -16px rgba(136, 104, 176, 0.18);
+  --shadow-focus: 0 0 0 4px rgba(136, 104, 176, 0.22);
+}
+
+/* ── Base styles ─────────────────────────────────────────── */
+
+@layer base {
+  /*
+   * Par défaut, l'app est en serif éditorial (Inria Serif Light 300).
+   * Les contextes denses (admin, forms) overrident avec --font-ui (Manrope).
+   */
+  html {
+    font-family: var(--font-sans);
+    font-weight: 300;
+    color: var(--color-ink-900);
+    background: var(--color-cream);
+  }
+  body {
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--color-violet-100);
+    color: var(--color-violet-700);
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  /*
+   * Cinzel n'a pas d'italique natif — fallback Inria Serif italic
+   * pour <em>/<i> dans les titres et les éléments .font-serif.
+   */
+  .font-serif em, .font-serif i,
+  h1 em, h2 em, h3 em, h4 em,
+  h1 i, h2 i, h3 i, h4 i {
+    font-family: var(--font-sans);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+}
+
+/* ── Règles d'application Manrope ────────────────────────── */
+
+@layer components {
+  /* Inputs : Manrope pour la valeur saisie (labels restent en Julius Sans One) */
+  .input, .select, .textarea {
+    font-family: var(--font-ui);
+    font-weight: 400;
+  }
+
+  /* Helper text et messages d'erreur */
+  .field-help, .field-error {
+    font-family: var(--font-ui);
+    font-weight: 400;
+  }
+
+  /* Shell admin — tout l'espace /admin en Manrope */
+  .admin-shell,
+  .admin-shell * {
+    font-family: var(--font-ui);
+    font-weight: 400;
+  }
+  /* Exception : titres serif Cinzel (cohérence brand) */
+  .admin-shell h1,
+  .admin-shell h2,
+  .admin-shell h3,
+  .admin-shell h4 {
+    font-family: var(--font-serif);
+  }
+  /* Exception : eyebrows / badges / boutons / labels gardent Julius Sans One */
+  .admin-shell .section-eyebrow,
+  .admin-shell .badge,
+  .admin-shell .btn,
+  .admin-shell .field-label {
+    font-family: var(--font-display);
+  }
+
+  /* Tables data-heavy (admin OU public) */
+  .data-table {
+    font-family: var(--font-ui);
+    font-weight: 400;
+  }
+
+  /* Toasts (lisibilité critique) */
+  .toast {
+    font-family: var(--font-ui);
+    font-weight: 400;
+  }
+}
+
+/* ── Animations dashboard admin ──────────────────────────── */
+@keyframes anim-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-fade-up {
+  animation: anim-fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.stagger > * {
+  animation: anim-fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+/* ── prefers-reduced-motion ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Contenu riche (TipTap → blog / ebooks) ─────────────────
+ * Classe dédiée `.rich-content` appliquée UNIQUEMENT sur les zones
+ * de rendu TipTap (éditeur admin + détail blog/ebook public).
+ * Ne pas réutiliser sur d'autres surfaces — ces styles présupposent
+ * un HTML sanitizé issu de TipTap.
+ * ─────────────────────────────────────────────────────────── */
+
+.rich-content {
+  color: var(--color-ink-700);
+  line-height: 1.7;
+}
+
+.rich-content > * + * {
+  margin-top: 1em;
+}
+
+.rich-content h1 {
+  font-family: var(--font-serif);
+  font-size: 1.875rem;
+  line-height: 1.2;
+  color: var(--color-ink-900);
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+}
+
+.rich-content h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--color-ink-900);
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+}
+
+.rich-content h3 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  line-height: 1.3;
+  color: var(--color-ink-900);
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+}
+
+.rich-content p {
+  margin: 0.9em 0;
+}
+
+.rich-content a {
+  color: var(--color-violet-700);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+.rich-content a:hover {
+  color: var(--color-violet-600);
+  text-decoration-thickness: 2px;
+}
+
+.rich-content strong { font-weight: 600; color: var(--color-ink-900); }
+.rich-content em     { font-style: italic; }
+.rich-content u      { text-decoration: underline; }
+.rich-content s, .rich-content del { text-decoration: line-through; color: var(--color-ink-500); }
+
+.rich-content ul, .rich-content ol {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.rich-content ul { list-style: disc; }
+.rich-content ol { list-style: decimal; }
+.rich-content li { margin: 0.35em 0; }
+.rich-content li > ul, .rich-content li > ol { margin: 0.4em 0; }
+
+.rich-content blockquote {
+  margin: 1.4em 0;
+  padding: 0.5em 1.2em;
+  border-left: 3px solid var(--color-violet-600);
+  background: var(--color-violet-50);
+  color: var(--color-ink-700);
+  font-style: italic;
+  border-radius: 0 4px 4px 0;
+}
+
+.rich-content blockquote p { margin: 0.4em 0; }
+
+.rich-content code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 0.15em 0.4em;
+  background: var(--color-bone);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  color: var(--color-ink-900);
+}
+
+.rich-content pre {
+  margin: 1.2em 0;
+  padding: 1em 1.2em;
+  background: var(--color-ink-900);
+  color: #f0eee8;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+.rich-content pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+}
+
+.rich-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.4em auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-line);
+}
+
+.rich-content hr {
+  margin: 2em 0;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+
+/* Alignements TipTap (style="text-align:...") respectés tels quels. */

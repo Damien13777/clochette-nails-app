@@ -1,0 +1,931 @@
+// ============================================================
+// CLOCHETTE NAILS — Schéma Prisma 7
+// Site vitrine + réservation salon prothésie ongulaire
+//
+// Stack : Next.js 16 + Prisma 7 + Postgres + NextAuth v5
+// Source : Phase 0 data design + integration-notes harmonisations
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ════════════════════════════════════════════════════════════
+// ENUMS
+// ════════════════════════════════════════════════════════════
+
+enum Role {
+  ADMIN
+  CLIENT // Préparé pour J+6 mois, inactif à J0
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum BlogCategory {
+  CONSEILS // Conseils & entretien
+  TENDANCES // Tendances & inspirations
+  TUTORIELS // Tutoriels & techniques
+  COULISSES // Coulisses du salon
+}
+
+enum ServiceCategory {
+  POSE_NATURELS // Pose sur ongles naturels (court / mi-long / long)
+  RALLONGEMENT // Rallongements (court / mi-long / long)
+  PACK_SPECIAL // Pack ongles rongés, Pack premium
+  SOIN_MAINS // Soin des mains, manucure
+  SOIN_PIEDS // Pedi'Care, pose pieds
+  DEPOSE // Dépose et manucure (interne / externe)
+}
+
+enum BookingStatus {
+  AWAITING_DEPOSIT // Soumis, attente paiement Stripe Checkout
+  CONFIRMED // Acompte payé via webhook
+  COMPLETED // RDV honoré (admin marque)
+  CANCELLED_BY_CLIENT
+  CANCELLED_BY_ADMIN
+  NO_SHOW // Cliente absente sans prévenir
+  EXPIRED // Stripe Checkout abandonné, expiré (cron)
+}
+
+enum DepositMode {
+  PERCENT // depositPercent appliqué
+  FIXED // depositFixedCents appliqué
+}
+
+enum Season {
+  PRINTEMPS
+  ETE
+  AUTOMNE
+  HIVER
+  TOUTE_ANNEE
+}
+
+enum PhotoMood {
+  ELEGANT
+  FESTIF
+  NATUREL
+  AUDACIEUX
+  MINIMALISTE
+  ROMANTIQUE
+  TENDANCE
+}
+
+enum NotificationType {
+  NEW_BOOKING
+  DEPOSIT_PAID
+  EBOOK_SOLD
+  BOOKING_CANCELLED
+  BOOKING_RESCHEDULED
+  CONTACT_MESSAGE
+  REFUND_PROCESSED
+  NEWSLETTER_SUBSCRIBE
+  GIFT_CARD_EXPIRING // Ajout integration-notes dashboard
+  GIFT_CARD_PURCHASED
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum OutboundEventStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  ABANDONED // Après maxAttempts
+}
+
+enum GiftCardDeliveryMode {
+  EMAIL_TO_RECIPIENT
+  EMAIL_TO_BUYER
+  PRINTABLE_PDF
+}
+
+enum GiftCardStatus {
+  PENDING_PAYMENT // Stripe Checkout en cours
+  ACTIVE
+  PARTIALLY_USED
+  FULLY_USED
+  EXPIRED
+  REFUNDED
+  CANCELLED
+}
+
+enum GiftCardCreationMode {
+  PUBLIC // Acheté par une cliente via le site (Stripe). Compte au CA.
+  ADMIN_GIFT // Offert par l'admin (geste commercial). Ne compte PAS au CA.
+  ADMIN_SALE // Vendu par l'admin en salon (paiement physique). Compte au CA.
+}
+
+enum GiftCardRedemptionType {
+  BOOKING_DEPOSIT // Au booking, couvre tout ou partie de l'acompte
+  BOOKING_SERVICE // Post-RDV, paiement de la prestation
+  EBOOK // Achat ebook
+}
+
+// ════════════════════════════════════════════════════════════
+// AUTH (NextAuth v5) & USERS
+// ════════════════════════════════════════════════════════════
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   DateTime?
+  name            String?
+  image           String?
+  hashedPassword  String?
+  role            Role      @default(CLIENT)
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  suspendedAt     DateTime?
+  suspendedReason String?
+  adminNotes      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  accounts          Account[]
+  sessions          Session[]
+  bookings          Booking[]
+  ebookPurchases    EbookPurchase[]
+  notifications     Notification[]
+  auditLogsAsAdmin  AuditLog[]      @relation("AdminLogs")
+  auditLogsAsTarget AuditLog[]      @relation("TargetLogs")
+
+  @@index([role])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ════════════════════════════════════════════════════════════
+// API TOKENS — pluggabilité avec Management
+// ════════════════════════════════════════════════════════════
+
+model ApiToken {
+  id         String    @id @default(cuid())
+  name       String // "management-prod", "management-staging"
+  tokenHash  String    @unique // bcrypt du token complet
+  prefix     String // 8 premiers car. visibles
+  scopes     String[] // ["bookings:read", "events:write"]
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([prefix])
+  @@map("api_tokens")
+}
+
+// ════════════════════════════════════════════════════════════
+// CATALOGUE — Prestations & Options
+// ════════════════════════════════════════════════════════════
+
+model Service {
+  id               String          @id @default(cuid())
+  slug             String          @unique
+  title            String
+  shortDesc        String          @db.VarChar(300)
+  description      String          @db.Text
+  category         ServiceCategory
+  durationMinutes  Int
+  priceCents       Int // PRIVÉ — sert au calcul d'acompte, jamais affiché front
+  status           ContentStatus   @default(DRAFT)
+  displayOrder     Int             @default(0)
+  coverImage       String?
+  coverImageAlt    String?
+  metaTitle        String?
+  metaDesc         String?
+  tags             String[]
+  postPurchaseInfo String?         @db.Text
+  /// Avertissement affiché en rouge sur la carte côté cliente quand la
+  /// prestation est sélectionnée à la réservation. Ex : « Prestation
+  /// déconseillée pendant la grossesse ».
+  disclaimer       String?         @db.Text
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  bookings Booking[]
+  photos   ServicePhoto[]
+
+  @@index([status, displayOrder])
+  @@index([category, status])
+  @@map("services")
+}
+
+model ServiceOption {
+  id                   String            @id @default(cuid())
+  slug                 String            @unique
+  title                String
+  description          String?           @db.Text
+  addedDurationMinutes Int
+  addedPriceCents      Int // Privé, ajoute au total pour calcul acompte
+  applicableCategories ServiceCategory[]
+  /// Avertissement affiché en rouge sur la carte option si la cliente
+  /// l'a cochée à la réservation. Même comportement que Service.disclaimer.
+  disclaimer           String?           @db.Text
+  status               ContentStatus     @default(DRAFT)
+  displayOrder         Int               @default(0)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  bookingLinks BookingOption[]
+
+  @@index([status, displayOrder])
+  @@map("service_options")
+}
+
+model ServicePhoto {
+  id           String          @id @default(cuid())
+  serviceId    String?
+  blogPostId   String?
+  category     ServiceCategory
+  season       Season?
+  mood         PhotoMood?
+  occasion     String? // Free-form : "mariage", "noel", "saint-valentin"
+  url          String
+  // Variantes générées par Sharp : { thumb: {key, url}, medium: ..., large: ... }
+  variants     Json?
+  // Clé du fichier principal (large) dans le storage adapter
+  storageKey   String?
+  alt          String
+  caption      String?
+  tags         String[]
+  featured     Boolean         @default(false)
+  displayOrder Int             @default(0)
+  width        Int?
+  height       Int?
+  sizeBytes    Int?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  service  Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  blogPost BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: SetNull)
+
+  @@index([category, displayOrder])
+  @@index([featured, displayOrder])
+  @@index([season])
+  @@index([occasion])
+  @@index([blogPostId])
+  @@map("service_photos")
+}
+
+// ════════════════════════════════════════════════════════════
+// CALENDRIER — Mois, Horaires, Indispos
+// ════════════════════════════════════════════════════════════
+
+model BookableMonth {
+  id          String   @id @default(cuid())
+  year        Int
+  month       Int // 1-12
+  enabledAt   DateTime @default(now())
+  enabledById String?
+
+  @@unique([year, month])
+  @@map("bookable_months")
+}
+
+model BusinessHours {
+  id          String  @id @default(cuid())
+  dayOfWeek   Int // 0=Dimanche, 1=Lundi, ..., 6=Samedi
+  isOpen      Boolean @default(true)
+  openingTime String? // "08:00"
+  closingTime String? // "19:00"
+  breakStart  String? // "12:30"
+  breakEnd    String? // "13:30"
+
+  @@unique([dayOfWeek])
+  @@map("business_hours")
+}
+
+/// Exception ponctuelle d'horaires pour une date spécifique.
+/// Override les BusinessHours récurrents quand présent.
+/// Ex : "ouvert exceptionnellement ce lundi" ou "fermé ce mercredi (formation)".
+model DayException {
+  id          String   @id @default(cuid())
+  date        DateTime @unique @db.Date
+  isOpen      Boolean
+  openingTime String? // requis si isOpen=true
+  closingTime String? // requis si isOpen=true
+  breakStart  String?
+  breakEnd    String?
+  reason      String? // motif interne, non visible cliente
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+  @@map("day_exceptions")
+}
+
+model Unavailability {
+  id        String   @id @default(cuid())
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([startsAt, endsAt])
+  @@map("unavailabilities")
+}
+
+model RecurringUnavailability {
+  id         String    @id @default(cuid())
+  dayOfWeek  Int // 0-6
+  startTime  String? // null = toute la journée
+  endTime    String?
+  startsFrom DateTime  @db.Date
+  endsAt     DateTime? @db.Date
+  reason     String?
+  createdAt  DateTime  @default(now())
+
+  @@index([dayOfWeek])
+  @@map("recurring_unavailabilities")
+}
+
+// ════════════════════════════════════════════════════════════
+// BOOKINGS
+// ════════════════════════════════════════════════════════════
+
+model Booking {
+  id String @id @default(cuid())
+
+  // Plage horaire (modèle time-range, pas de slot pré-défini)
+  date      DateTime @db.Date
+  startTime String // "HH:MM" Europe/Paris
+  endTime   String // computed startTime + totalDurationMinutes
+
+  // Client (anonyme à J0, lié à User si auth client activée)
+  clientId        String?
+  client          User?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientFirstName String
+  clientLastName  String
+  clientEmail     String
+  clientPhone     String
+
+  // Prestation choisie + options
+  serviceId String
+  service   Service         @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  options   BookingOption[]
+
+  // Pricing snapshot (figé au moment de la booking)
+  totalDurationMinutes Int
+  totalPriceCents      Int // PRIVÉ (cache pour reporting admin)
+  depositCents         Int // Snapshot calculé selon depositMode
+
+  // CA réel encaissé sur ce RDV (saisi au markCompleted), HORS carte cadeau.
+  // Représente uniquement la part cash/CB/chèque/virement (la part GC est
+  // déjà comptée au CA à la VENTE de la carte cadeau, on évite ainsi le
+  // double-count). Permet ajustement options ajoutées / geste commercial.
+  // Source de vérité pour le KPI CA du mois sur le dashboard.
+  revenueCents Int?
+  /// Mode de paiement utilisé pour le complément encaissé au markCompleted.
+  /// "cash" | "card_terminal" | "transfer" | "check" | null (si 100% gift card)
+  completionPaymentMethod String?
+
+  // Message + uploads client
+  clientMessage String?       @db.Text
+  files         BookingFile[]
+
+  // Statut & paiement
+  status          BookingStatus @default(AWAITING_DEPOSIT)
+  stripeSessionId String?       @unique
+  stripePaymentId String?
+  stripeFeeCents  Int? // Réel via charge.updated webhook
+  paidAt          DateTime?
+  refundedAmount  Int? // Refund partiel possible
+  /// Date d'expiration du paiement (créneau libéré si pas payé avant) :
+  /// - 30 min après création pour les bookings publics
+  /// - 24 h après création pour les bookings créés en admin avec lien
+  /// - null pour les autres (gift_card_full, paid_in_person, no_deposit)
+  paymentExpiresAt DateTime?
+  /// Méthode de paiement effective :
+  /// "stripe" | "cash" | "transfer" | "check" | "card_terminal" | "none" | "gift_card_full"
+  paymentMethod    String?
+  /// True si le RDV a été créé par l'admin depuis le calendrier (pas par la cliente).
+  /// Affiché avec une icône distinctive et logique d'expiration différente.
+  createdByAdmin   Boolean   @default(false)
+
+  // Token pour vérifier accès success page sans deviner les bookingId
+  confirmationToken String? @unique
+
+  // Token cliente pour annulation/déplacement via lien dans le mail.
+  // Single-use : invalidé après annulation OU après 1 déplacement (CGV §11).
+  // Généré à la confirmation du paiement, nul sur bookings AWAITING_DEPOSIT.
+  clientActionToken  String?   @unique
+  clientActionUsedAt DateTime? // timestamp d'utilisation, null = utilisable
+
+  // Gift card "réservée" : décrémentée seulement à confirmation (webhook
+  // ou dev fallback). Permet d'annuler proprement si paiement échoue.
+  pendingGiftCardId         String?
+  pendingGiftCardAmountCents Int?
+
+  // Audit dates
+  confirmedAt        DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  adminNotes         String?   @db.Text
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime? // Soft delete (audit forensic)
+
+  giftCardRedemptions GiftCardRedemption[]
+
+  @@index([date, startTime]) // CRITIQUE : overlap detection
+  @@index([status, createdAt])
+  @@index([clientEmail])
+  @@map("bookings")
+}
+
+model BookingOption {
+  bookingId       String
+  serviceOptionId String
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceOption ServiceOption @relation(fields: [serviceOptionId], references: [id], onDelete: Restrict)
+
+  @@id([bookingId, serviceOptionId])
+  @@map("booking_options")
+}
+
+model BookingFile {
+  id           String   @id @default(cuid())
+  bookingId    String
+  url          String // /uploads/booking-files/{uuid}.ext
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  createdAt    DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@map("booking_files")
+}
+
+// ════════════════════════════════════════════════════════════
+// EBOOKS
+// ════════════════════════════════════════════════════════════
+
+model Ebook {
+  id                String        @id @default(cuid())
+  slug              String        @unique
+  title             String
+  shortDesc         String        @db.VarChar(300)
+  description       String        @db.Text
+  coverImage        String?
+  coverImageAlt     String?
+  pdfUrl            String? // /uploads/ebooks/{uuid}.pdf — requis pour PUBLISHED
+  pdfSizeBytes      Int?
+  pdfOriginalName   String? // Nom de fichier original (pour debug)
+  priceCents        Int
+  comparePriceCents Int?
+  status            ContentStatus @default(DRAFT)
+  metaTitle         String?
+  metaDesc          String?
+  tags              String[]
+  stripeProductId   String?
+  stripePriceId     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  purchases EbookPurchase[]
+
+  @@index([status])
+  @@map("ebooks")
+}
+
+model EbookPurchase {
+  id      String @id @default(cuid())
+  ebookId String
+  ebook   Ebook  @relation(fields: [ebookId], references: [id], onDelete: Restrict)
+
+  // Acheteur (anonyme à J0)
+  clientId    String?
+  client      User?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  clientEmail String
+  clientName  String?
+
+  // Paiement
+  paymentStatus   PaymentStatus @default(PENDING)
+  amount          Int
+  refundedAmount  Int?
+  stripeSessionId String?       @unique
+  stripePaymentId String?
+  stripeFeeCents  Int?
+  paidAt          DateTime?
+
+  // Téléchargement signé sans auth (token opaque, expirant)
+  downloadToken  String    @unique
+  tokenExpiresAt DateTime // 30j par défaut
+  downloadCount  Int       @default(0)
+  lastDownloadAt DateTime? // dernière utilisation du lien (SAV admin)
+
+  purchasedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  giftCardRedemption GiftCardRedemption? // 1 max par ebook
+
+  @@index([paymentStatus, purchasedAt])
+  @@index([clientEmail])
+  @@map("ebook_purchases")
+}
+
+// ════════════════════════════════════════════════════════════
+// BLOG & NEWSLETTER
+// ════════════════════════════════════════════════════════════
+
+model BlogPost {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  title         String
+  excerpt       String        @db.VarChar(300)
+  content       String        @db.Text // HTML TipTap, sanitize au render
+  coverImage    String?
+  coverImageAlt String?
+  status        ContentStatus @default(DRAFT)
+  category      BlogCategory  @default(CONSEILS) // Filtrage public (liste fermée)
+  publishedAt   DateTime? // Permet programmation
+  metaTitle     String?
+  metaDesc      String?
+  tags          String[] // SEO + articles connexes uniquement
+  readingTime   Int?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  photos ServicePhoto[] // Photos qui illustrent cet article
+
+  @@index([status, publishedAt(sort: Desc)])
+  @@index([category, status, publishedAt(sort: Desc)])
+  @@map("blog_posts")
+}
+
+model NewsletterSubscriber {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  source           String? // "footer", "blog-cta", "ebook-thankyou"
+  consentGivenAt   DateTime  @default(now()) // Date saisie formulaire (preuve RGPD)
+  consentIp        String? // Preuve RGPD
+  // Double opt-in CNIL : tant que confirmedAt = null, abonnement non actif.
+  confirmToken     String?   @unique
+  confirmedAt      DateTime?
+  unsubscribedAt   DateTime?
+  unsubscribeToken String    @unique // Lien désabo dans chaque email
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([confirmedAt])
+  @@index([unsubscribedAt])
+  @@map("newsletter_subscribers")
+}
+
+// ════════════════════════════════════════════════════════════
+// PLATEFORME & SETTINGS
+// ════════════════════════════════════════════════════════════
+
+model PlatformSettings {
+  id String @id @default(cuid())
+
+  // Identité business
+  businessName    String  @default("Clochette Nails")
+  businessSiret   String?
+  businessAddress String? @db.Text
+  contactEmail    String  @default("contact@clochette-nails.fr")
+  contactPhone    String?
+
+  // Personnalisation des emails (cf. lib/email/globals.ts) :
+  /// Signature en fin d'email (ex: "Chloé — Clochette Nails")
+  emailSignature       String  @default("Chloé — Clochette Nails")
+  /// Mention temporaire affichée en haut/bas des emails clientes
+  /// (vacances, promo saisonnière…). Vide = aucun bandeau.
+  emailFooterNote      String? @db.Text
+  /// URL d'une bannière image affichée en haut de chaque email.
+  /// Stockée dans /public/uploads/email-banner/{uuid}.webp.
+  emailHeaderImageUrl   String?
+  /// Largeur d'affichage en px (varie selon le ratio détecté à l'upload :
+  /// ~240 pour un logo, 600 pour une bannière horizontale full-width).
+  emailHeaderImageWidth Int?
+  /// Idem mais affichée en bas avant le footer.
+  emailFooterImageUrl   String?
+  emailFooterImageWidth Int?
+
+  // Mode global
+  maintenanceMode    Boolean @default(false)
+  maintenanceMessage String? @db.Text
+
+  // Feature flags (kill switches)
+  bookingsEnabled   Boolean @default(true)
+  ebooksEnabled     Boolean @default(true)
+  blogEnabled       Boolean @default(true)
+  newsletterEnabled Boolean @default(true)
+  giftCardsEnabled  Boolean @default(true)
+
+  // Booking deposit
+  depositMode               DepositMode @default(PERCENT)
+  depositPercent            Int         @default(30) // % du total
+  depositFixedCents         Int         @default(2500) // 25€ fixe en alternative
+  /// Délai minimum entre maintenant et l'heure de début d'un RDV.
+  /// Empêche la réservation trop tardive. Appliqué dans availability.ts
+  /// pour exclure les créneaux trop proches sur le jour courant.
+  bookingMinAdvanceHours    Int         @default(2)
+  bookingGranularityMinutes Int         @default(30)
+  bookingCancellationPolicy String?     @db.Text
+
+  // Cartes cadeau
+  giftCardExpiryDays     Int @default(180)
+  giftCardMinAmountCents Int @default(2000)
+  giftCardMaxAmountCents Int @default(50000)
+
+  // Fiscalité
+  vatEnabled Boolean @default(false) // Auto-entrepreneur par défaut
+  vatRate    Float   @default(20)
+
+  // SMS (différé V2 — adapter pattern)
+  smsEnabled Boolean @default(false)
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  @@map("platform_settings")
+}
+
+// ════════════════════════════════════════════════════════════
+// AUDIT, NOTIFICATIONS, EMAILS
+// ════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  adminId      String
+  admin        User     @relation("AdminLogs", fields: [adminId], references: [id], onDelete: Restrict)
+  targetUserId String?
+  targetUser   User?    @relation("TargetLogs", fields: [targetUserId], references: [id], onDelete: SetNull)
+  action       String // "BOOKING_CONFIRMED", "EBOOK_REFUND", etc.
+  metadata     Json? // { before, after, reason }
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String?          @db.Text
+  link      String? // Deep link
+  metadata  Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+  @@map("notifications")
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique // "booking.awaiting_deposit", "ebook.purchase_confirmation"
+  subject     String
+  bodyHtml    String   @db.Text // TipTap, sanitize au render
+  variables   String[] // ["clientName", "bookingDate", "depositAmount"]
+  active      Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  @@map("email_templates")
+}
+
+// ════════════════════════════════════════════════════════════
+// CONTACT & STRIPE IDEMPOTENCY
+// ════════════════════════════════════════════════════════════
+
+model ContactMessage {
+  id         String               @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  subject    String?
+  message    String               @db.Text
+  status     ContactMessageStatus @default(NEW)
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  archivedAt DateTime?
+
+  @@index([status, createdAt(sort: Desc)])
+  @@map("contact_messages")
+}
+
+model StripeEvent {
+  id          String   @id // event id Stripe (evt_xxx) — idempotency
+  type        String
+  processedAt DateTime @default(now())
+
+  @@index([type])
+  @@map("stripe_events")
+}
+
+// ════════════════════════════════════════════════════════════
+// PLUGGABILITÉ — events sortants vers Management
+// ════════════════════════════════════════════════════════════
+
+model OutboundEvent {
+  id            String              @id @default(cuid())
+  type          String // "booking.created", "booking.confirmed", "ebook.purchased"
+  payload       Json
+  targetUrl     String
+  targetService String              @default("management")
+  status        OutboundEventStatus @default(PENDING)
+  attempts      Int                 @default(0)
+  maxAttempts   Int                 @default(5)
+  nextAttemptAt DateTime            @default(now())
+  lastError     String?             @db.Text
+  createdAt     DateTime            @default(now())
+  deliveredAt   DateTime?
+
+  @@index([status, nextAttemptAt])
+  @@index([type, createdAt])
+  @@map("outbound_events")
+}
+
+// ════════════════════════════════════════════════════════════
+// GIFT CARDS — Montant uniquement (multi-redemption)
+// ════════════════════════════════════════════════════════════
+
+model GiftCard {
+  id        String         @id @default(cuid())
+  code      String         @unique // Format "GIFT-A1B2-C3D4-E5F6"
+  codeHash  String         @unique // bcrypt du code
+  prefix    String // 4 derniers chars pour identification UI
+  status    GiftCardStatus @default(PENDING_PAYMENT)
+  version   Int            @default(0) // Optimistic locking (cf. integration-notes calendar)
+
+  initialAmountCents   Int
+  remainingAmountCents Int
+
+  // Acheteur (toujours requis)
+  buyerEmail String
+  buyerName  String
+  buyerPhone String?
+
+  // Bénéficiaire (optionnel)
+  recipientEmail String?
+  recipientName  String?
+  giftMessage    String? @db.Text
+
+  // Livraison
+  deliveryMode GiftCardDeliveryMode
+  scheduledFor DateTime?
+  deliveredAt  DateTime?
+
+  // Validité
+  expiresAt DateTime
+
+  // Paiement de l'achat
+  amount          Int
+  paymentStatus   PaymentStatus @default(PENDING)
+  stripeSessionId String?       @unique
+  stripePaymentId String?
+  stripeFeeCents  Int?
+  paidAt          DateTime?
+  refundedAmount  Int?
+
+  /// Origine de la carte. Détermine si elle compte au CA (PUBLIC/ADMIN_SALE)
+  /// ou non (ADMIN_GIFT = geste commercial).
+  creationMode GiftCardCreationMode @default(PUBLIC)
+  /// Mode de paiement effectif pour ADMIN_SALE :
+  /// "cash" | "transfer" | "check" | "card_terminal".
+  /// null pour PUBLIC (Stripe) et ADMIN_GIFT (pas de paiement).
+  paymentMethod String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  redemptions GiftCardRedemption[]
+
+  @@index([buyerEmail])
+  @@index([recipientEmail])
+  @@index([status, expiresAt])
+  @@index([paymentStatus, createdAt])
+  @@map("gift_cards")
+}
+
+model GiftCardRedemption {
+  id         String                 @id @default(cuid())
+  giftCardId String
+  giftCard   GiftCard               @relation(fields: [giftCardId], references: [id], onDelete: Cascade)
+  type       GiftCardRedemptionType
+
+  // Référence à la ressource concernée (un seul des deux non-null)
+  bookingId       String?
+  booking         Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  ebookPurchaseId String?        @unique
+  ebookPurchase   EbookPurchase? @relation(fields: [ebookPurchaseId], references: [id], onDelete: SetNull)
+
+  amountUsedCents Int
+
+  // Traçabilité
+  redeemedByEmail   String
+  redeemedByAdminId String? // not null si BOOKING_SERVICE (admin a déclenché)
+  ipAddress         String?
+  redeemedAt        DateTime @default(now())
+
+  // Reversal (si refund booking)
+  reversedAt          DateTime?
+  reversedAmountCents Int?
+
+  @@index([giftCardId, redeemedAt])
+  @@index([bookingId])
+  @@map("gift_card_redemptions")
+}
+
+// ════════════════════════════════════════════════════════════
+// SITE MEDIA — slots nommés pour images globales du site
+// (hero desktop/mobile, photos "À propos", etc.)
+// Distinct de ServicePhoto qui couvre covers prestations + portfolio.
+// ════════════════════════════════════════════════════════════
+
+model SiteMedia {
+  id        String   @id @default(cuid())
+  // Slot unique : "hero_desktop", "hero_mobile", "about_studio", etc.
+  slot      String   @unique
+  url       String
+  // URLs des variantes générées par le pipeline Sharp
+  // Format : { thumb: "/uploads/...", medium: "/uploads/...", large: "/uploads/..." }
+  variants  Json?
+  alt       String
+  width     Int?
+  height    Int?
+  sizeBytes Int?
+  mimeType  String?
+  // Clé interne (chemin/key) pour suppression côté adapter de stockage
+  storageKey String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  @@map("site_media")
+}

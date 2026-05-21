@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clochette Nails — Design System v1</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Inria+Serif:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Julius+Sans+One&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style type="text/tailwindcss">
+    @theme {
+      /* Couleurs — palette Clochette (v2) */
+      --color-violet-700: #5E4392;        /* hover, liens lisibles */
+      --color-violet-600: #8868B0;        /* principal — mauve doux, cohérent avec le clair */
+      --color-violet-500: #A187C5;
+      --color-violet-300: #CCAAD2;        /* clair (inchangé) */
+      --color-violet-100: #ece1f3;
+      --color-violet-50:  #f6f1fa;
+
+      --color-gold-600: #BF9F44;
+      --color-gold-500: #DEC264;          /* accent doux — entre l'accent et le clair */
+      --color-gold-300: #ECD68B;
+      --color-gold-200: #F7DC6F;          /* clair (inchangé) */
+      --color-gold-50:  #fbf6e0;
+
+      --color-rose-100: #FCE0E3;          /* pastel doux */
+      --color-rose-50:  #fdf1f3;
+
+      --color-cream: #FCFBF7;             /* background — contraste 15:1 avec ink-900, AAA */
+      --color-paper: #ffffff;
+      --color-bone:  #f4f1e8;
+
+      --color-ink-900: #2A2A2A;           /* anthracite — moins dur qu'un noir pur */
+      --color-ink-700: #4a3f44;
+      --color-ink-500: #7a5c65;           /* texte secondaire (inchangé) */
+      --color-ink-300: #b8a4ab;
+      --color-ink-200: #d8cdd1;
+      --color-line:    #ece5e7;
+
+      --color-success: #2f8f5a;
+      --color-warning: #c98a2a;
+      --color-danger:  #b23a4a;
+      --color-info:    var(--color-violet-600);
+
+      /* Typographie — quatuor
+         - Serif déco (titres) : Cinzel 500 — h1/h2/h3 partout (Roman inscriptionnel)
+         - Display caps : Julius Sans One 400 — eyebrows, badges, boutons, labels formulaire
+         - Serif body : Inria Serif Light 300 — éditorial (hero, marketing, blog, paragraphes)
+         - Sans UI : Manrope 400 — UI dense (inputs valeur, helper, errors, admin, tables, toasts)
+      */
+      --font-serif:   "Cinzel", "Trajan Pro", "Iowan Old Style", Georgia, serif;
+      --font-display: "Julius Sans One", "Manrope", ui-sans-serif, sans-serif;
+      --font-sans:    "Inria Serif", "Iowan Old Style", Georgia, serif;
+      --font-ui:      "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+      /* Espacements (rem) */
+      --spacing-xs:  0.5rem;
+      --spacing-sm:  1rem;
+      --spacing-md:  1.5rem;
+      --spacing-lg:  2rem;
+      --spacing-xl:  3rem;
+      --spacing-2xl: 4rem;
+      --spacing-3xl: 6rem;
+
+      /* Border radius */
+      --radius-sm:   8px;
+      --radius-md:  15px;
+      --radius-lg:  25px;
+      --radius-pill: 50px;
+
+      /* Shadows douces violettes — teinte alignée sur le nouveau violet 600 */
+      --shadow-xs: 0 1px 2px 0 rgba(136, 104, 176, 0.06);
+      --shadow-sm: 0 2px 8px -2px rgba(136, 104, 176, 0.08);
+      --shadow-md: 0 8px 24px -8px rgba(136, 104, 176, 0.14);
+      --shadow-lg: 0 18px 40px -16px rgba(136, 104, 176, 0.18);
+      --shadow-focus: 0 0 0 4px rgba(136, 104, 176, 0.22);
+    }
+
+    @layer base {
+      html { font-family: var(--font-sans); font-weight: 300; color: var(--color-ink-900); background: var(--color-cream); }
+      body { font-feature-settings: "ss01", "cv11"; -webkit-font-smoothing: antialiased; }
+      ::selection { background: var(--color-violet-100); color: var(--color-violet-700); }
+      h1,h2,h3,h4 { font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.01em; }
+      /* Cinzel n'a pas d'italique — bascule les emphases italiques sur Inria Serif italic, déjà chargé */
+      .font-serif em, .font-serif i, h1 em, h2 em, h3 em, h4 em, h1 i, h2 i, h3 i, h4 i {
+        font-family: var(--font-sans); font-style: italic; font-weight: 400; letter-spacing: 0;
+      }
+    }
+
+    @layer components {
+      /* ── Boutons ─────────────────────────────────────── */
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.875rem 1.75rem;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.875rem; font-weight: 400;
+        letter-spacing: 0.06em;
+        transition: all 0.3s cubic-bezier(.2,.7,.3,1);
+        cursor: pointer; border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .btn[disabled], .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+      .btn-primary { background: var(--color-violet-600); color: white; }
+      .btn-primary:hover:not(:disabled) { background: var(--color-violet-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+      .btn-primary:active:not(:disabled) { transform: translateY(0); box-shadow: var(--shadow-xs); }
+
+      .btn-secondary { background: transparent; color: var(--color-violet-600); border-color: var(--color-violet-600); }
+      .btn-secondary:hover:not(:disabled) { background: var(--color-violet-50); border-color: var(--color-violet-700); color: var(--color-violet-700); }
+      .btn-secondary:active:not(:disabled) { background: var(--color-violet-100); }
+
+      .btn-gold { background: var(--color-gold-500); color: var(--color-ink-900); }
+      .btn-gold:hover:not(:disabled) { background: var(--color-gold-600); color: white; transform: translateY(-1px); box-shadow: 0 8px 24px -8px rgba(222, 194, 100, 0.45); }
+      .btn-gold:active:not(:disabled) { transform: translateY(0); }
+
+      .btn-ghost { background: transparent; color: var(--color-ink-900); }
+      .btn-ghost:hover:not(:disabled) { background: var(--color-violet-50); color: var(--color-violet-700); }
+
+      .btn-sm { padding: 0.625rem 1.25rem; font-size: 0.8125rem; }
+      .btn-lg { padding: 1.0625rem 2.25rem; font-size: 1rem; }
+      .btn-icon-only { padding: 0.75rem; width: 2.75rem; height: 2.75rem; }
+
+      /* ── Inputs ──────────────────────────────────────── */
+      .field { display: flex; flex-direction: column; gap: 0.4375rem; }
+      .field-label { font-family: var(--font-display); font-size: 0.75rem; font-weight: 400; color: var(--color-ink-700); letter-spacing: 0.14em; text-transform: uppercase; }
+      .field-help { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-ink-500); }
+      .field-error { font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-danger); display: flex; align-items: center; gap: 0.375rem; }
+
+      .input, .select, .textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--color-paper);
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-sm);
+        font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 400; color: var(--color-ink-900);
+        transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+      }
+      .input::placeholder, .textarea::placeholder { color: var(--color-ink-300); }
+      .input:hover, .select:hover, .textarea:hover { border-color: var(--color-ink-200); }
+      .input:focus, .select:focus, .textarea:focus { outline: none; border-color: var(--color-violet-600); box-shadow: var(--shadow-focus); }
+      .input[disabled], .select[disabled], .textarea[disabled] { background: var(--color-bone); cursor: not-allowed; color: var(--color-ink-500); }
+      .input.is-error, .select.is-error, .textarea.is-error { border-color: var(--color-danger); }
+      .input.is-error:focus { box-shadow: 0 0 0 4px rgba(178, 58, 74, 0.16); }
+
+      .textarea { resize: vertical; min-height: 6.5rem; line-height: 1.55; }
+
+      .select {
+        appearance: none; -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a5c65' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+        background-repeat: no-repeat; background-position: right 1rem center;
+        padding-right: 2.5rem;
+      }
+
+      .input-icon-wrap { position: relative; }
+      .input-icon-wrap .icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--color-ink-500); pointer-events: none; }
+      .input-icon-wrap .input { padding-left: 2.75rem; }
+
+      /* Checkbox & radio */
+      .check, .radio {
+        appearance: none; -webkit-appearance: none;
+        width: 1.125rem; height: 1.125rem;
+        border: 1px solid var(--color-ink-300); background: var(--color-paper);
+        cursor: pointer; transition: all 0.2s;
+        display: inline-grid; place-content: center;
+      }
+      .check { border-radius: 4px; }
+      .radio { border-radius: 50%; }
+      .check:hover, .radio:hover { border-color: var(--color-violet-600); }
+      .check:checked, .radio:checked { background: var(--color-violet-600); border-color: var(--color-violet-600); }
+      .check:checked::after { content: ''; width: 0.625rem; height: 0.625rem; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat; }
+      .radio:checked::after { content: ''; width: 0.4375rem; height: 0.4375rem; border-radius: 50%; background: white; }
+      .check:focus-visible, .radio:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+
+      /* Switch */
+      .switch { position: relative; width: 2.5rem; height: 1.375rem; appearance: none; -webkit-appearance: none; background: var(--color-ink-200); border-radius: 50px; cursor: pointer; transition: background 0.3s; }
+      .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: calc(1.375rem - 4px); height: calc(1.375rem - 4px); background: white; border-radius: 50%; transition: left 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+      .switch:checked { background: var(--color-violet-600); }
+      .switch:checked::after { left: calc(2.5rem - 1.375rem + 2px); }
+      .switch:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+
+      /* ── Cards ───────────────────────────────────────── */
+      .card {
+        background: var(--color-paper);
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-md);
+        transition: transform 0.3s cubic-bezier(.2,.7,.3,1), box-shadow 0.3s, border-color 0.3s;
+      }
+      .card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--color-violet-100); }
+      .card-padded { padding: 1.5rem; }
+
+      /* ── Badges ──────────────────────────────────────── */
+      .badge {
+        display: inline-flex; align-items: center; gap: 0.375rem;
+        padding: 0.3125rem 0.75rem;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-display);
+        font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.16em;
+        text-transform: uppercase;
+        line-height: 1;
+      }
+      .badge-rose { background: var(--color-rose-100); color: #8a3c4a; }
+      .badge-gold { background: var(--color-gold-200); color: #6b5413; }
+      .badge-violet { background: var(--color-violet-100); color: var(--color-violet-700); }
+      .badge-outline { background: transparent; border: 1px solid var(--color-ink-300); color: var(--color-ink-700); }
+      .badge-dot::before { content: ''; width: 0.375rem; height: 0.375rem; border-radius: 50%; background: currentColor; }
+
+      /* ── Section ─────────────────────────────────────── */
+      .section-eyebrow { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--color-ink-500); font-weight: 400; }
+      .section-divider { border: 0; border-top: 1px solid var(--color-line); margin: 0; }
+
+      /* ── Code / token chip ───────────────────────────── */
+      .token-code { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-ink-500); }
+      .kbd-mono { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-ink-700); background: var(--color-bone); padding: 0.125rem 0.375rem; border-radius: 4px; }
+
+      /* ── Toast ───────────────────────────────────────── */
+      .toast {
+        display: flex; align-items: flex-start; gap: 0.875rem;
+        background: var(--color-paper); border: 1px solid var(--color-line);
+        border-left: 3px solid var(--color-violet-600);
+        border-radius: var(--radius-sm);
+        padding: 1rem 1.125rem;
+        box-shadow: var(--shadow-md);
+        min-width: 18rem; max-width: 22rem;
+        font-family: var(--font-ui);
+      }
+      .toast-success { border-left-color: var(--color-success); }
+      .toast-warning { border-left-color: var(--color-warning); }
+      .toast-error   { border-left-color: var(--color-danger); }
+
+      /* ── Header / Nav ────────────────────────────────── */
+      .nav-link {
+        position: relative; padding: 0.5rem 0; font-size: 0.9375rem; color: var(--color-ink-700);
+        transition: color 0.3s;
+      }
+      .nav-link::after {
+        content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
+        height: 1px; background: var(--color-violet-600);
+        transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+      }
+      .nav-link:hover { color: var(--color-violet-700); }
+      .nav-link:hover::after { transform: scaleX(1); }
+      .nav-link.is-active { color: var(--color-violet-700); }
+      .nav-link.is-active::after { transform: scaleX(1); }
+
+      /* swatches */
+      .swatch { aspect-ratio: 1.4 / 1; border-radius: var(--radius-md); border: 1px solid var(--color-line); }
+    }
+
+    /* ── Drawer / modal helpers ──────────────────────── */
+    .drawer-backdrop { position: fixed; inset: 0; background: rgba(26, 26, 26, 0.35); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity 0.35s; z-index: 60; }
+    .drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+    .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 92vw); background: var(--color-paper); transform: translateX(100%); transition: transform 0.4s cubic-bezier(.2,.7,.3,1); z-index: 70; box-shadow: -24px 0 60px -20px rgba(26,26,26,0.15); display: flex; flex-direction: column; }
+    .drawer.is-open { transform: translateX(0); }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(26,26,26,0.4); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 80; padding: 1rem; }
+    .modal-backdrop.is-open { display: flex; }
+    .modal { background: var(--color-paper); border-radius: var(--radius-md); width: min(480px, 100%); padding: 2rem; box-shadow: var(--shadow-lg); animation: modal-in 0.35s cubic-bezier(.2,.7,.3,1); }
+    @keyframes modal-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+
+    /* Toast stack */
+    #toast-stack { position: fixed; right: 1.25rem; bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.625rem; z-index: 90; }
+    .toast-anim { animation: toast-in 0.4s cubic-bezier(.2,.7,.3,1); }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* TOC sticky */
+    .toc-link { display: block; padding: 0.375rem 0; font-size: 0.8125rem; color: var(--color-ink-500); transition: color 0.2s; border-left: 1px solid transparent; padding-left: 0.875rem; margin-left: -0.875rem; }
+    .toc-link:hover { color: var(--color-ink-900); }
+    .toc-link.is-active { color: var(--color-violet-700); border-left-color: var(--color-violet-600); }
+
+    /* Subtle line motif used as decorative divider in Aesop/Diptyque-style */
+    .hairline { height: 1px; background: linear-gradient(90deg, transparent, var(--color-ink-300), transparent); }
+
+    /* Mobile-only menu */
+    .mobile-menu { position: fixed; inset: 0; background: var(--color-cream); transform: translateX(100%); transition: transform 0.4s cubic-bezier(.2,.7,.3,1); z-index: 70; padding: 1.5rem; display: flex; flex-direction: column; }
+    .mobile-menu.is-open { transform: translateX(0); }
+  </style>
+</head>
+
+<body class="bg-[var(--color-cream)] text-[var(--color-ink-900)]">
+
+  <!-- ───────────────── Top Bar ─────────────────── -->
+  <header class="border-b border-[var(--color-line)] bg-[var(--color-cream)] sticky top-0 z-40 backdrop-blur">
+    <div class="max-w-[1240px] mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+        <div class="leading-tight">
+          <div class="font-serif text-[15px]">Clochette Nails</div>
+          <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-ink-500)]">Design System · v1.0</div>
+        </div>
+      </div>
+      <nav class="hidden md:flex items-center gap-8 text-sm">
+        <a href="#fondations" class="nav-link is-active">Fondations</a>
+        <a href="#composants" class="nav-link">Composants</a>
+        <a href="#patterns" class="nav-link">Patterns</a>
+        <a href="#principes" class="nav-link">Principes</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <span class="hidden sm:inline-flex badge badge-violet">Phase 1</span>
+        <button class="btn-icon-only btn btn-ghost" aria-label="Recherche"><i data-lucide="search" class="w-[18px] h-[18px]"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ───────────────── Hero ─────────────────────── -->
+  <section class="max-w-[1240px] mx-auto px-6 lg:px-10 pt-16 lg:pt-24 pb-16 lg:pb-24">
+    <div class="grid lg:grid-cols-12 gap-10 items-end">
+      <div class="lg:col-span-8">
+        <p class="section-eyebrow mb-6">Référence visuelle · Mai 2026</p>
+        <h1 class="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-[1.05] tracking-tight">
+          Le langage visuel<br/>
+          de <em class="italic font-normal text-[var(--color-violet-700)]">Clochette Nails</em>.
+        </h1>
+        <p class="mt-8 text-[var(--color-ink-500)] text-lg leading-relaxed max-w-[52ch]">
+          Tokens, composants et règles d'usage qui sous-tendent l'ensemble des écrans —
+          site public, prise de rendez-vous, et espace administration. Une seule source de
+          vérité, pour une expérience cohérente, douce et lisible.
+        </p>
+        <div class="mt-10 flex flex-wrap items-center gap-3">
+          <a href="#fondations" class="btn btn-primary">
+            Explorer les fondations <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </a>
+          <a href="#composants" class="btn btn-secondary">Voir les composants</a>
+        </div>
+      </div>
+
+      <aside class="lg:col-span-4 lg:pl-8 lg:border-l lg:border-[var(--color-line)]">
+        <p class="section-eyebrow mb-4">Sommaire</p>
+        <nav class="flex flex-col">
+          <a href="#palette" class="toc-link">01 — Palette</a>
+          <a href="#typographie" class="toc-link">02 — Typographie</a>
+          <a href="#espacements" class="toc-link">03 — Espacements</a>
+          <a href="#radius-shadows" class="toc-link">04 — Radius &amp; ombres</a>
+          <a href="#iconographie" class="toc-link">05 — Iconographie</a>
+          <a href="#boutons" class="toc-link">06 — Boutons</a>
+          <a href="#formulaires" class="toc-link">07 — Formulaires</a>
+          <a href="#cards" class="toc-link">08 — Cards</a>
+          <a href="#badges" class="toc-link">09 — Badges</a>
+          <a href="#navigation" class="toc-link">10 — Navigation</a>
+          <a href="#footer" class="toc-link">11 — Footer</a>
+          <a href="#overlays" class="toc-link">12 — Modals &amp; drawers</a>
+          <a href="#toasts" class="toc-link">13 — Notifications</a>
+          <a href="#principes" class="toc-link">14 — Principes</a>
+        </nav>
+      </aside>
+    </div>
+  </section>
+
+  <hr class="hairline max-w-[1240px] mx-auto" />
+
+  <!-- ─────────────── FONDATIONS ─────────────── -->
+  <section id="fondations" class="max-w-[1240px] mx-auto px-6 lg:px-10 py-20">
+    <div class="grid lg:grid-cols-12 gap-10 mb-16">
+      <div class="lg:col-span-4">
+        <p class="section-eyebrow mb-3">01 · 02 · 03</p>
+        <h2 class="text-[2rem] lg:text-[2.5rem] font-serif">Fondations</h2>
+      </div>
+      <p class="lg:col-span-8 text-[var(--color-ink-500)] text-lg leading-relaxed lg:pt-4">
+        Couleurs, typographie et rythme sont fixés par tokens CSS. Tout écrit de la marque s'y
+        réfère — jamais de valeur en dur dans les composants.
+      </p>
+    </div>
+
+    <!-- Palette -->
+    <div id="palette" class="mb-24">
+      <header class="flex items-end justify-between mb-8">
+        <div>
+          <p class="section-eyebrow mb-2">01</p>
+          <h3 class="text-[1.5rem] font-serif">Palette</h3>
+        </div>
+        <span class="text-xs text-[var(--color-ink-500)] hidden sm:block">8 couleurs primaires + alias sémantiques</span>
+      </header>
+
+      <!-- Primaires -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 mb-10">
+        <article>
+          <div class="swatch bg-[var(--color-violet-600)] mb-3"></div>
+          <div class="text-sm font-medium">Violet principal</div>
+          <div class="token-code">--color-violet-600 · #8868B0</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Boutons, liens, accents</p>
+        </article>
+        <article>
+          <div class="swatch bg-[var(--color-violet-300)] mb-3"></div>
+          <div class="text-sm font-medium">Violet clair</div>
+          <div class="token-code">--color-violet-300 · #CCAAD2</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Hovers, surfaces secondaires</p>
+        </article>
+        <article>
+          <div class="swatch bg-[var(--color-gold-500)] mb-3"></div>
+          <div class="text-sm font-medium">Doré accent</div>
+          <div class="token-code">--color-gold-500 · #DEC264</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Highlights, premium feel</p>
+        </article>
+        <article>
+          <div class="swatch bg-[var(--color-gold-200)] mb-3"></div>
+          <div class="text-sm font-medium">Doré clair</div>
+          <div class="token-code">--color-gold-200 · #F7DC6F</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Backgrounds subtils</p>
+        </article>
+
+        <article>
+          <div class="swatch bg-[var(--color-cream)] mb-3"></div>
+          <div class="text-sm font-medium">Crème</div>
+          <div class="token-code">--color-cream · #FCFBF7</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Fond global de l'app</p>
+        </article>
+        <article>
+          <div class="swatch bg-[var(--color-rose-100)] mb-3"></div>
+          <div class="text-sm font-medium">Rose pastel</div>
+          <div class="token-code">--color-rose-100 · #FCE0E3</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Mises en avant douces</p>
+        </article>
+        <article>
+          <div class="swatch bg-[var(--color-ink-900)] mb-3"></div>
+          <div class="text-sm font-medium text-[var(--color-ink-900)]">Encre principale</div>
+          <div class="token-code">--color-ink-900 · #2A2A2A</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Anthracite — titres, corps</p>
+        </article>
+        <article>
+          <div class="swatch bg-[var(--color-ink-500)] mb-3"></div>
+          <div class="text-sm font-medium">Encre secondaire</div>
+          <div class="token-code">--color-ink-500 · #7a5c65</div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">Texte de support</p>
+        </article>
+      </div>
+
+      <!-- Échelles -->
+      <div class="grid lg:grid-cols-2 gap-8 mb-10">
+        <div>
+          <p class="text-sm font-medium mb-3">Échelle violet</p>
+          <div class="flex h-14 rounded-[8px] overflow-hidden border border-[var(--color-line)]">
+            <div class="flex-1 bg-[var(--color-violet-50)]"></div>
+            <div class="flex-1 bg-[var(--color-violet-100)]"></div>
+            <div class="flex-1 bg-[var(--color-violet-300)]"></div>
+            <div class="flex-1 bg-[var(--color-violet-500)]"></div>
+            <div class="flex-1 bg-[var(--color-violet-600)]"></div>
+            <div class="flex-1 bg-[var(--color-violet-700)]"></div>
+          </div>
+          <div class="flex justify-between mt-2 token-code">
+            <span>50</span><span>100</span><span>300</span><span>500</span><span>600</span><span>700</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm font-medium mb-3">Échelle doré</p>
+          <div class="flex h-14 rounded-[8px] overflow-hidden border border-[var(--color-line)]">
+            <div class="flex-1 bg-[var(--color-gold-50)]"></div>
+            <div class="flex-1 bg-[var(--color-gold-200)]"></div>
+            <div class="flex-1 bg-[var(--color-gold-300)]"></div>
+            <div class="flex-1 bg-[var(--color-gold-500)]"></div>
+            <div class="flex-1 bg-[var(--color-gold-600)]"></div>
+          </div>
+          <div class="flex justify-between mt-2 token-code">
+            <span>50</span><span>200</span><span>300</span><span>500</span><span>600</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sémantique -->
+      <div>
+        <p class="text-sm font-medium mb-3">Couleurs sémantiques</p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="flex items-center gap-3 p-3 rounded-[8px] border border-[var(--color-line)] bg-[var(--color-paper)]">
+            <span class="w-3 h-3 rounded-full bg-[var(--color-success)]"></span>
+            <div>
+              <div class="text-sm font-medium">Succès</div>
+              <div class="token-code">#2f8f5a</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-[8px] border border-[var(--color-line)] bg-[var(--color-paper)]">
+            <span class="w-3 h-3 rounded-full bg-[var(--color-warning)]"></span>
+            <div>
+              <div class="text-sm font-medium">Avertissement</div>
+              <div class="token-code">#c98a2a</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-[8px] border border-[var(--color-line)] bg-[var(--color-paper)]">
+            <span class="w-3 h-3 rounded-full bg-[var(--color-danger)]"></span>
+            <div>
+              <div class="text-sm font-medium">Erreur</div>
+              <div class="token-code">#b23a4a</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 p-3 rounded-[8px] border border-[var(--color-line)] bg-[var(--color-paper)]">
+            <span class="w-3 h-3 rounded-full bg-[var(--color-info)]"></span>
+            <div>
+              <div class="text-sm font-medium">Info</div>
+              <div class="token-code">= violet 600</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Typographie -->
+    <div id="typographie" class="mb-24">
+      <header class="mb-10">
+        <p class="section-eyebrow mb-2">02</p>
+        <h3 class="text-[1.5rem] font-serif">Typographie</h3>
+      </header>
+
+      <div class="grid lg:grid-cols-2 gap-10 mb-12">
+        <div class="card card-padded">
+          <div class="flex items-baseline justify-between">
+            <p class="font-serif text-[2.75rem] leading-none">Aa</p>
+            <span class="badge badge-outline">Serif · Titres</span>
+          </div>
+          <p class="font-serif text-[1.75rem] mt-6 leading-tight">Cinzel</p>
+          <p class="text-sm text-[var(--color-ink-500)] mt-2">Serif <em>capitale romaine</em>, inspirée des inscriptions lapidaires. Lettrage majuscule structuré, monumental. Réservé aux titres et capitques.</p>
+          <p class="token-code mt-4">--font-serif · Cinzel · 400 / 500 / 600 / 700 / 800 / 900 (pas d'italique)</p>
+        </div>
+
+        <div class="card card-padded">
+          <div class="flex items-baseline justify-between">
+            <p class="text-[2.75rem] leading-none" style="font-weight: 300;">Aa</p>
+            <span class="badge badge-outline">Serif body · Light</span>
+          </div>
+          <p class="text-[1.75rem] mt-6 leading-tight" style="font-weight: 300;">Inria Serif</p>
+          <p class="text-sm text-[var(--color-ink-500)] mt-2" style="font-weight: 300;">Serif aérien et lisible en graisse <em>Light 300</em>. Apporte une chaleur éditoriale aux paragraphes et formulaires — sans concurrencer Cormorant en titre.</p>
+          <p class="token-code mt-4">--font-sans · Inria Serif · 300 / 400 / 700 + italic</p>
+        </div>
+      </div>
+
+      <!-- Display caps -->
+      <div class="card card-padded mb-6">
+        <div class="flex items-baseline justify-between mb-4">
+          <p class="text-sm font-medium">Display caps · accents premium</p>
+          <span class="badge badge-outline">Display</span>
+        </div>
+        <p class="font-display text-[2rem] tracking-[0.16em] leading-none" style="font-family: var(--font-display);">JULIUS SANS ONE</p>
+        <p class="text-sm text-[var(--color-ink-500)] mt-3 max-w-[60ch]">Réservé aux capitales : eyebrows, badges, libellés de formulaire, boutons. Donne le caractère premium sans alourdir la lecture longue.</p>
+        <p class="token-code mt-3">--font-display · 400</p>
+      </div>
+
+      <!-- UI sans -->
+      <div class="card card-padded mb-6">
+        <div class="flex items-baseline justify-between mb-4">
+          <p class="text-sm font-medium">Sans UI · dense</p>
+          <span class="badge badge-outline">UI</span>
+        </div>
+        <p class="text-[2rem] leading-none" style="font-family: var(--font-ui); font-weight: 400;">Manrope</p>
+        <p class="text-sm text-[var(--color-ink-500)] mt-3 max-w-[60ch]" style="font-family: var(--font-ui);">Réservé aux contextes UI denses : valeurs d'inputs, helper text, messages d'erreur, tables, toasts, admin. Plus neutre que l'Inria Serif, lisible à petite taille.</p>
+        <p class="token-code mt-3">--font-ui · Manrope · 300 / 400 / 500 / 600 / 700</p>
+      </div>
+
+      <!-- Echelle -->
+      <div class="card overflow-hidden">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b border-[var(--color-line)] text-xs uppercase tracking-[0.12em] text-[var(--color-ink-500)]">
+              <th class="py-4 px-6 font-medium">Token</th>
+              <th class="py-4 px-6 font-medium">Taille</th>
+              <th class="py-4 px-6 font-medium">Aperçu</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--color-line)]">
+            <tr>
+              <td class="py-5 px-6 token-code align-middle">h1</td>
+              <td class="py-5 px-6 token-code align-middle whitespace-nowrap">clamp(2.5rem, 5vw, 4rem)</td>
+              <td class="py-5 px-6"><span class="font-serif text-[clamp(1.75rem,3vw,2.5rem)] leading-tight">Une douceur méticuleuse</span></td>
+            </tr>
+            <tr>
+              <td class="py-5 px-6 token-code align-middle">h2</td>
+              <td class="py-5 px-6 token-code align-middle whitespace-nowrap">2rem → 2.5rem</td>
+              <td class="py-5 px-6"><span class="font-serif text-[2rem] leading-tight">Soin, pose, finition</span></td>
+            </tr>
+            <tr>
+              <td class="py-5 px-6 token-code align-middle">h3</td>
+              <td class="py-5 px-6 token-code align-middle whitespace-nowrap">1.5rem</td>
+              <td class="py-5 px-6"><span class="font-serif text-[1.5rem] leading-tight">Prestations</span></td>
+            </tr>
+            <tr>
+              <td class="py-5 px-6 token-code align-middle">body</td>
+              <td class="py-5 px-6 token-code align-middle whitespace-nowrap">1rem · 1.6 line-height</td>
+              <td class="py-5 px-6 max-w-[44ch]"><span class="text-base text-[var(--color-ink-900)]">Chloé reçoit en cabine privée à Moncoutant. Chaque rendez-vous démarre par un diagnostic — état de l'ongle, attentes, tenue.</span></td>
+            </tr>
+            <tr>
+              <td class="py-5 px-6 token-code align-middle">small</td>
+              <td class="py-5 px-6 token-code align-middle whitespace-nowrap">0.875rem</td>
+              <td class="py-5 px-6"><span class="text-sm text-[var(--color-ink-500)]">Réservation conseillée — confirmation par SMS sous 24h.</span></td>
+            </tr>
+            <tr>
+              <td class="py-5 px-6 token-code align-middle">eyebrow</td>
+              <td class="py-5 px-6 token-code align-middle whitespace-nowrap">0.75rem · UC · 0.18em</td>
+              <td class="py-5 px-6"><span class="section-eyebrow">Studio · Moncoutant-sur-Sèvre</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Espacements -->
+    <div id="espacements" class="mb-24">
+      <header class="mb-10">
+        <p class="section-eyebrow mb-2">03</p>
+        <h3 class="text-[1.5rem] font-serif">Espacements</h3>
+      </header>
+
+      <div class="grid lg:grid-cols-2 gap-10">
+        <div>
+          <p class="text-sm text-[var(--color-ink-500)] mb-6 max-w-[44ch]">Échelle stricte de 7 valeurs en rem. Toute marge ou padding s'aligne sur ces tokens.</p>
+          <div class="space-y-3">
+            <!-- 0.5 -->
+            <div class="flex items-center gap-4">
+              <div class="w-16 token-code">0.5</div>
+              <div class="bg-[var(--color-violet-100)] h-3 rounded-sm" style="width: 0.5rem"></div>
+              <div class="text-xs text-[var(--color-ink-500)]">8 px · xs</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 token-code">1</div>
+              <div class="bg-[var(--color-violet-100)] h-3 rounded-sm" style="width: 1rem"></div>
+              <div class="text-xs text-[var(--color-ink-500)]">16 px · sm</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 token-code">1.5</div>
+              <div class="bg-[var(--color-violet-100)] h-3 rounded-sm" style="width: 1.5rem"></div>
+              <div class="text-xs text-[var(--color-ink-500)]">24 px · md</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 token-code">2</div>
+              <div class="bg-[var(--color-violet-300)] h-3 rounded-sm" style="width: 2rem"></div>
+              <div class="text-xs text-[var(--color-ink-500)]">32 px · lg</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 token-code">3</div>
+              <div class="bg-[var(--color-violet-300)] h-3 rounded-sm" style="width: 3rem"></div>
+              <div class="text-xs text-[var(--color-ink-500)]">48 px · xl</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 token-code">4</div>
+              <div class="bg-[var(--color-violet-500)] h-3 rounded-sm" style="width: 4rem"></div>
+              <div class="text-xs text-[var(--color-ink-500)]">64 px · 2xl</div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-16 token-code">6</div>
+              <div class="bg-[var(--color-violet-600)] h-3 rounded-sm" style="width: 6rem"></div>
+              <div class="text-xs text-[var(--color-ink-500)]">96 px · 3xl</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-sm font-medium mb-3">Rythme de page</p>
+          <div class="card card-padded">
+            <div class="space-y-4">
+              <div class="h-3 bg-[var(--color-bone)] rounded-sm w-3/5"></div>
+              <div class="h-2 bg-[var(--color-bone)] rounded-sm w-4/5"></div>
+              <div class="h-2 bg-[var(--color-bone)] rounded-sm w-2/3"></div>
+            </div>
+            <div class="my-8 h-[1px] bg-[var(--color-line)]"></div>
+            <div class="space-y-2">
+              <div class="h-2 bg-[var(--color-bone)] rounded-sm w-1/2"></div>
+              <div class="h-2 bg-[var(--color-bone)] rounded-sm w-1/3"></div>
+            </div>
+            <p class="text-xs text-[var(--color-ink-500)] mt-6">Section &gt; bloc : <span class="kbd-mono">3rem</span> · Bloc &gt; titre : <span class="kbd-mono">1.5rem</span> · Titre &gt; texte : <span class="kbd-mono">1rem</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Radius & shadows -->
+    <div id="radius-shadows" class="mb-24">
+      <header class="mb-10">
+        <p class="section-eyebrow mb-2">04</p>
+        <h3 class="text-[1.5rem] font-serif">Border radius &amp; ombres</h3>
+      </header>
+
+      <div class="grid lg:grid-cols-2 gap-10">
+        <div>
+          <p class="text-sm font-medium mb-4">Border radius</p>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <div class="aspect-square bg-[var(--color-paper)] border border-[var(--color-line)] mb-2" style="border-radius: 8px;"></div>
+              <div class="text-sm font-medium">8 px</div>
+              <div class="token-code">--radius-sm · inputs</div>
+            </div>
+            <div>
+              <div class="aspect-square bg-[var(--color-paper)] border border-[var(--color-line)] mb-2" style="border-radius: 15px;"></div>
+              <div class="text-sm font-medium">15 px</div>
+              <div class="token-code">--radius-md · cards</div>
+            </div>
+            <div>
+              <div class="aspect-square bg-[var(--color-paper)] border border-[var(--color-line)] mb-2" style="border-radius: 25px;"></div>
+              <div class="text-sm font-medium">25 px</div>
+              <div class="token-code">--radius-lg · panels</div>
+            </div>
+            <div>
+              <div class="aspect-square bg-[var(--color-paper)] border border-[var(--color-line)] mb-2" style="border-radius: 50px;"></div>
+              <div class="text-sm font-medium">50 px</div>
+              <div class="token-code">--radius-pill · boutons</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-sm font-medium mb-4">Ombres (teintées violet)</p>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="bg-[var(--color-paper)] rounded-[15px] p-5" style="box-shadow: var(--shadow-xs);">
+              <div class="text-sm font-medium">xs</div>
+              <div class="token-code mt-1">subtle (0.06)</div>
+            </div>
+            <div class="bg-[var(--color-paper)] rounded-[15px] p-5" style="box-shadow: var(--shadow-sm);">
+              <div class="text-sm font-medium">sm</div>
+              <div class="token-code mt-1">default (0.08)</div>
+            </div>
+            <div class="bg-[var(--color-paper)] rounded-[15px] p-5" style="box-shadow: var(--shadow-md);">
+              <div class="text-sm font-medium">md</div>
+              <div class="token-code mt-1">hover (0.12)</div>
+            </div>
+            <div class="bg-[var(--color-paper)] rounded-[15px] p-5" style="box-shadow: var(--shadow-lg);">
+              <div class="text-sm font-medium">lg</div>
+              <div class="token-code mt-1">overlay (0.15)</div>
+            </div>
+          </div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-4 max-w-[44ch]">Les ombres sont teintées violet (rgba 107,70,193) pour rester cohérentes avec la palette — jamais de gris neutre.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Iconographie -->
+    <div id="iconographie" class="mb-8">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">05</p>
+        <h3 class="text-[1.5rem] font-serif">Iconographie</h3>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2 max-w-[52ch]">Lucide, stroke-width 1.5, taille par défaut 20 px. Jamais d'emoji — l'icône doit s'effacer face au contenu.</p>
+      </header>
+
+      <div class="card card-padded">
+        <div class="flex flex-wrap gap-x-10 gap-y-6 text-[var(--color-ink-700)]">
+          <div class="flex flex-col items-center gap-2"><i data-lucide="calendar" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">calendar</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="sparkles" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">sparkles</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="user" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">user</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="map-pin" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">map-pin</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="phone" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">phone</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="mail" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">mail</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="instagram" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">instagram</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="check" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">check</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="clock" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">clock</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="heart" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">heart</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="settings" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">settings</span></div>
+          <div class="flex flex-col items-center gap-2"><i data-lucide="bell" class="w-5 h-5" stroke-width="1.5"></i><span class="token-code">bell</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="hairline max-w-[1240px] mx-auto" />
+
+  <!-- ─────────────── COMPOSANTS ─────────────── -->
+  <section id="composants" class="max-w-[1240px] mx-auto px-6 lg:px-10 py-20">
+
+    <div class="grid lg:grid-cols-12 gap-10 mb-16">
+      <div class="lg:col-span-4">
+        <p class="section-eyebrow mb-3">06 → 13</p>
+        <h2 class="text-[2rem] lg:text-[2.5rem] font-serif">Composants</h2>
+      </div>
+      <p class="lg:col-span-8 text-[var(--color-ink-500)] text-lg leading-relaxed lg:pt-4">
+        Briques élémentaires utilisables tels quels. Chaque composant déclare ses états (hover,
+        focus, disabled) et reste accessible au clavier.
+      </p>
+    </div>
+
+    <!-- Boutons -->
+    <div id="boutons" class="mb-24">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">06</p>
+        <h3 class="text-[1.5rem] font-serif">Boutons</h3>
+      </header>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Variants -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">Variants</p>
+          <div class="flex flex-wrap gap-3 mb-6">
+            <button class="btn btn-primary">Réserver</button>
+            <button class="btn btn-secondary">En savoir plus</button>
+            <button class="btn btn-gold">Offre privilège</button>
+            <button class="btn btn-ghost">Annuler</button>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <button class="btn btn-primary"><i data-lucide="calendar" class="w-4 h-4" stroke-width="1.5"></i>Prendre rendez-vous</button>
+            <button class="btn btn-secondary"><i data-lucide="arrow-right" class="w-4 h-4" stroke-width="1.5"></i>Découvrir</button>
+            <button class="btn btn-icon-only btn-secondary" aria-label="Favori"><i data-lucide="heart" class="w-[18px] h-[18px]" stroke-width="1.5"></i></button>
+          </div>
+        </div>
+
+        <!-- States -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">États</p>
+          <div class="grid grid-cols-2 gap-x-6 gap-y-3 items-center text-sm">
+            <span class="text-[var(--color-ink-500)]">Default</span>
+            <button class="btn btn-primary justify-self-start">Réserver</button>
+
+            <span class="text-[var(--color-ink-500)]">Hover (simulé)</span>
+            <button class="btn btn-primary justify-self-start" style="background: var(--color-violet-700); transform: translateY(-1px); box-shadow: var(--shadow-md);">Réserver</button>
+
+            <span class="text-[var(--color-ink-500)]">Focus</span>
+            <button class="btn btn-primary justify-self-start" style="box-shadow: var(--shadow-focus);">Réserver</button>
+
+            <span class="text-[var(--color-ink-500)]">Disabled</span>
+            <button class="btn btn-primary justify-self-start" disabled>Réserver</button>
+
+            <span class="text-[var(--color-ink-500)]">Loading</span>
+            <button class="btn btn-primary justify-self-start" disabled>
+              <span class="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+              Patientez
+            </button>
+          </div>
+        </div>
+
+        <!-- Sizes -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">Tailles</p>
+          <div class="flex flex-wrap items-center gap-3">
+            <button class="btn btn-primary btn-sm">Petit</button>
+            <button class="btn btn-primary">Standard</button>
+            <button class="btn btn-primary btn-lg">Large</button>
+          </div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-4">Hauteur respective : 36 / 48 / 56 px — toujours pill (50px radius).</p>
+        </div>
+
+        <!-- Anatomy -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">Anatomie</p>
+          <div class="flex justify-center py-4">
+            <button class="btn btn-primary btn-lg">
+              <i data-lucide="calendar" class="w-4 h-4" stroke-width="1.5"></i>
+              Prendre rendez-vous
+              <i data-lucide="arrow-right" class="w-4 h-4" stroke-width="1.5"></i>
+            </button>
+          </div>
+          <ul class="text-xs text-[var(--color-ink-500)] space-y-1 mt-2">
+            <li>· Padding 0.875rem 1.75rem (sm/lg variations)</li>
+            <li>· Gap 0.5rem entre icône et label</li>
+            <li>· Transition 0.3s cubic-bezier(.2,.7,.3,1)</li>
+            <li>· Hover : translateY(-1px) + shadow-md</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Formulaires -->
+    <div id="formulaires" class="mb-24">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">07</p>
+        <h3 class="text-[1.5rem] font-serif">Formulaires</h3>
+      </header>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Inputs -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">Champs texte</p>
+          <div class="space-y-4">
+            <div class="field">
+              <label class="field-label">Prénom</label>
+              <input class="input" placeholder="Chloé" />
+            </div>
+
+            <div class="field">
+              <label class="field-label">Email · avec icône</label>
+              <div class="input-icon-wrap">
+                <i data-lucide="mail" class="icon w-[18px] h-[18px]" stroke-width="1.5"></i>
+                <input class="input" placeholder="vous@exemple.fr" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Prestation</label>
+              <select class="select">
+                <option>Pose semi-permanente</option>
+                <option>Pose en gel</option>
+                <option>Beauté des mains</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Message</label>
+              <textarea class="textarea" placeholder="Quelques mots sur vos attentes…"></textarea>
+              <span class="field-help">Optionnel — utilisé pour préparer votre rendez-vous.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- States -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">États</p>
+          <div class="space-y-4">
+            <div class="field">
+              <label class="field-label">Default</label>
+              <input class="input" placeholder="Saisir…" />
+            </div>
+            <div class="field">
+              <label class="field-label">Focus (simulé)</label>
+              <input class="input" value="Pose semi-permanente" style="border-color: var(--color-violet-600); box-shadow: var(--shadow-focus);" />
+            </div>
+            <div class="field">
+              <label class="field-label">Disabled</label>
+              <input class="input" value="Indisponible" disabled />
+            </div>
+            <div class="field">
+              <label class="field-label">Erreur</label>
+              <input class="input is-error" value="chloé@" />
+              <span class="field-error"><i data-lucide="alert-circle" class="w-3.5 h-3.5" stroke-width="1.5"></i>Adresse e-mail incomplète.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Choix -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">Sélections</p>
+          <div class="space-y-5">
+            <div>
+              <p class="field-label mb-3">Cases à cocher</p>
+              <div class="flex flex-col gap-2.5 text-sm">
+                <label class="flex items-center gap-3"><input type="checkbox" class="check" checked /> Recevoir les rappels SMS</label>
+                <label class="flex items-center gap-3"><input type="checkbox" class="check" /> Newsletter mensuelle</label>
+                <label class="flex items-center gap-3 text-[var(--color-ink-500)]"><input type="checkbox" class="check" disabled /> Option indisponible</label>
+              </div>
+            </div>
+            <div>
+              <p class="field-label mb-3">Boutons radio</p>
+              <div class="flex flex-col gap-2.5 text-sm">
+                <label class="flex items-center gap-3"><input type="radio" name="r1" class="radio" checked /> Cabine privée</label>
+                <label class="flex items-center gap-3"><input type="radio" name="r1" class="radio" /> Salon partagé</label>
+              </div>
+            </div>
+            <div>
+              <p class="field-label mb-3">Switch</p>
+              <label class="flex items-center gap-3 text-sm"><input type="checkbox" class="switch" checked /> Confirmation automatique des RDV</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Composé -->
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-5">Bloc composé · réservation</p>
+          <form class="space-y-4" onsubmit="event.preventDefault(); showToast('success', 'Demande envoyée', 'Nous vous recontactons sous 24h.');">
+            <div class="grid grid-cols-2 gap-3">
+              <div class="field">
+                <label class="field-label">Prénom</label>
+                <input class="input" placeholder="Chloé" />
+              </div>
+              <div class="field">
+                <label class="field-label">Nom</label>
+                <input class="input" placeholder="Renaud" />
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">Téléphone</label>
+              <div class="input-icon-wrap">
+                <i data-lucide="phone" class="icon w-[18px] h-[18px]" stroke-width="1.5"></i>
+                <input class="input" placeholder="06 12 34 56 78" />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-full">Demander un créneau</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Cards -->
+    <div id="cards" class="mb-24">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">08</p>
+        <h3 class="text-[1.5rem] font-serif">Cards</h3>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2 max-w-[52ch]">Survol : <span class="kbd-mono">translateY(-3px) + shadow-md</span>. Bordure violet 100 au hover pour signaler l'interactivité.</p>
+      </header>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Prestation card -->
+        <article class="card card-hover overflow-hidden">
+          <div class="aspect-[4/3] bg-[var(--color-rose-50)] relative overflow-hidden">
+            <svg class="absolute inset-0 w-full h-full opacity-60" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="stripeRose" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                  <line x1="0" y1="0" x2="0" y2="14" stroke="#e9bfc4" stroke-width="1"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#stripeRose)"/>
+            </svg>
+            <span class="absolute top-3 left-3 badge badge-rose">Signature</span>
+            <span class="absolute bottom-3 left-3 right-3 text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--color-ink-500)]">Photo · pose semi-permanente</span>
+          </div>
+          <div class="p-5">
+            <h4 class="font-serif text-lg leading-tight">Semi-permanent “Reflet”</h4>
+            <p class="text-sm text-[var(--color-ink-500)] mt-1.5">Pose, finition mate ou brillante, soin cuticules.</p>
+            <div class="flex items-center justify-between mt-4">
+              <span class="text-sm font-medium">45 €</span>
+              <span class="text-xs text-[var(--color-ink-500)]">1 h 15</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Témoignage -->
+        <article class="card card-hover card-padded flex flex-col">
+          <i data-lucide="quote" class="w-5 h-5 text-[var(--color-violet-300)] mb-4" stroke-width="1.5"></i>
+          <p class="font-serif text-[1.0625rem] leading-snug italic text-[var(--color-ink-900)]">Une parenthèse hors du temps. Chloé prend soin de chaque détail, du diagnostic à la finition.</p>
+          <div class="mt-auto pt-5 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] text-sm font-medium">M</div>
+            <div>
+              <div class="text-sm font-medium leading-tight">Marie L.</div>
+              <div class="text-xs text-[var(--color-ink-500)]">Cliente fidèle · 2024</div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Stat / admin -->
+        <article class="card card-hover card-padded">
+          <div class="flex items-start justify-between">
+            <span class="badge badge-violet badge-dot">Cette semaine</span>
+            <button class="text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)]" aria-label="Plus"><i data-lucide="more-horizontal" class="w-4 h-4" stroke-width="1.5"></i></button>
+          </div>
+          <p class="font-serif text-[2rem] leading-none mt-5">28</p>
+          <p class="text-sm text-[var(--color-ink-500)] mt-2">Rendez-vous confirmés</p>
+          <div class="mt-5 pt-5 border-t border-[var(--color-line)] flex items-center gap-2 text-xs">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-[var(--color-success)]" stroke-width="1.5"></i>
+            <span class="text-[var(--color-success)] font-medium">+12%</span>
+            <span class="text-[var(--color-ink-500)]">vs. semaine dernière</span>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Badges -->
+    <div id="badges" class="mb-24">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">09</p>
+        <h3 class="text-[1.5rem] font-serif">Badges</h3>
+      </header>
+
+      <div class="card card-padded">
+        <div class="flex flex-wrap items-center gap-3 mb-6">
+          <span class="badge badge-rose">Signature</span>
+          <span class="badge badge-gold">Premium</span>
+          <span class="badge badge-violet">Nouveau</span>
+          <span class="badge badge-outline">Bientôt</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="badge badge-violet badge-dot" style="color: var(--color-success); background: rgba(47,143,90,0.12);">Disponible</span>
+          <span class="badge badge-violet badge-dot" style="color: var(--color-warning); background: rgba(201,138,42,0.12);">Bientôt complet</span>
+          <span class="badge badge-violet badge-dot" style="color: var(--color-danger); background: rgba(178,58,74,0.10);">Complet</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Navigation -->
+    <div id="navigation" class="mb-24">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">10</p>
+        <h3 class="text-[1.5rem] font-serif">Navigation</h3>
+      </header>
+
+      <!-- Desktop header -->
+      <div class="card overflow-hidden mb-6">
+        <div class="px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)] border-b border-[var(--color-line)] bg-[var(--color-bone)]">Header desktop</div>
+        <div class="px-6 h-16 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+            <span class="font-serif text-[15px]">Clochette Nails</span>
+          </div>
+          <nav class="hidden md:flex items-center gap-8 text-sm">
+            <a href="#" class="nav-link is-active">Accueil</a>
+            <a href="#" class="nav-link">Prestations</a>
+            <a href="#" class="nav-link">Studio</a>
+            <a href="#" class="nav-link">Tarifs</a>
+            <a href="#" class="nav-link">Contact</a>
+          </nav>
+          <div class="flex items-center gap-2">
+            <button class="btn btn-ghost btn-sm">Connexion</button>
+            <button class="btn btn-primary btn-sm">Réserver</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile header -->
+      <div class="card overflow-hidden">
+        <div class="px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)] border-b border-[var(--color-line)] bg-[var(--color-bone)]">Header mobile</div>
+        <div class="max-w-[420px] mx-auto py-6">
+          <div class="border border-[var(--color-line)] rounded-[15px] overflow-hidden bg-[var(--color-paper)]">
+            <div class="px-5 h-14 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-7 h-7 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-xs">C</div>
+                <span class="font-serif text-sm">Clochette Nails</span>
+              </div>
+              <button onclick="document.getElementById('mobile-menu').classList.add('is-open')" class="btn btn-ghost btn-icon-only" aria-label="Menu">
+                <i data-lucide="menu" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-[var(--color-ink-500)] mt-3 text-center">Tapez sur le menu pour ouvrir l'overlay plein écran.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Footer -->
+    <div id="footer" class="mb-24">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">11</p>
+        <h3 class="text-[1.5rem] font-serif">Footer</h3>
+      </header>
+
+      <div class="card overflow-hidden">
+        <div class="px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)] border-b border-[var(--color-line)] bg-[var(--color-bone)]">Pied de page</div>
+        <footer class="bg-[var(--color-cream)] px-8 lg:px-12 pt-14 pb-8">
+          <div class="grid lg:grid-cols-12 gap-10">
+            <div class="lg:col-span-4">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+                <span class="font-serif text-lg">Clochette Nails</span>
+              </div>
+              <p class="text-sm text-[var(--color-ink-500)] max-w-[36ch]">Salon de prothésie ongulaire à Moncoutant-sur-Sèvre, par Chloé. Sur rendez-vous.</p>
+            </div>
+            <div class="lg:col-span-2">
+              <p class="section-eyebrow mb-4">Salon</p>
+              <ul class="space-y-2.5 text-sm">
+                <li><a href="#" class="hover:text-[var(--color-violet-700)] transition-colors">Prestations</a></li>
+                <li><a href="#" class="hover:text-[var(--color-violet-700)] transition-colors">Tarifs</a></li>
+                <li><a href="#" class="hover:text-[var(--color-violet-700)] transition-colors">Réserver</a></li>
+              </ul>
+            </div>
+            <div class="lg:col-span-3">
+              <p class="section-eyebrow mb-4">Contact</p>
+              <ul class="space-y-2.5 text-sm text-[var(--color-ink-700)]">
+                <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4 text-[var(--color-ink-500)]" stroke-width="1.5"></i> 12 rue des Tilleuls, 79320</li>
+                <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4 text-[var(--color-ink-500)]" stroke-width="1.5"></i> 06 12 34 56 78</li>
+                <li class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4 text-[var(--color-ink-500)]" stroke-width="1.5"></i> bonjour@clochette-nails.fr</li>
+              </ul>
+            </div>
+            <div class="lg:col-span-3">
+              <p class="section-eyebrow mb-4">Lettre du salon</p>
+              <p class="text-sm text-[var(--color-ink-500)] mb-3">Une attention par mois — pas plus.</p>
+              <form class="flex gap-2" onsubmit="event.preventDefault(); showToast('success','Inscription confirmée','Merci, à très vite.');">
+                <input type="email" class="input flex-1" placeholder="vous@exemple.fr" />
+                <button class="btn btn-primary btn-sm">OK</button>
+              </form>
+            </div>
+          </div>
+          <div class="mt-12 pt-6 border-t border-[var(--color-line)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[var(--color-ink-500)]">
+            <p>© 2026 Clochette Nails — Tous droits réservés.</p>
+            <div class="flex items-center gap-5">
+              <a href="#" class="hover:text-[var(--color-ink-900)]">Mentions légales</a>
+              <a href="#" class="hover:text-[var(--color-ink-900)]">Confidentialité</a>
+              <a href="#" class="hover:text-[var(--color-ink-900)]" aria-label="Instagram"><i data-lucide="instagram" class="w-4 h-4" stroke-width="1.5"></i></a>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Overlays -->
+    <div id="overlays" class="mb-24">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">12</p>
+        <h3 class="text-[1.5rem] font-serif">Modals &amp; drawers</h3>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2 max-w-[52ch]">Le drawer entre par la droite (440 px max). Le modal est centré, max 480 px, animé en fade + scale.</p>
+      </header>
+
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-3">Drawer · slide-in droit</p>
+          <p class="text-sm text-[var(--color-ink-500)] mb-5 max-w-[36ch]">Utilisé pour la confirmation de RDV, le panier des prestations, ou les filtres.</p>
+          <button class="btn btn-secondary" onclick="openDrawer()">Ouvrir le drawer</button>
+        </div>
+        <div class="card card-padded">
+          <p class="text-sm font-medium mb-3">Modal · centré</p>
+          <p class="text-sm text-[var(--color-ink-500)] mb-5 max-w-[36ch]">Pour les actions critiques : annulation, suppression, confirmation ferme.</p>
+          <button class="btn btn-secondary" onclick="openModal()">Ouvrir le modal</button>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider mb-24" />
+
+    <!-- Toasts -->
+    <div id="toasts" class="mb-8">
+      <header class="mb-8">
+        <p class="section-eyebrow mb-2">13</p>
+        <h3 class="text-[1.5rem] font-serif">Notifications</h3>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2 max-w-[52ch]">Coin bas-droit, empilement vertical. Auto-dismiss à 4s, fermable manuellement.</p>
+      </header>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="toast toast-success">
+          <i data-lucide="check-circle-2" class="w-5 h-5 mt-0.5 text-[var(--color-success)] shrink-0" stroke-width="1.5"></i>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium leading-tight">Rendez-vous confirmé</p>
+            <p class="text-xs text-[var(--color-ink-500)] mt-1">Vendredi 15 mai à 14h00.</p>
+          </div>
+        </div>
+        <div class="toast">
+          <i data-lucide="info" class="w-5 h-5 mt-0.5 text-[var(--color-info)] shrink-0" stroke-width="1.5"></i>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium leading-tight">Rappel programmé</p>
+            <p class="text-xs text-[var(--color-ink-500)] mt-1">SMS la veille à 18h.</p>
+          </div>
+        </div>
+        <div class="toast toast-warning">
+          <i data-lucide="alert-triangle" class="w-5 h-5 mt-0.5 text-[var(--color-warning)] shrink-0" stroke-width="1.5"></i>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium leading-tight">Créneau bientôt complet</p>
+            <p class="text-xs text-[var(--color-ink-500)] mt-1">Plus que 2 places ce mois-ci.</p>
+          </div>
+        </div>
+        <div class="toast toast-error">
+          <i data-lucide="x-circle" class="w-5 h-5 mt-0.5 text-[var(--color-danger)] shrink-0" stroke-width="1.5"></i>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium leading-tight">Erreur d'envoi</p>
+            <p class="text-xs text-[var(--color-ink-500)] mt-1">Vérifiez votre connexion.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button class="btn btn-secondary btn-sm" onclick="showToast('success','Bien noté','Confirmation envoyée.')">Tester succès</button>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('info','Rappel','Le studio rouvre à 14h.')">Tester info</button>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('warning','Attention','Soyez à l'heure.')">Tester avertissement</button>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('error','Échec','Veuillez réessayer.')">Tester erreur</button>
+      </div>
+    </div>
+  </section>
+
+  <hr class="hairline max-w-[1240px] mx-auto" />
+
+  <!-- ─────────────── PRINCIPES ─────────────── -->
+  <section id="principes" class="max-w-[1240px] mx-auto px-6 lg:px-10 py-20">
+    <div class="grid lg:grid-cols-12 gap-10 mb-12">
+      <div class="lg:col-span-4">
+        <p class="section-eyebrow mb-3">14</p>
+        <h2 class="text-[2rem] lg:text-[2.5rem] font-serif">Principes UI</h2>
+      </div>
+      <p class="lg:col-span-8 text-[var(--color-ink-500)] text-lg leading-relaxed lg:pt-4">
+        Quelques règles d'usage qui priment sur tout le reste — pour préserver la douceur, la
+        lisibilité et la sobriété de la marque.
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <article class="card card-padded">
+        <p class="font-serif text-[2rem] text-[var(--color-violet-300)] leading-none">01</p>
+        <h4 class="font-serif text-lg mt-3">Mobile-first</h4>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2">Concevoir pour un écran 375 px d'abord. Le desktop n'est qu'une amplification.</p>
+      </article>
+      <article class="card card-padded">
+        <p class="font-serif text-[2rem] text-[var(--color-violet-300)] leading-none">02</p>
+        <h4 class="font-serif text-lg mt-3">WCAG AA strict</h4>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2">Contraste minimum 4.5:1 sur le texte. Tous les états interactifs visibles au clavier.</p>
+      </article>
+      <article class="card card-padded">
+        <p class="font-serif text-[2rem] text-[var(--color-violet-300)] leading-none">03</p>
+        <h4 class="font-serif text-lg mt-3">Pas d'emoji, pas de néon</h4>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2">Iconographie Lucide stroke 1.5. Aucun effet criard, paillette ou dégradé saturé.</p>
+      </article>
+      <article class="card card-padded">
+        <p class="font-serif text-[2rem] text-[var(--color-violet-300)] leading-none">04</p>
+        <h4 class="font-serif text-lg mt-3">Micro-interactions subtiles</h4>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2">Toutes les transitions sont de 0.3s, en easing doux. Jamais de bounce ou de rebond.</p>
+      </article>
+      <article class="card card-padded">
+        <p class="font-serif text-[2rem] text-[var(--color-violet-300)] leading-none">05</p>
+        <h4 class="font-serif text-lg mt-3">Respiration généreuse</h4>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2">Whitespace prioritaire. Préférer une seule colonne aérée à deux colonnes serrées.</p>
+      </article>
+      <article class="card card-padded">
+        <p class="font-serif text-[2rem] text-[var(--color-violet-300)] leading-none">06</p>
+        <h4 class="font-serif text-lg mt-3">Tokens, jamais de hex</h4>
+        <p class="text-sm text-[var(--color-ink-500)] mt-2">Toute couleur, taille ou ombre passe par une variable <span class="kbd-mono">--*</span>.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- Bottom -->
+  <footer class="border-t border-[var(--color-line)] py-8">
+    <div class="max-w-[1240px] mx-auto px-6 lg:px-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[var(--color-ink-500)]">
+      <p>Clochette Nails — Design System · v1.0 · Mai 2026</p>
+      <p>Maintenu par Chloé &amp; l'équipe produit · <a href="#" class="hover:text-[var(--color-ink-900)]">Changelog</a></p>
+    </div>
+  </footer>
+
+  <!-- ─────────────── Drawer ─────────────── -->
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true">
+    <header class="px-6 py-5 border-b border-[var(--color-line)] flex items-center justify-between">
+      <div>
+        <p class="section-eyebrow">Récapitulatif</p>
+        <h4 class="font-serif text-lg mt-1">Votre rendez-vous</h4>
+      </div>
+      <button class="btn btn-ghost btn-icon-only" onclick="closeDrawer()" aria-label="Fermer"><i data-lucide="x" class="w-[18px] h-[18px]" stroke-width="1.5"></i></button>
+    </header>
+    <div class="px-6 py-6 flex-1 overflow-y-auto space-y-5">
+      <div class="flex items-start gap-4 pb-5 border-b border-[var(--color-line)]">
+        <div class="w-12 h-12 rounded-[8px] bg-[var(--color-rose-100)] shrink-0"></div>
+        <div class="flex-1">
+          <p class="font-medium text-sm">Semi-permanent “Reflet”</p>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">1 h 15 · finition mate</p>
+        </div>
+        <span class="text-sm font-medium">45 €</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <i data-lucide="calendar" class="w-4 h-4 mt-0.5 text-[var(--color-ink-500)]" stroke-width="1.5"></i>
+        <div class="text-sm">
+          <p class="font-medium">Vendredi 15 mai · 14h00</p>
+          <p class="text-[var(--color-ink-500)] text-xs mt-1">Cabine privée</p>
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-[var(--color-ink-500)]" stroke-width="1.5"></i>
+        <div class="text-sm">
+          <p class="font-medium">Studio Clochette</p>
+          <p class="text-[var(--color-ink-500)] text-xs mt-1">12 rue des Tilleuls, Moncoutant</p>
+        </div>
+      </div>
+    </div>
+    <footer class="px-6 py-5 border-t border-[var(--color-line)] space-y-2">
+      <button class="btn btn-primary w-full" onclick="closeDrawer(); showToast('success','Rendez-vous confirmé','Vendredi 15 mai à 14h00.')">Confirmer le rendez-vous</button>
+      <button class="btn btn-ghost w-full" onclick="closeDrawer()">Modifier</button>
+    </footer>
+  </aside>
+
+  <!-- ─────────────── Modal ─────────────── -->
+  <div class="modal-backdrop" id="modal-backdrop" onclick="if(event.target.id==='modal-backdrop') closeModal()">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="flex items-start gap-4 mb-2">
+        <div class="w-10 h-10 rounded-full bg-[var(--color-rose-50)] grid place-items-center shrink-0">
+          <i data-lucide="alert-triangle" class="w-5 h-5 text-[var(--color-danger)]" stroke-width="1.5"></i>
+        </div>
+        <div class="flex-1">
+          <h4 class="font-serif text-xl leading-tight">Annuler ce rendez-vous ?</h4>
+          <p class="text-sm text-[var(--color-ink-500)] mt-2 leading-relaxed">Cette action est définitive. Le créneau du vendredi 15 mai à 14h00 sera libéré.</p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button class="btn btn-ghost" onclick="closeModal()">Conserver</button>
+        <button class="btn btn-primary" style="background: var(--color-danger);" onclick="closeModal(); showToast('info','Rendez-vous annulé','Vous pouvez reprogrammer à tout moment.')">Annuler le RDV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────── Mobile menu ─────────────── -->
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="flex items-center justify-between mb-10">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-xs">C</div>
+        <span class="font-serif text-sm">Clochette Nails</span>
+      </div>
+      <button onclick="document.getElementById('mobile-menu').classList.remove('is-open')" class="btn btn-ghost btn-icon-only" aria-label="Fermer">
+        <i data-lucide="x" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+      </button>
+    </div>
+    <nav class="flex flex-col gap-1">
+      <a href="#" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Accueil</a>
+      <a href="#" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Prestations</a>
+      <a href="#" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Studio</a>
+      <a href="#" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Tarifs</a>
+      <a href="#" class="font-serif text-2xl py-3 border-b border-[var(--color-line)]">Contact</a>
+    </nav>
+    <div class="mt-auto space-y-3">
+      <button class="btn btn-primary w-full">Réserver</button>
+      <button class="btn btn-ghost w-full">Connexion</button>
+    </div>
+  </div>
+
+  <!-- ─────────────── Toasts stack ─────────────── -->
+  <div id="toast-stack" aria-live="polite"></div>
+
+  <script>
+    // Lucide
+    function refreshIcons(){ if (window.lucide) window.lucide.createIcons({ attrs: { 'stroke-width': 1.5 }}); }
+    refreshIcons();
+
+    // Drawer
+    function openDrawer(){
+      document.getElementById('drawer').classList.add('is-open');
+      document.getElementById('drawer-backdrop').classList.add('is-open');
+    }
+    function closeDrawer(){
+      document.getElementById('drawer').classList.remove('is-open');
+      document.getElementById('drawer-backdrop').classList.remove('is-open');
+    }
+
+    // Modal
+    function openModal(){ document.getElementById('modal-backdrop').classList.add('is-open'); refreshIcons(); }
+    function closeModal(){ document.getElementById('modal-backdrop').classList.remove('is-open'); }
+
+    // Esc closes overlays
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeDrawer(); closeModal(); document.getElementById('mobile-menu').classList.remove('is-open'); }
+    });
+
+    // Toast
+    const TOAST_ICONS = {
+      success: 'check-circle-2',
+      info: 'info',
+      warning: 'alert-triangle',
+      error: 'x-circle',
+    };
+    const TOAST_COLORS = {
+      success: 'var(--color-success)',
+      info: 'var(--color-info)',
+      warning: 'var(--color-warning)',
+      error: 'var(--color-danger)',
+    };
+    function showToast(kind, title, body){
+      const stack = document.getElementById('toast-stack');
+      const el = document.createElement('div');
+      el.className = `toast toast-anim ${kind === 'success' ? 'toast-success' : kind === 'warning' ? 'toast-warning' : kind === 'error' ? 'toast-error' : ''}`;
+      el.innerHTML = `
+        <i data-lucide="${TOAST_ICONS[kind]}" class="w-5 h-5 mt-0.5 shrink-0" style="color:${TOAST_COLORS[kind]}" stroke-width="1.5"></i>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium leading-tight">${title}</p>
+          <p class="text-xs text-[var(--color-ink-500)] mt-1">${body}</p>
+        </div>
+        <button class="text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)] -mt-1 -mr-1 p-1" aria-label="Fermer"><i data-lucide="x" class="w-4 h-4" stroke-width="1.5"></i></button>
+      `;
+      el.querySelector('button').addEventListener('click', () => el.remove());
+      stack.appendChild(el);
+      refreshIcons();
+      setTimeout(() => { el.style.transition = 'opacity 0.4s, transform 0.4s'; el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; setTimeout(() => el.remove(), 400); }, 4000);
+    }
+
+    // Sticky TOC active state
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const targets = [...tocLinks].map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          tocLinks.forEach(l => l.classList.toggle('is-active', l.getAttribute('href') === '#' + e.target.id));
+        }
+      });
+    }, { rootMargin: '-30% 0px -65% 0px' });
+    targets.forEach(t => obs.observe(t));
+  </script>
+
+</body>
+</html>

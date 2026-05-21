@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tableau de bord · Clochette Nails — Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inria+Serif:ital,wght@1,300;1,400&family=Julius+Sans+One&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    html, body { background: #FCFBF7; }
+  </style>
+
+  <style type="text/tailwindcss">
+    @theme {
+      --color-violet-700: #5E4392; --color-violet-600: #8868B0; --color-violet-500: #A187C5;
+      --color-violet-300: #CCAAD2; --color-violet-100: #ece1f3; --color-violet-50: #f6f1fa;
+      --color-gold-600: #BF9F44; --color-gold-500: #DEC264; --color-gold-300: #ECD68B; --color-gold-50: #fbf6e0;
+      --color-cream: #FCFBF7; --color-paper: #ffffff; --color-bone: #f4f1e8;
+      --color-ink-900: #2A2A2A; --color-ink-700: #4a3f44; --color-ink-500: #7a5c65;
+      --color-ink-300: #b8a4ab; --color-ink-200: #d8cdd1; --color-line: #ece5e7;
+      --color-success: #2f8f5a; --color-warning: #c98a2a; --color-danger: #b23a4a;
+      --font-serif: "Cinzel", "Trajan Pro", "Iowan Old Style", Georgia, serif;
+      --font-italic: "Inria Serif", "Iowan Old Style", Georgia, serif;
+      --font-display: "Julius Sans One", "Manrope", ui-sans-serif, sans-serif;
+      --font-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --radius-sm: 8px; --radius-md: 15px; --radius-lg: 25px; --radius-pill: 50px;
+      --shadow-xs: 0 1px 2px 0 rgba(136,104,176,.06);
+      --shadow-sm: 0 2px 8px -2px rgba(136,104,176,.08);
+      --shadow-md: 0 8px 24px -8px rgba(136,104,176,.14);
+      --shadow-lg: 0 18px 40px -16px rgba(136,104,176,.18);
+      --shadow-focus: 0 0 0 4px rgba(136,104,176,.22);
+    }
+
+    @layer base {
+      /* admin-shell : Manrope dominant, pas d'Inria Serif sauf italique sur emphases */
+      html { font-family: var(--font-ui); font-weight: 400; color: var(--color-ink-900); background: var(--color-cream); }
+      body { -webkit-font-smoothing: antialiased; }
+      h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.01em; }
+      h1 em, h2 em, h3 em { font-family: var(--font-italic); font-style: italic; font-weight: 400; letter-spacing: 0; }
+    }
+
+    @layer components {
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.75rem 1.5rem; border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.8125rem; font-weight: 400; letter-spacing: 0.06em;
+        transition: all 0.3s cubic-bezier(.2,.7,.3,1); cursor: pointer; border: 1px solid transparent; white-space: nowrap; }
+      .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .btn-primary { background: var(--color-violet-600); color: white; }
+      .btn-primary:hover:not(:disabled) { background: var(--color-violet-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+      .btn-secondary { background: transparent; color: var(--color-violet-700); border-color: var(--color-violet-600); }
+      .btn-secondary:hover { background: var(--color-violet-50); }
+      .btn-ghost { background: transparent; color: var(--color-ink-700); }
+      .btn-ghost:hover { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .btn-sm { padding: 0.5rem 1rem; font-size: 0.75rem; }
+      .btn-icon-only { padding: 0; width: 2.5rem; height: 2.5rem; border-radius: 50%; }
+
+      .badge { display: inline-flex; align-items: center; gap: 0.375rem;
+        padding: 0.25rem 0.625rem; border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.14em;
+        text-transform: uppercase; line-height: 1; }
+      .badge-violet { background: var(--color-violet-100); color: var(--color-violet-700); }
+      .badge-success { background: rgba(47,143,90,.12); color: var(--color-success); }
+      .badge-warning { background: rgba(201,138,42,.14); color: var(--color-warning); }
+      .badge-danger { background: rgba(178,58,74,.12); color: var(--color-danger); }
+      .badge-outline { background: transparent; border: 1px solid var(--color-ink-300); color: var(--color-ink-700); }
+      .badge-gold { background: var(--color-gold-50); color: var(--color-gold-600); }
+
+      .card { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md); }
+      .card-padded { padding: 1.25rem 1.5rem; }
+      .card-hoverable { transition: transform .25s, box-shadow .25s, border-color .25s; }
+      .card-hoverable:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-violet-300); }
+
+      .section-eyebrow { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--color-ink-500); font-weight: 400; }
+
+      .input { width: 100%; padding: 0.625rem 1rem; background: var(--color-paper); border: 1px solid var(--color-line);
+        border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.875rem; color: var(--color-ink-900); transition: border-color .3s, box-shadow .3s; }
+      .input:focus { outline: none; border-color: var(--color-violet-600); box-shadow: var(--shadow-focus); }
+      .input::placeholder { color: var(--color-ink-300); }
+
+      /* ── ADMIN SHELL ───────────────────────────────────── */
+      .admin-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+      @media (max-width: 1023px) {
+        .admin-shell { grid-template-columns: 1fr; }
+        .admin-sidebar { position: fixed; inset: 0 auto 0 0; width: 280px; transform: translateX(-100%); transition: transform .3s; z-index: 60; }
+        .admin-sidebar.is-open { transform: translateX(0); }
+      }
+
+      .admin-sidebar {
+        background: var(--color-paper); border-right: 1px solid var(--color-line);
+        display: flex; flex-direction: column; padding: 1.25rem 0;
+      }
+      .admin-sidebar-brand { display: flex; align-items: center; gap: 0.75rem; padding: 0 1.5rem 1.25rem; border-bottom: 1px solid var(--color-line); margin-bottom: 1rem; }
+      .admin-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 0.75rem; flex: 1; overflow-y: auto; }
+      .admin-nav-section { font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-ink-500); padding: 0.875rem 0.75rem 0.375rem; }
+      .admin-nav-link {
+        display: flex; align-items: center; gap: 0.75rem;
+        padding: 0.5625rem 0.75rem; border-radius: var(--radius-sm);
+        font-family: var(--font-ui); font-size: 0.875rem; font-weight: 500;
+        color: var(--color-ink-700); position: relative;
+        transition: background .2s, color .2s;
+      }
+      .admin-nav-link:hover { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .admin-nav-link.is-active { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .admin-nav-link.is-active::before { content:''; position: absolute; left: -0.75rem; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; background: var(--color-violet-600); border-radius: 0 2px 2px 0; }
+      .admin-nav-link .nav-badge { margin-left: auto; }
+      .admin-sidebar-footer { border-top: 1px solid var(--color-line); padding: 0.875rem 1.5rem 0; margin-top: 0.5rem; }
+
+      .admin-topbar {
+        height: 64px; background: var(--color-paper); border-bottom: 1px solid var(--color-line);
+        display: flex; align-items: center; gap: 1rem; padding: 0 1.5rem 0 2rem;
+        position: sticky; top: 0; z-index: 30;
+      }
+      @media (max-width: 1023px) { .admin-topbar { padding: 0 1rem; } }
+      .admin-main { display: flex; flex-direction: column; min-width: 0; }
+      .admin-content { padding: 2rem; max-width: 1400px; width: 100%; margin: 0 auto; }
+      @media (max-width: 767px) { .admin-content { padding: 1.25rem; } }
+
+      /* Search topbar */
+      .topbar-search { position: relative; flex: 1; max-width: 360px; }
+      .topbar-search .icon-left { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--color-ink-500); pointer-events: none; }
+      .topbar-search .kbd-hint { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%);
+        font-family: var(--font-ui); font-size: 0.6875rem; color: var(--color-ink-500);
+        background: var(--color-bone); padding: 0.125rem 0.375rem; border-radius: 4px; border: 1px solid var(--color-line); }
+      .topbar-search input { padding-left: 2.5rem; padding-right: 3.25rem; }
+
+      /* Notification bell */
+      .icon-btn {
+        display: inline-grid; place-items: center;
+        width: 2.5rem; height: 2.5rem; border-radius: 50%;
+        color: var(--color-ink-700); background: transparent; border: 0; cursor: pointer; position: relative;
+        transition: background .2s, color .2s;
+      }
+      .icon-btn:hover { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .icon-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .bell-dot { position: absolute; top: 8px; right: 8px; min-width: 16px; height: 16px;
+        background: var(--color-danger); color: white; border-radius: 50px;
+        font-family: var(--font-display); font-size: 0.625rem; letter-spacing: 0;
+        display: grid; place-items: center; padding: 0 4px; border: 2px solid var(--color-paper); }
+
+      /* Avatar */
+      .avatar { width: 2.25rem; height: 2.25rem; border-radius: 50%;
+        background: var(--color-violet-600); color: white; font-family: var(--font-serif);
+        font-size: 0.875rem; display: inline-grid; place-items: center; cursor: pointer;
+        border: 2px solid transparent; transition: border-color .2s; }
+      .avatar:hover { border-color: var(--color-violet-300); }
+
+      /* Popover */
+      .popover {
+        position: absolute; top: calc(100% + 8px); right: 0; min-width: 320px;
+        background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg); padding: 0.5rem; z-index: 40;
+        opacity: 0; transform: translateY(-4px); pointer-events: none;
+        transition: opacity .2s, transform .2s;
+      }
+      .popover.is-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+      .popover-item {
+        display: flex; align-items: flex-start; gap: 0.75rem;
+        padding: 0.625rem 0.75rem; border-radius: var(--radius-sm);
+        font-family: var(--font-ui); font-size: 0.8125rem; color: var(--color-ink-700);
+        cursor: pointer; transition: background .15s;
+      }
+      .popover-item:hover { background: var(--color-violet-50); }
+
+      /* KPI card */
+      .kpi {
+        background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md);
+        padding: 1.25rem 1.375rem; display: flex; flex-direction: column; gap: 0.75rem;
+        transition: transform .25s, box-shadow .25s, border-color .25s;
+      }
+      .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-violet-300); }
+      .kpi-icon { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: var(--color-violet-100); color: var(--color-violet-700); display: grid; place-items: center; }
+      .kpi-value { font-family: var(--font-serif); font-size: 1.875rem; line-height: 1; font-weight: 500; color: var(--color-ink-900); }
+      .kpi-label { font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-ink-500); }
+      .kpi-delta { font-family: var(--font-ui); font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; }
+      .delta-up { color: var(--color-success); }
+      .delta-down { color: var(--color-danger); }
+
+      /* Table */
+      .data-table { width: 100%; border-collapse: collapse; }
+      .data-table thead th {
+        font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.16em; text-transform: uppercase;
+        color: var(--color-ink-500); font-weight: 400; text-align: left;
+        padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--color-line);
+      }
+      .data-table tbody td {
+        font-family: var(--font-ui); font-size: 0.875rem; color: var(--color-ink-900);
+        padding: 0.875rem 0.75rem; border-bottom: 1px solid var(--color-line);
+        vertical-align: middle;
+      }
+      .data-table tbody tr:last-child td { border-bottom: 0; }
+      .data-table tbody tr { transition: background .15s; }
+      .data-table tbody tr:hover { background: var(--color-violet-50); }
+
+      /* Alert card */
+      .alert-row { display: flex; gap: 0.75rem; padding: 0.875rem; border: 1px solid var(--color-line); border-radius: var(--radius-sm); transition: border-color .25s, background .25s; cursor: pointer; }
+      .alert-row:hover { border-color: var(--color-violet-300); background: var(--color-violet-50); }
+      .alert-row .alert-icon { width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; }
+      .alert-warning { background: rgba(201,138,42,.14); color: var(--color-warning); }
+      .alert-info { background: var(--color-violet-100); color: var(--color-violet-700); }
+      .alert-danger { background: rgba(178,58,74,.12); color: var(--color-danger); }
+
+      /* Timeline */
+      .timeline-item { display: flex; gap: 0.875rem; padding: 0.75rem 0; }
+      .timeline-icon { width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-violet-50); color: var(--color-violet-700); display: grid; place-items: center; flex-shrink: 0; border: 1px solid var(--color-violet-100); }
+      .timeline-time { font-family: var(--font-ui); font-size: 0.75rem; color: var(--color-ink-500); }
+
+      /* Tab pills */
+      .tab-pill {
+        font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.14em; text-transform: uppercase;
+        padding: 0.4375rem 0.875rem; border-radius: var(--radius-pill); color: var(--color-ink-500);
+        cursor: pointer; transition: all .2s; border: 1px solid transparent;
+      }
+      .tab-pill:hover { color: var(--color-violet-700); }
+      .tab-pill.is-active { background: var(--color-violet-600); color: white; }
+
+      /* Quick action card */
+      .quick-card { display: flex; align-items: flex-start; gap: 1rem; padding: 1.125rem 1.25rem; }
+      .quick-card .arrow { margin-left: auto; color: var(--color-ink-300); transition: transform .25s, color .25s; }
+      .quick-card:hover .arrow { transform: translateX(3px); color: var(--color-violet-700); }
+
+      /* Drawer mobile backdrop */
+      .drawer-backdrop { position: fixed; inset: 0; background: rgba(26,26,26,.4); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .25s; }
+      .drawer-backdrop.is-open { opacity: 1; pointer-events: auto; }
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .anim-fade-up { animation: fadeUp 400ms cubic-bezier(.2,.7,.3,1) both; }
+    .stagger > * { opacity: 0; animation: fadeUp 400ms cubic-bezier(.2,.7,.3,1) both; }
+    .stagger > *:nth-child(1) { animation-delay: 0ms; }
+    .stagger > *:nth-child(2) { animation-delay: 60ms; }
+    .stagger > *:nth-child(3) { animation-delay: 120ms; }
+    .stagger > *:nth-child(4) { animation-delay: 180ms; }
+    .stagger > *:nth-child(5) { animation-delay: 240ms; }
+    .stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .anim-fade-up, .stagger > * { animation: none !important; opacity: 1 !important; transform: none !important; }
+    }
+  </style>
+</head>
+
+<body data-screen-label="Admin · Tableau de bord">
+
+  <div class="drawer-backdrop" id="drawer-backdrop" aria-hidden="true"></div>
+
+  <div class="admin-shell">
+
+    <!-- ════════ SIDEBAR ════════ -->
+    <aside class="admin-sidebar" id="sidebar" aria-label="Navigation principale">
+      <div class="admin-sidebar-brand">
+        <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+        <div class="leading-tight">
+          <div class="font-serif text-[15px]">Clochette Nails</div>
+          <div class="text-[10px] tracking-[0.18em] uppercase text-[var(--color-ink-500)]" style="font-family: var(--font-display);">Administration</div>
+        </div>
+      </div>
+
+      <nav class="admin-nav" role="navigation" aria-label="Navigation principale">
+        <div class="admin-nav-section">Pilotage</div>
+        <a href="#" class="admin-nav-link is-active" aria-current="page">
+          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Tableau de bord
+        </a>
+        <a href="#" class="admin-nav-link">
+          <i data-lucide="calendar" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Calendrier
+        </a>
+        <a href="#" class="admin-nav-link">
+          <i data-lucide="bookmark-check" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Bookings
+          <span class="badge badge-warning nav-badge">3</span>
+        </a>
+
+        <div class="admin-nav-section">Catalogue</div>
+        <a href="#" class="admin-nav-link"><i data-lucide="sparkles" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Prestations</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="image" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Photos</a>
+        <a href="#" class="admin-nav-link">
+          <i data-lucide="gift" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Cartes cadeau
+          <span class="badge badge-warning nav-badge">2</span>
+        </a>
+        <a href="#" class="admin-nav-link"><i data-lucide="book-open" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Ebooks</a>
+
+        <div class="admin-nav-section">Contenu</div>
+        <a href="#" class="admin-nav-link"><i data-lucide="newspaper" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Blog</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="mail" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Newsletter</a>
+        <a href="#" class="admin-nav-link">
+          <i data-lucide="message-circle" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Contacts
+          <span class="badge badge-violet nav-badge">5</span>
+        </a>
+
+        <div class="admin-nav-section">Système</div>
+        <a href="#" class="admin-nav-link"><i data-lucide="trending-up" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Finances</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="settings" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Paramètres</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="scroll-text" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Logs</a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div class="flex items-center justify-between text-xs text-[var(--color-ink-500)]">
+          <span>v1.0.0</span>
+          <button class="btn-ghost btn btn-sm" aria-label="Déconnexion">
+            <i data-lucide="log-out" class="w-4 h-4" stroke-width="1.5"></i> Quitter
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ════════ MAIN ════════ -->
+    <div class="admin-main">
+
+      <!-- ──── TOPBAR ──── -->
+      <header class="admin-topbar">
+        <button class="icon-btn lg:hidden" id="burger" aria-label="Ouvrir le menu">
+          <i data-lucide="menu" class="w-5 h-5" stroke-width="1.5"></i>
+        </button>
+
+        <div class="topbar-search hidden sm:block" role="search">
+          <i data-lucide="search" class="icon-left w-[16px] h-[16px]" stroke-width="1.5"></i>
+          <label for="admin-search" class="sr-only">Recherche globale</label>
+          <input id="admin-search" class="input" type="search" placeholder="Rechercher une cliente, booking, prestation…" />
+          <span class="kbd-hint">⌘ K</span>
+        </div>
+
+        <div class="flex-1"></div>
+
+        <!-- Nouveau dropdown -->
+        <div class="relative" data-dropdown="new">
+          <button class="btn btn-primary btn-sm" data-dd-trigger>
+            <i data-lucide="plus" class="w-4 h-4" stroke-width="2"></i>
+            <span class="hidden sm:inline">Nouveau</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5" stroke-width="2"></i>
+          </button>
+          <div class="popover" data-dd-panel>
+            <div class="popover-item"><i data-lucide="calendar-plus" class="w-4 h-4 mt-0.5" stroke-width="1.5"></i>Nouvelle booking manuelle</div>
+            <div class="popover-item"><i data-lucide="sparkles" class="w-4 h-4 mt-0.5" stroke-width="1.5"></i>Nouvelle prestation</div>
+            <div class="popover-item"><i data-lucide="clock" class="w-4 h-4 mt-0.5" stroke-width="1.5"></i>Nouveau créneau</div>
+            <div class="popover-item"><i data-lucide="image-plus" class="w-4 h-4 mt-0.5" stroke-width="1.5"></i>Nouvelle photo</div>
+            <div class="popover-item"><i data-lucide="book-plus" class="w-4 h-4 mt-0.5" stroke-width="1.5"></i>Nouveau ebook</div>
+            <div class="popover-item"><i data-lucide="file-plus" class="w-4 h-4 mt-0.5" stroke-width="1.5"></i>Nouveau article</div>
+          </div>
+        </div>
+
+        <!-- Bell -->
+        <div class="relative" data-dropdown="bell">
+          <button class="icon-btn" data-dd-trigger aria-label="3 notifications non lues">
+            <i data-lucide="bell" class="w-5 h-5" stroke-width="1.5"></i>
+            <span class="bell-dot">3</span>
+          </button>
+          <div class="popover" data-dd-panel style="min-width: 340px;">
+            <div class="px-3 py-2 flex items-center justify-between border-b border-[var(--color-line)]">
+              <span class="section-eyebrow">Notifications</span>
+              <button class="text-xs text-[var(--color-violet-700)] hover:underline">Tout marquer lu</button>
+            </div>
+            <div class="popover-item">
+              <div class="w-7 h-7 rounded-full bg-[var(--color-violet-100)] text-[var(--color-violet-700)] grid place-items-center flex-shrink-0"><i data-lucide="calendar-plus" class="w-3.5 h-3.5" stroke-width="1.5"></i></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[var(--color-ink-900)]">Nouvelle booking — Marie L.</p>
+                <p class="text-[var(--color-ink-500)] text-xs mt-0.5">il y a 12 min</p>
+              </div>
+            </div>
+            <div class="popover-item">
+              <div class="w-7 h-7 rounded-full bg-[rgba(47,143,90,.12)] text-[var(--color-success)] grid place-items-center flex-shrink-0"><i data-lucide="check-circle-2" class="w-3.5 h-3.5" stroke-width="1.5"></i></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[var(--color-ink-900)]">Acompte reçu — Sophie D.</p>
+                <p class="text-[var(--color-ink-500)] text-xs mt-0.5">il y a 1h</p>
+              </div>
+            </div>
+            <div class="popover-item">
+              <div class="w-7 h-7 rounded-full bg-[rgba(201,138,42,.14)] text-[var(--color-warning)] grid place-items-center flex-shrink-0"><i data-lucide="alert-triangle" class="w-3.5 h-3.5" stroke-width="1.5"></i></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[var(--color-ink-900)]">2 cartes cadeau expirent dans 14 jours</p>
+                <p class="text-[var(--color-ink-500)] text-xs mt-0.5">aujourd'hui</p>
+              </div>
+            </div>
+            <a href="#" class="popover-item text-center justify-center text-[var(--color-violet-700)] font-medium">Voir toutes</a>
+          </div>
+        </div>
+
+        <!-- Avatar -->
+        <div class="relative" data-dropdown="user">
+          <button class="avatar" data-dd-trigger aria-label="Menu utilisateur">C</button>
+          <div class="popover" data-dd-panel>
+            <div class="px-3 py-2 border-b border-[var(--color-line)]">
+              <p class="font-medium text-sm text-[var(--color-ink-900)]">Chloé Renaud</p>
+              <p class="text-xs text-[var(--color-ink-500)]">admin@clochette-nails.fr</p>
+            </div>
+            <div class="popover-item"><i data-lucide="user" class="w-4 h-4" stroke-width="1.5"></i>Mon profil</div>
+            <div class="popover-item"><i data-lucide="settings" class="w-4 h-4" stroke-width="1.5"></i>Paramètres</div>
+            <div class="popover-item text-[var(--color-danger)]"><i data-lucide="log-out" class="w-4 h-4" stroke-width="1.5"></i>Déconnexion</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ──── CONTENT ──── -->
+      <main class="admin-content space-y-8">
+
+        <!-- 1. Header dashboard -->
+        <section class="anim-fade-up">
+          <p class="section-eyebrow mb-3">Espace administration</p>
+          <h1 class="text-[2rem] md:text-[2.25rem] leading-tight">Bonjour <em>Chloé</em></h1>
+          <p class="text-sm text-[var(--color-ink-500)] mt-2">Mardi 11 mai 2026</p>
+        </section>
+
+        <!-- 2. KPI strip -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger" aria-label="Indicateurs clés">
+          <div class="kpi">
+            <div class="flex items-start justify-between">
+              <div class="kpi-icon"><i data-lucide="calendar-check" class="w-5 h-5" stroke-width="1.5"></i></div>
+              <span class="kpi-delta delta-up"><i data-lucide="trending-up" class="w-3 h-3" stroke-width="2"></i> +18%</span>
+            </div>
+            <div class="kpi-value" data-countup="22">0</div>
+            <div class="kpi-label">RDV cette semaine</div>
+          </div>
+
+          <div class="kpi">
+            <div class="flex items-start justify-between">
+              <div class="kpi-icon"><i data-lucide="euro" class="w-5 h-5" stroke-width="1.5"></i></div>
+              <span class="kpi-delta delta-up"><i data-lucide="trending-up" class="w-3 h-3" stroke-width="2"></i> +9%</span>
+            </div>
+            <div class="kpi-value"><span data-countup="4280">0</span> €</div>
+            <div class="kpi-label">CA du mois</div>
+          </div>
+
+          <div class="kpi">
+            <div class="flex items-start justify-between">
+              <div class="kpi-icon"><i data-lucide="gift" class="w-5 h-5" stroke-width="1.5"></i></div>
+              <span class="kpi-delta delta-down"><i data-lucide="trending-down" class="w-3 h-3" stroke-width="2"></i> −2</span>
+            </div>
+            <div class="kpi-value" data-countup="14">0</div>
+            <div class="kpi-label">Cartes cadeau actives</div>
+            <p class="text-xs text-[var(--color-ink-500)] mt-1">1 240 € restants au total</p>
+          </div>
+
+          <div class="kpi">
+            <div class="flex items-start justify-between">
+              <div class="kpi-icon" style="background: rgba(201,138,42,.14); color: var(--color-warning);"><i data-lucide="clock" class="w-5 h-5" stroke-width="1.5"></i></div>
+              <span class="badge badge-warning">À traiter</span>
+            </div>
+            <div class="kpi-value" style="color: var(--color-warning);" data-countup="3">0</div>
+            <div class="kpi-label">Bookings en attente</div>
+          </div>
+        </section>
+
+        <!-- 3 + 4. RDV (2/3) + Alertes (1/3) -->
+        <section class="grid lg:grid-cols-3 gap-6">
+
+          <!-- Prochains rendez-vous -->
+          <div class="card lg:col-span-2 anim-fade-up">
+            <header class="flex items-center justify-between p-5 border-b border-[var(--color-line)]">
+              <div>
+                <h2 class="text-lg leading-none">Prochains rendez-vous</h2>
+                <p class="text-xs text-[var(--color-ink-500)] mt-1.5">5 à venir cette semaine</p>
+              </div>
+              <a href="#" class="text-sm text-[var(--color-violet-700)] hover:underline underline-offset-4 inline-flex items-center gap-1.5">Voir tous <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.6"></i></a>
+            </header>
+
+            <!-- Desktop : table -->
+            <div class="hidden md:block overflow-x-auto">
+              <table class="data-table" aria-label="Prochains rendez-vous">
+                <caption class="sr-only">Liste des 5 prochains rendez-vous confirmés ou en attente d'acompte.</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Prestation</th>
+                    <th scope="col">Durée</th>
+                    <th scope="col">Statut</th>
+                    <th scope="col" class="text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="font-serif text-[15px] block leading-tight">14 mai</span><span class="text-xs text-[var(--color-ink-500)]">10:00</span></td>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <span class="font-medium">Marie Laurent</span>
+                        <span class="badge badge-violet" title="Carte cadeau utilisée">GC</span>
+                      </div>
+                      <p class="text-xs text-[var(--color-ink-500)] mt-0.5">marie.l@email.fr</p>
+                    </td>
+                    <td>Semi-permanent « Reflet »<br/><span class="text-xs text-[var(--color-ink-500)]">+ Nail-art léger</span></td>
+                    <td>1h30</td>
+                    <td><span class="badge badge-success">Confirmé</span></td>
+                    <td class="text-right"><button class="icon-btn" aria-label="Voir le détail"><i data-lucide="eye" class="w-4 h-4" stroke-width="1.5"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-serif text-[15px] block leading-tight">14 mai</span><span class="text-xs text-[var(--color-ink-500)]">14:30</span></td>
+                    <td><span class="font-medium">Sophie Dubreuil</span><p class="text-xs text-[var(--color-ink-500)] mt-0.5">sophie.db@email.fr</p></td>
+                    <td>Rallongement « Couture »</td>
+                    <td>2h30</td>
+                    <td><span class="badge badge-warning">En attente</span></td>
+                    <td class="text-right"><button class="icon-btn" aria-label="Voir"><i data-lucide="eye" class="w-4 h-4" stroke-width="1.5"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-serif text-[15px] block leading-tight">15 mai</span><span class="text-xs text-[var(--color-ink-500)]">09:30</span></td>
+                    <td><span class="font-medium">Julie Martin</span><p class="text-xs text-[var(--color-ink-500)] mt-0.5">julie.m@email.fr</p></td>
+                    <td>French « Moderne »</td>
+                    <td>1h30</td>
+                    <td><span class="badge badge-success">Confirmé</span></td>
+                    <td class="text-right"><button class="icon-btn" aria-label="Voir"><i data-lucide="eye" class="w-4 h-4" stroke-width="1.5"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-serif text-[15px] block leading-tight">15 mai</span><span class="text-xs text-[var(--color-ink-500)]">13:00</span></td>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <span class="font-medium">Camille Renault</span>
+                        <span class="badge badge-violet" title="Carte cadeau utilisée">GC</span>
+                      </div>
+                      <p class="text-xs text-[var(--color-ink-500)] mt-0.5">camille.r@email.fr</p>
+                    </td>
+                    <td>Beauté des mains</td>
+                    <td>45 min</td>
+                    <td><span class="badge badge-success">Confirmé</span></td>
+                    <td class="text-right"><button class="icon-btn" aria-label="Voir"><i data-lucide="eye" class="w-4 h-4" stroke-width="1.5"></i></button></td>
+                  </tr>
+                  <tr>
+                    <td><span class="font-serif text-[15px] block leading-tight">16 mai</span><span class="text-xs text-[var(--color-ink-500)]">11:00</span></td>
+                    <td><span class="font-medium">Anaïs Petit</span><p class="text-xs text-[var(--color-ink-500)] mt-0.5">anais.p@email.fr</p></td>
+                    <td>Nail-art « Atelier »</td>
+                    <td>1h45</td>
+                    <td><span class="badge badge-warning">En attente</span></td>
+                    <td class="text-right"><button class="icon-btn" aria-label="Voir"><i data-lucide="eye" class="w-4 h-4" stroke-width="1.5"></i></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile : cards -->
+            <div class="md:hidden p-3 space-y-2">
+              <article class="border border-[var(--color-line)] rounded-[var(--radius-sm)] p-3">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <p class="font-serif text-base leading-none">14 mai · 10:00</p>
+                    <p class="text-sm font-medium mt-2">Marie Laurent <span class="badge badge-violet ml-1">GC</span></p>
+                    <p class="text-xs text-[var(--color-ink-500)] mt-1">Semi-permanent « Reflet » · 1h30</p>
+                  </div>
+                  <span class="badge badge-success">Confirmé</span>
+                </div>
+              </article>
+              <article class="border border-[var(--color-line)] rounded-[var(--radius-sm)] p-3">
+                <div class="flex items-start justify-between">
+                  <div>
+                    <p class="font-serif text-base leading-none">14 mai · 14:30</p>
+                    <p class="text-sm font-medium mt-2">Sophie Dubreuil</p>
+                    <p class="text-xs text-[var(--color-ink-500)] mt-1">Rallongement « Couture » · 2h30</p>
+                  </div>
+                  <span class="badge badge-warning">En attente</span>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <!-- Alertes -->
+          <aside class="card anim-fade-up">
+            <header class="flex items-center justify-between p-5 border-b border-[var(--color-line)]">
+              <h2 class="text-lg leading-none">Alertes</h2>
+              <span class="badge badge-warning">4</span>
+            </header>
+            <div class="p-3 space-y-2">
+              <div class="alert-row">
+                <div class="alert-icon alert-warning"><i data-lucide="gift" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium">2 cartes cadeau expirent dans 14 jours</p>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">CC-2024-072, CC-2024-088 · 180 € restants</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--color-ink-300)] self-center" stroke-width="1.6"></i>
+              </div>
+              <div class="alert-row">
+                <div class="alert-icon alert-warning"><i data-lucide="clock" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium">3 bookings sans acompte &gt; 24h</p>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">À relancer ou annuler</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--color-ink-300)] self-center" stroke-width="1.6"></i>
+              </div>
+              <div class="alert-row">
+                <div class="alert-icon alert-info"><i data-lucide="message-circle" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium">5 messages contact non lus</p>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">Dernier : il y a 2h</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--color-ink-300)] self-center" stroke-width="1.6"></i>
+              </div>
+              <div class="alert-row">
+                <div class="alert-icon alert-info"><i data-lucide="package" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium">Ebook « Routine ongles » épuisé</p>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">Stock virtuel à 0</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-[var(--color-ink-300)] self-center" stroke-width="1.6"></i>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <!-- 5. Activité récente -->
+        <section class="card anim-fade-up">
+          <header class="flex items-center justify-between p-5 border-b border-[var(--color-line)]">
+            <h2 class="text-lg leading-none">Activité récente</h2>
+            <div class="flex gap-1.5">
+              <button class="tab-pill is-active">Aujourd'hui</button>
+              <button class="tab-pill">Cette semaine</button>
+              <button class="tab-pill">Ce mois</button>
+            </div>
+          </header>
+          <div class="p-5">
+            <ol class="divide-y divide-[var(--color-line)]">
+              <li class="timeline-item">
+                <div class="timeline-icon"><i data-lucide="calendar-plus" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <p class="text-sm"><span class="font-medium">Marie L.</span> a créé une booking</p>
+                  <p class="timeline-time mt-0.5">Semi-permanent « Reflet » · 14 mai 10:00 · il y a 2h</p>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-icon" style="background: rgba(47,143,90,.12); color: var(--color-success); border-color: rgba(47,143,90,.22);"><i data-lucide="check-circle-2" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <p class="text-sm"><span class="font-medium">Sophie D.</span> a payé l'acompte</p>
+                  <p class="timeline-time mt-0.5">22 € · Stripe · il y a 4h</p>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-icon" style="background: var(--color-gold-50); color: var(--color-gold-600); border-color: var(--color-gold-300);"><i data-lucide="gift" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <p class="text-sm">Carte cadeau achetée <span class="text-[var(--color-ink-500)]">— Anonyme</span></p>
+                  <p class="timeline-time mt-0.5">100 € · valable 1 an · hier</p>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-icon"><i data-lucide="mail" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <p class="text-sm">Nouveau message contact — <span class="font-medium">Julie M.</span></p>
+                  <p class="timeline-time mt-0.5">« Bonjour, j'aimerais savoir si… » · hier</p>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-icon"><i data-lucide="image-plus" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <p class="text-sm"><span class="font-medium">Chloé</span> a ajouté 3 photos à la galerie</p>
+                  <p class="timeline-time mt-0.5">Catégorie : Rallongements · il y a 2 jours</p>
+                </div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-icon" style="background: rgba(47,143,90,.12); color: var(--color-success); border-color: rgba(47,143,90,.22);"><i data-lucide="check-circle-2" class="w-4 h-4" stroke-width="1.5"></i></div>
+                <div class="flex-1">
+                  <p class="text-sm"><span class="font-medium">Anaïs P.</span> a payé l'acompte</p>
+                  <p class="timeline-time mt-0.5">31,50 € · Stripe · il y a 2 jours</p>
+                </div>
+              </li>
+            </ol>
+            <a href="#" class="block mt-4 pt-4 border-t border-[var(--color-line)] text-center text-sm text-[var(--color-violet-700)] hover:underline underline-offset-4 inline-flex items-center justify-center gap-1.5 w-full">
+              Voir le journal complet <i data-lucide="arrow-right" class="w-3.5 h-3.5" stroke-width="1.6"></i>
+            </a>
+          </div>
+        </section>
+
+        <!-- 6. Raccourcis -->
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg leading-none">Raccourcis</h2>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger">
+            <a href="#" class="card card-hoverable">
+              <div class="quick-card">
+                <div class="w-10 h-10 rounded-full bg-[var(--color-violet-100)] text-[var(--color-violet-700)] grid place-items-center flex-shrink-0"><i data-lucide="ban" class="w-5 h-5" stroke-width="1.5"></i></div>
+                <div class="min-w-0">
+                  <h3 class="font-serif text-base leading-tight">Bloquer une période</h3>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">Vacances, formation, indisponibilité</p>
+                </div>
+                <i data-lucide="arrow-right" class="arrow w-4 h-4 self-center" stroke-width="1.6"></i>
+              </div>
+            </a>
+            <a href="#" class="card card-hoverable">
+              <div class="quick-card">
+                <div class="w-10 h-10 rounded-full bg-[var(--color-violet-100)] text-[var(--color-violet-700)] grid place-items-center flex-shrink-0"><i data-lucide="clock" class="w-5 h-5" stroke-width="1.5"></i></div>
+                <div class="min-w-0">
+                  <h3 class="font-serif text-base leading-tight">Configurer les horaires</h3>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">Plages d'ouverture du salon</p>
+                </div>
+                <i data-lucide="arrow-right" class="arrow w-4 h-4 self-center" stroke-width="1.6"></i>
+              </div>
+            </a>
+            <a href="#" class="card card-hoverable">
+              <div class="quick-card">
+                <div class="w-10 h-10 rounded-full bg-[var(--color-violet-100)] text-[var(--color-violet-700)] grid place-items-center flex-shrink-0"><i data-lucide="file-down" class="w-5 h-5" stroke-width="1.5"></i></div>
+                <div class="min-w-0">
+                  <h3 class="font-serif text-base leading-tight">Exporter la compta</h3>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">CSV des paiements du mois</p>
+                </div>
+                <i data-lucide="arrow-right" class="arrow w-4 h-4 self-center" stroke-width="1.6"></i>
+              </div>
+            </a>
+            <a href="#" class="card card-hoverable">
+              <div class="quick-card">
+                <div class="w-10 h-10 rounded-full bg-[var(--color-violet-100)] text-[var(--color-violet-700)] grid place-items-center flex-shrink-0"><i data-lucide="send" class="w-5 h-5" stroke-width="1.5"></i></div>
+                <div class="min-w-0">
+                  <h3 class="font-serif text-base leading-tight">Envoyer une newsletter</h3>
+                  <p class="text-xs text-[var(--color-ink-500)] mt-1">Composer et envoyer aux abonnées</p>
+                </div>
+                <i data-lucide="arrow-right" class="arrow w-4 h-4 self-center" stroke-width="1.6"></i>
+              </div>
+            </a>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // ── Burger / drawer sidebar mobile ──
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('drawer-backdrop');
+    const burger = document.getElementById('burger');
+    burger?.addEventListener('click', () => {
+      sidebar.classList.add('is-open');
+      backdrop.classList.add('is-open');
+    });
+    backdrop.addEventListener('click', () => {
+      sidebar.classList.remove('is-open');
+      backdrop.classList.remove('is-open');
+    });
+
+    // ── Dropdowns (Nouveau, Bell, Avatar) ──
+    document.querySelectorAll('[data-dropdown]').forEach(dd => {
+      const trigger = dd.querySelector('[data-dd-trigger]');
+      const panel = dd.querySelector('[data-dd-panel]');
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // close others
+        document.querySelectorAll('[data-dropdown] [data-dd-panel].is-open').forEach(p => {
+          if (p !== panel) p.classList.remove('is-open');
+        });
+        panel.classList.toggle('is-open');
+      });
+    });
+    document.addEventListener('click', () => {
+      document.querySelectorAll('[data-dd-panel].is-open').forEach(p => p.classList.remove('is-open'));
+    });
+
+    // ── Tabs activité récente ──
+    document.querySelectorAll('.tab-pill').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.tab-pill').forEach(x => x.classList.remove('is-active'));
+        t.classList.add('is-active');
+      });
+    });
+
+    // ── Count-up KPI ──
+    const formatNum = (n, target) => {
+      if (target >= 1000) return Math.round(n).toLocaleString('fr-FR');
+      return Math.round(n).toString();
+    };
+    function countUp(el) {
+      const target = parseFloat(el.dataset.countup);
+      const duration = 700;
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = formatNum(eased * target, target);
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    document.querySelectorAll('[data-countup]').forEach(el => countUp(el));
+
+    // ── Cmd+K focus search ──
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        document.getElementById('admin-search')?.focus();
+      }
+    });
+  </script>
+</body>
+</html>

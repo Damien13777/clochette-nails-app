@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calendrier · Clochette Nails — Admin</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inria+Serif:ital,wght@1,300;1,400&family=Julius+Sans+One&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>html, body { background: #FCFBF7; }</style>
+
+  <style type="text/tailwindcss">
+    @theme {
+      --color-violet-700: #5E4392; --color-violet-600: #8868B0; --color-violet-500: #A187C5;
+      --color-violet-300: #CCAAD2; --color-violet-100: #ece1f3; --color-violet-50: #f6f1fa;
+      --color-gold-600: #BF9F44; --color-gold-500: #DEC264; --color-gold-300: #ECD68B; --color-gold-50: #fbf6e0;
+      --color-cream: #FCFBF7; --color-paper: #ffffff; --color-bone: #f4f1e8;
+      --color-ink-900: #2A2A2A; --color-ink-700: #4a3f44; --color-ink-500: #7a5c65;
+      --color-ink-300: #b8a4ab; --color-ink-200: #d8cdd1; --color-line: #ece5e7;
+      --color-success: #2f8f5a; --color-warning: #c98a2a; --color-danger: #b23a4a;
+      /* Catégories prestation (8 nuances déterministes) */
+      --color-cat-natural: #b8a4d4;
+      --color-cat-rallong: #d4a4b8;
+      --color-cat-soin: #a4c2d4;
+      --color-cat-art: #d4c2a4;
+      --color-cat-french: #b8d4a4;
+      --color-cat-retir: #d4a4a4;
+      --color-cat-evnmt: #c2a4d4;
+      --color-cat-autre: #a4d4c2;
+      --font-serif: "Cinzel", "Trajan Pro", Georgia, serif;
+      --font-italic: "Inria Serif", Georgia, serif;
+      --font-display: "Julius Sans One", "Manrope", ui-sans-serif, sans-serif;
+      --font-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+      --radius-sm: 8px; --radius-md: 15px; --radius-lg: 25px; --radius-pill: 50px;
+      --shadow-xs: 0 1px 2px 0 rgba(136,104,176,.06);
+      --shadow-sm: 0 2px 8px -2px rgba(136,104,176,.08);
+      --shadow-md: 0 8px 24px -8px rgba(136,104,176,.14);
+      --shadow-lg: 0 18px 40px -16px rgba(136,104,176,.18);
+      --shadow-focus: 0 0 0 4px rgba(136,104,176,.22);
+    }
+
+    @layer base {
+      html { font-family: var(--font-ui); color: var(--color-ink-900); background: var(--color-cream); }
+      body { -webkit-font-smoothing: antialiased; }
+      h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 500; letter-spacing: 0.01em; }
+      h1 em, h2 em, h3 em { font-family: var(--font-italic); font-style: italic; font-weight: 400; letter-spacing: 0; }
+    }
+
+    @layer components {
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.75rem 1.5rem; border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.8125rem; letter-spacing: 0.06em;
+        transition: all 0.3s cubic-bezier(.2,.7,.3,1); cursor: pointer; border: 1px solid transparent; white-space: nowrap; }
+      .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .btn-primary { background: var(--color-violet-600); color: white; }
+      .btn-primary:hover:not(:disabled) { background: var(--color-violet-700); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+      .btn-secondary { background: transparent; color: var(--color-violet-700); border-color: var(--color-violet-600); }
+      .btn-secondary:hover { background: var(--color-violet-50); }
+      .btn-ghost { background: transparent; color: var(--color-ink-700); }
+      .btn-ghost:hover { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .btn-danger { background: var(--color-danger); color: white; }
+      .btn-danger:hover { background: #962f3d; }
+      .btn-sm { padding: 0.5rem 1rem; font-size: 0.75rem; }
+
+      .badge { display: inline-flex; align-items: center; gap: 0.375rem;
+        padding: 0.25rem 0.625rem; border-radius: var(--radius-pill);
+        font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1; }
+      .badge-violet { background: var(--color-violet-100); color: var(--color-violet-700); }
+      .badge-success { background: rgba(47,143,90,.12); color: var(--color-success); }
+      .badge-warning { background: rgba(201,138,42,.14); color: var(--color-warning); }
+      .badge-danger { background: rgba(178,58,74,.12); color: var(--color-danger); }
+      .badge-neutral { background: var(--color-bone); color: var(--color-ink-700); }
+      .badge-outline { background: transparent; border: 1px solid var(--color-ink-300); color: var(--color-ink-700); }
+
+      .card { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md); }
+      .section-eyebrow { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--color-ink-500); }
+      .input { width: 100%; padding: 0.625rem 1rem; background: var(--color-paper); border: 1px solid var(--color-line);
+        border-radius: var(--radius-sm); font-family: var(--font-ui); font-size: 0.875rem; color: var(--color-ink-900); transition: border-color .3s, box-shadow .3s; }
+      .input:focus { outline: none; border-color: var(--color-violet-600); box-shadow: var(--shadow-focus); }
+      .input-time { width: 100px; }
+
+      /* ── ADMIN SHELL (identique au dashboard) ── */
+      .admin-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+      @media (max-width: 1023px) {
+        .admin-shell { grid-template-columns: 1fr; }
+        .admin-sidebar { position: fixed; inset: 0 auto 0 0; width: 280px; transform: translateX(-100%); transition: transform .3s; z-index: 60; }
+        .admin-sidebar.is-open { transform: translateX(0); }
+      }
+      .admin-sidebar { background: var(--color-paper); border-right: 1px solid var(--color-line); display: flex; flex-direction: column; padding: 1.25rem 0; }
+      .admin-sidebar-brand { display: flex; align-items: center; gap: 0.75rem; padding: 0 1.5rem 1.25rem; border-bottom: 1px solid var(--color-line); margin-bottom: 1rem; }
+      .admin-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 0.75rem; flex: 1; overflow-y: auto; }
+      .admin-nav-section { font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-ink-500); padding: 0.875rem 0.75rem 0.375rem; }
+      .admin-nav-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.5625rem 0.75rem; border-radius: var(--radius-sm);
+        font-family: var(--font-ui); font-size: 0.875rem; font-weight: 500; color: var(--color-ink-700); position: relative; transition: background .2s, color .2s; }
+      .admin-nav-link:hover { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .admin-nav-link.is-active { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .admin-nav-link.is-active::before { content:''; position: absolute; left: -0.75rem; top: 50%; transform: translateY(-50%); width: 3px; height: 22px; background: var(--color-violet-600); border-radius: 0 2px 2px 0; }
+      .admin-nav-link .nav-badge { margin-left: auto; }
+      .admin-sidebar-footer { border-top: 1px solid var(--color-line); padding: 0.875rem 1.5rem 0; margin-top: 0.5rem; }
+
+      .admin-topbar { height: 64px; background: var(--color-paper); border-bottom: 1px solid var(--color-line);
+        display: flex; align-items: center; gap: 1rem; padding: 0 1.5rem 0 2rem; position: sticky; top: 0; z-index: 30; }
+      @media (max-width: 1023px) { .admin-topbar { padding: 0 1rem; } }
+      .admin-main { display: flex; flex-direction: column; min-width: 0; }
+      .admin-content { padding: 2rem; max-width: 1400px; width: 100%; margin: 0 auto; }
+      @media (max-width: 767px) { .admin-content { padding: 1.25rem; } }
+
+      .topbar-search { position: relative; flex: 1; max-width: 360px; }
+      .topbar-search .icon-left { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--color-ink-500); pointer-events: none; }
+      .topbar-search input { padding-left: 2.5rem; }
+      .icon-btn { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; color: var(--color-ink-700); background: transparent; border: 0; cursor: pointer; position: relative; transition: background .2s, color .2s; }
+      .icon-btn:hover { background: var(--color-violet-50); color: var(--color-violet-700); }
+      .icon-btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+      .icon-btn-sm { width: 2rem; height: 2rem; }
+      .bell-dot { position: absolute; top: 8px; right: 8px; min-width: 16px; height: 16px;
+        background: var(--color-danger); color: white; border-radius: 50px; font-family: var(--font-display); font-size: 0.625rem; display: grid; place-items: center; padding: 0 4px; border: 2px solid var(--color-paper); }
+      .avatar { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--color-violet-600); color: white; font-family: var(--font-serif); font-size: 0.875rem; display: inline-grid; place-items: center; }
+
+      /* ── Page header ── */
+      .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+
+      /* ── Tabs ── */
+      .tab-bar { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--color-line); margin-bottom: 1.5rem; position: sticky; top: 64px; background: var(--color-cream); z-index: 20; padding-top: 0.5rem; }
+      .tab-trigger { padding: 0.875rem 1rem; font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-ink-500); border: 0; background: transparent; cursor: pointer; position: relative; transition: color .2s; }
+      .tab-trigger:hover { color: var(--color-violet-700); }
+      .tab-trigger.is-active { color: var(--color-violet-700); }
+      .tab-trigger.is-active::after { content:''; position: absolute; left: 0.5rem; right: 0.5rem; bottom: -1px; height: 2px; background: var(--color-violet-600); border-radius: 2px 2px 0 0; }
+      .tab-panel { display: none; }
+      .tab-panel.is-active { display: block; animation: fadeUp 250ms cubic-bezier(.2,.7,.3,1) both; }
+
+      /* ── Calendar toolbar ── */
+      .cal-toolbar { display: flex; align-items: center; gap: 1rem; justify-content: space-between; flex-wrap: wrap; margin-bottom: 1rem; }
+      .month-nav { display: flex; align-items: center; gap: 0.5rem; }
+      .month-label { font-family: var(--font-serif); font-size: 1.25rem; min-width: 200px; text-align: center; }
+      .view-toggle { display: inline-flex; background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-pill); padding: 3px; }
+      .view-toggle button { padding: 0.375rem 0.875rem; font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; border: 0; background: transparent; color: var(--color-ink-500); border-radius: var(--radius-pill); cursor: pointer; transition: all .2s; }
+      .view-toggle button.is-active { background: var(--color-violet-600); color: white; }
+
+      /* ── Calendar grid ── */
+      .cal-grid { background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+      .cal-grid-head { display: grid; grid-template-columns: repeat(7, 1fr); border-bottom: 1px solid var(--color-line); background: var(--color-bone); }
+      .cal-grid-head > div { padding: 0.625rem 0.75rem; font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-ink-500); text-align: center; }
+      .cal-grid-body { display: grid; grid-template-columns: repeat(7, 1fr); }
+      .cal-cell { min-height: 140px; padding: 0.5rem 0.625rem; border-right: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); cursor: pointer; transition: background .15s; position: relative; display: flex; flex-direction: column; gap: 4px; background: var(--color-paper); }
+      .cal-cell:nth-child(7n) { border-right: 0; }
+      .cal-cell:hover:not(.cal-cell--closed):not(.cal-cell--unbookable) { background: var(--color-violet-50); }
+      .cal-cell--out { background: rgba(244,241,232,.5); opacity: 0.5; cursor: default; }
+      .cal-cell--out .cal-day-num { color: var(--color-ink-300); }
+      .cal-cell--unbookable { background-image: repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(184,164,171,.18) 8px, rgba(184,164,171,.18) 10px); cursor: not-allowed; }
+      .cal-cell--closed { background: var(--color-bone); cursor: default; }
+      .cal-cell--closed .cal-day-num { color: var(--color-ink-300); }
+      .cal-cell--today { box-shadow: inset 0 0 0 2px var(--color-violet-600); }
+      .cal-cell--today .cal-day-num { color: var(--color-violet-700); font-weight: 600; }
+      .cal-cell--selected { background: var(--color-violet-100) !important; box-shadow: inset 0 0 0 2px var(--color-violet-600); }
+      .cal-cell--unavail { border-color: var(--color-warning); }
+      .cal-day-num { font-family: var(--font-serif); font-size: 0.9375rem; line-height: 1; }
+      .cal-cell-flags { display: inline-flex; gap: 4px; }
+      .cal-flag { font-size: 0.5625rem; font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; padding: 1px 5px; border-radius: var(--radius-pill); color: var(--color-warning); background: rgba(201,138,42,.14); }
+      .cal-flag-today { color: var(--color-violet-700); background: var(--color-violet-100); }
+
+      .booking-chip { display: flex; align-items: center; gap: 4px; height: 18px; padding: 0 6px; border-radius: var(--radius-pill); font-family: var(--font-ui); font-size: 0.6875rem; line-height: 1; color: var(--color-ink-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+      .booking-chip:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+      .booking-chip .chip-time { font-weight: 600; }
+      .booking-chip--natural { background: color-mix(in oklab, var(--color-cat-natural) 25%, white); border-left: 3px solid var(--color-cat-natural); }
+      .booking-chip--rallong { background: color-mix(in oklab, var(--color-cat-rallong) 25%, white); border-left: 3px solid var(--color-cat-rallong); }
+      .booking-chip--soin { background: color-mix(in oklab, var(--color-cat-soin) 25%, white); border-left: 3px solid var(--color-cat-soin); }
+      .booking-chip--art { background: color-mix(in oklab, var(--color-cat-art) 25%, white); border-left: 3px solid var(--color-cat-art); }
+      .booking-chip--french { background: color-mix(in oklab, var(--color-cat-french) 25%, white); border-left: 3px solid var(--color-cat-french); }
+      .booking-chip--retir { background: color-mix(in oklab, var(--color-cat-retir) 25%, white); border-left: 3px solid var(--color-cat-retir); }
+      .booking-chip--awaiting { opacity: 0.7; outline: 1px dashed var(--color-warning); outline-offset: -2px; }
+      .more-chip { font-size: 0.625rem; color: var(--color-ink-500); padding: 0 6px; font-family: var(--font-display); letter-spacing: 0.06em; }
+
+      /* ── Drawer right ── */
+      .drawer { position: fixed; top: 0; right: 0; height: 100vh; width: 480px; max-width: 100%;
+        background: var(--color-paper); border-left: 1px solid var(--color-line); box-shadow: var(--shadow-lg);
+        transform: translateX(100%); transition: transform .35s cubic-bezier(.2,.7,.3,1); z-index: 70; display: flex; flex-direction: column; }
+      .drawer.is-open { transform: translateX(0); }
+      .drawer-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-line); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+      .drawer-body { flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem; }
+      .drawer-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--color-line); display: flex; gap: 0.5rem; flex-wrap: wrap; flex-shrink: 0; }
+      @media (max-width: 640px) { .drawer { width: 100%; } }
+
+      .drawer-section { padding: 1rem 0; border-bottom: 1px solid var(--color-line); }
+      .drawer-section:last-child { border-bottom: 0; }
+      .drawer-section h4 { font-family: var(--font-display); font-size: 0.6875rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-ink-500); margin-bottom: 0.625rem; font-weight: 400; }
+
+      .gc-box { background: var(--color-violet-50); border: 1px solid var(--color-violet-100); border-radius: var(--radius-md); padding: 1rem; margin-top: 0.5rem; }
+      .gc-row { display: flex; justify-content: space-between; padding: 0.25rem 0; font-size: 0.8125rem; }
+      .gc-row dt { color: var(--color-ink-500); }
+      .gc-row dd { font-weight: 500; }
+
+      /* ── Modal ── */
+      .modal-backdrop { position: fixed; inset: 0; background: rgba(26,26,26,.45); z-index: 80; opacity: 0; pointer-events: none; transition: opacity .25s; backdrop-filter: blur(2px); }
+      .modal-backdrop.is-open { opacity: 1; pointer-events: auto; }
+      .modal { position: fixed; inset: 0; z-index: 81; display: grid; place-items: center; padding: 1rem; pointer-events: none; }
+      .modal-card { background: var(--color-paper); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); width: 100%; max-width: 460px; opacity: 0; transform: scale(.98); transition: opacity .25s, transform .25s; pointer-events: none; }
+      .modal.is-open .modal-card { opacity: 1; transform: none; pointer-events: auto; }
+      .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--color-line); display: flex; align-items: center; justify-content: space-between; }
+      .modal-body { padding: 1.25rem 1.5rem; }
+      .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--color-line); display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+      /* ── Switch ── */
+      .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .switch-slider { position: absolute; cursor: pointer; inset: 0; background: var(--color-ink-200); border-radius: 50px; transition: .3s; }
+      .switch-slider:before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: .3s; box-shadow: var(--shadow-xs); }
+      .switch input:checked + .switch-slider { background: var(--color-violet-600); }
+      .switch input:checked + .switch-slider:before { transform: translateX(20px); }
+
+      .month-card { padding: 1rem; transition: border-color .25s, transform .25s; }
+      .month-card.is-open-month { border-color: var(--color-violet-300); background: var(--color-violet-50); }
+
+      .hours-row { display: grid; grid-template-columns: 90px 60px 1fr; gap: 1rem; align-items: center; padding: 0.875rem 1rem; border-bottom: 1px solid var(--color-line); }
+      .hours-row:last-child { border-bottom: 0; }
+      .hours-row--closed .hours-inputs { color: var(--color-ink-300); }
+      .hours-inputs { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; font-size: 0.8125rem; color: var(--color-ink-500); }
+      @media (max-width: 640px) {
+        .hours-row { grid-template-columns: 1fr; gap: 0.5rem; }
+      }
+
+      .save-bar { position: sticky; bottom: 0; background: var(--color-paper); border: 1px solid var(--color-line); border-radius: var(--radius-md); box-shadow: var(--shadow-md); padding: 0.875rem 1.25rem; display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; transform: translateY(120%); transition: transform .3s; }
+      .save-bar.is-visible { transform: translateY(0); }
+
+      .unavail-row { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--color-line); }
+      .unavail-row:last-child { border-bottom: 0; }
+      .unavail-row .when { font-family: var(--font-serif); font-size: 0.9375rem; min-width: 200px; }
+
+      .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(120%); background: var(--color-ink-900); color: white; padding: 0.625rem 1rem; border-radius: var(--radius-pill); font-size: 0.8125rem; box-shadow: var(--shadow-lg); transition: transform .3s; z-index: 90; }
+      .toast.is-visible { transform: translateX(-50%) translateY(0); }
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+
+<body data-screen-label="Admin · Calendrier">
+  <div id="drawer-backdrop" class="modal-backdrop" aria-hidden="true"></div>
+
+  <div class="admin-shell">
+
+    <!-- ════════ SIDEBAR ════════ -->
+    <aside class="admin-sidebar" id="sidebar" aria-label="Navigation principale">
+      <div class="admin-sidebar-brand">
+        <div class="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white font-serif text-sm">C</div>
+        <div class="leading-tight">
+          <div class="font-serif text-[15px]">Clochette Nails</div>
+          <div class="text-[10px] tracking-[0.18em] uppercase text-[var(--color-ink-500)]" style="font-family: var(--font-display);">Administration</div>
+        </div>
+      </div>
+      <nav class="admin-nav" role="navigation">
+        <div class="admin-nav-section">Pilotage</div>
+        <a href="#" class="admin-nav-link"><i data-lucide="layout-dashboard" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Tableau de bord</a>
+        <a href="#" class="admin-nav-link is-active" aria-current="page"><i data-lucide="calendar" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Calendrier</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="bookmark-check" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Bookings <span class="badge badge-warning nav-badge">3</span></a>
+        <div class="admin-nav-section">Catalogue</div>
+        <a href="#" class="admin-nav-link"><i data-lucide="sparkles" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Prestations</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="image" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Photos</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="gift" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Cartes cadeau <span class="badge badge-warning nav-badge">2</span></a>
+        <a href="#" class="admin-nav-link"><i data-lucide="book-open" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Ebooks</a>
+        <div class="admin-nav-section">Contenu</div>
+        <a href="#" class="admin-nav-link"><i data-lucide="newspaper" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Blog</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="mail" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Newsletter</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="message-circle" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Contacts <span class="badge badge-violet nav-badge">5</span></a>
+        <div class="admin-nav-section">Système</div>
+        <a href="#" class="admin-nav-link"><i data-lucide="trending-up" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Finances</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="settings" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Paramètres</a>
+        <a href="#" class="admin-nav-link"><i data-lucide="scroll-text" class="w-[18px] h-[18px]" stroke-width="1.5"></i> Logs</a>
+      </nav>
+      <div class="admin-sidebar-footer">
+        <div class="flex items-center justify-between text-xs text-[var(--color-ink-500)]">
+          <span>v1.0.0</span>
+          <button class="btn btn-ghost btn-sm"><i data-lucide="log-out" class="w-4 h-4" stroke-width="1.5"></i> Quitter</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ════════ MAIN ════════ -->
+    <div class="admin-main">
+
+      <!-- TOPBAR -->
+      <header class="admin-topbar">
+        <button class="icon-btn lg:hidden" id="burger" aria-label="Ouvrir le menu"><i data-lucide="menu" class="w-5 h-5" stroke-width="1.5"></i></button>
+        <div class="topbar-search hidden sm:block" role="search">
+          <i data-lucide="search" class="icon-left w-[16px] h-[16px]" stroke-width="1.5"></i>
+          <input class="input" type="search" placeholder="Rechercher…" />
+        </div>
+        <div class="flex-1"></div>
+        <button class="icon-btn" aria-label="3 notifications non lues"><i data-lucide="bell" class="w-5 h-5" stroke-width="1.5"></i><span class="bell-dot">3</span></button>
+        <button class="avatar" aria-label="Menu utilisateur">C</button>
+      </header>
+
+      <main class="admin-content">
+
+        <!-- Page header -->
+        <div class="page-header">
+          <div>
+            <p class="section-eyebrow mb-2">Calendrier</p>
+            <h1 class="text-[1.875rem] leading-tight">Disponibilités &amp; rendez-vous</h1>
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button class="btn btn-secondary btn-sm" data-open-unavail-modal><i data-lucide="ban" class="w-4 h-4" stroke-width="1.5"></i> Bloquer une période</button>
+            <button class="btn btn-primary btn-sm"><i data-lucide="plus" class="w-4 h-4" stroke-width="2"></i> Nouveau créneau</button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-bar" role="tablist" aria-label="Sections du calendrier">
+          <button class="tab-trigger is-active" role="tab" aria-selected="true" data-tab="view">Vue calendrier</button>
+          <button class="tab-trigger" role="tab" aria-selected="false" data-tab="months">Mois ouverts</button>
+          <button class="tab-trigger" role="tab" aria-selected="false" data-tab="hours">Horaires hebdo</button>
+          <button class="tab-trigger" role="tab" aria-selected="false" data-tab="unavail">Indispos</button>
+        </div>
+
+        <!-- ════════════════════════════════ -->
+        <!-- TAB 1 — VUE CALENDRIER          -->
+        <!-- ════════════════════════════════ -->
+        <section class="tab-panel is-active" data-panel="view" role="tabpanel">
+
+          <div class="cal-toolbar">
+            <div class="month-nav">
+              <button class="icon-btn" id="prev-month" aria-label="Mois précédent"><i data-lucide="chevron-left" class="w-5 h-5" stroke-width="1.6"></i></button>
+              <span class="month-label" id="month-label">Mai 2026</span>
+              <button class="icon-btn" id="next-month" aria-label="Mois suivant"><i data-lucide="chevron-right" class="w-5 h-5" stroke-width="1.6"></i></button>
+              <button class="btn btn-ghost btn-sm ml-2" id="today-btn">Aujourd'hui</button>
+            </div>
+            <div class="view-toggle" role="tablist" aria-label="Vue calendrier">
+              <button class="is-active" data-view="month">Mois</button>
+              <button data-view="week">Semaine</button>
+              <button data-view="day">Jour</button>
+            </div>
+            <div class="relative">
+              <select class="input" aria-label="Filtrer par catégorie">
+                <option>Toutes prestations</option>
+                <option>Naturels</option>
+                <option>Rallongements</option>
+                <option>Soins</option>
+                <option>Nail-art</option>
+                <option>French</option>
+                <option>Retraits</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Grid mois -->
+          <div class="cal-grid" role="grid" aria-labelledby="month-label" id="cal-grid">
+            <div class="cal-grid-head" role="row">
+              <div role="columnheader">Lun</div>
+              <div role="columnheader">Mar</div>
+              <div role="columnheader">Mer</div>
+              <div role="columnheader">Jeu</div>
+              <div role="columnheader">Ven</div>
+              <div role="columnheader">Sam</div>
+              <div role="columnheader">Dim</div>
+            </div>
+            <div class="cal-grid-body" id="cal-body"></div>
+          </div>
+
+          <!-- Légende -->
+          <div class="mt-4 flex flex-wrap gap-3 text-xs text-[var(--color-ink-500)]">
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background: var(--color-cat-natural);"></span>Naturels</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background: var(--color-cat-rallong);"></span>Rallongements</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background: var(--color-cat-soin);"></span>Soins</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background: var(--color-cat-art);"></span>Nail-art</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background: var(--color-cat-french);"></span>French</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-full" style="background: var(--color-cat-retir);"></span>Retraits</span>
+            <span class="ml-4 inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm border border-dashed border-[var(--color-warning)]"></span>Indispo</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(184,164,171,.4) 3px, rgba(184,164,171,.4) 5px);"></span>Mois non ouvert</span>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════ -->
+        <!-- TAB 2 — MOIS OUVERTS            -->
+        <!-- ════════════════════════════════ -->
+        <section class="tab-panel" data-panel="months" role="tabpanel">
+          <p class="section-eyebrow mb-2">BookableMonth</p>
+          <h2 class="text-[1.5rem] leading-tight mb-2">Mois ouverts à la réservation</h2>
+          <p class="text-sm text-[var(--color-ink-500)] mb-6 max-w-[60ch]">Par défaut, aucun mois n'est ouvert. Activez chaque mois que vous souhaitez rendre réservable côté client. Les bookings existantes ne sont pas affectées par la fermeture d'un mois.</p>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3" id="months-grid"></div>
+        </section>
+
+        <!-- ════════════════════════════════ -->
+        <!-- TAB 3 — HORAIRES HEBDO          -->
+        <!-- ════════════════════════════════ -->
+        <section class="tab-panel" data-panel="hours" role="tabpanel">
+          <p class="section-eyebrow mb-2">BusinessHours</p>
+          <h2 class="text-[1.5rem] leading-tight mb-2">Horaires d'ouverture</h2>
+          <p class="text-sm text-[var(--color-ink-500)] mb-6 max-w-[60ch]">Les horaires hebdomadaires s'appliquent à toutes les semaines. Les exceptions ponctuelles passent par l'onglet « Indispos ».</p>
+          <div class="card overflow-hidden" id="hours-list"></div>
+          <div class="save-bar" id="hours-savebar">
+            <p class="text-sm"><span class="font-medium">Modifications non sauvegardées.</span> <span class="text-[var(--color-ink-500)]">Cliquez pour appliquer.</span></p>
+            <div class="flex gap-2">
+              <button class="btn btn-ghost btn-sm" id="hours-cancel">Annuler</button>
+              <button class="btn btn-primary btn-sm" id="hours-save">Sauvegarder</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ════════════════════════════════ -->
+        <!-- TAB 4 — INDISPOS                -->
+        <!-- ════════════════════════════════ -->
+        <section class="tab-panel" data-panel="unavail" role="tabpanel">
+          <div class="grid lg:grid-cols-2 gap-6">
+
+            <div>
+              <div class="flex items-end justify-between mb-3">
+                <div>
+                  <p class="section-eyebrow mb-2">Unavailability</p>
+                  <h2 class="text-[1.25rem] leading-tight">Périodes bloquées (ponctuelles)</h2>
+                </div>
+                <button class="btn btn-secondary btn-sm" data-open-unavail-modal><i data-lucide="plus" class="w-4 h-4" stroke-width="2"></i> Bloquer</button>
+              </div>
+              <div class="card overflow-hidden">
+                <div class="unavail-row">
+                  <div class="when">22 mai → 28 mai 2026</div>
+                  <div class="flex-1 text-sm">
+                    <p class="text-[var(--color-ink-900)]">Vacances familiales</p>
+                    <p class="text-xs text-[var(--color-ink-500)] mt-1">Journées complètes · 7 jours</p>
+                  </div>
+                  <div class="flex gap-1">
+                    <button class="icon-btn icon-btn-sm" aria-label="Modifier"><i data-lucide="pencil" class="w-4 h-4" stroke-width="1.5"></i></button>
+                    <button class="icon-btn icon-btn-sm" aria-label="Supprimer"><i data-lucide="trash-2" class="w-4 h-4" stroke-width="1.5"></i></button>
+                  </div>
+                </div>
+                <div class="unavail-row">
+                  <div class="when">14 mai 2026</div>
+                  <div class="flex-1 text-sm">
+                    <p class="text-[var(--color-ink-900)]">Formation hygiène et désinfection</p>
+                    <p class="text-xs text-[var(--color-ink-500)] mt-1">14:00 → 18:00 · Partiel</p>
+                  </div>
+                  <div class="flex gap-1">
+                    <button class="icon-btn icon-btn-sm"><i data-lucide="pencil" class="w-4 h-4" stroke-width="1.5"></i></button>
+                    <button class="icon-btn icon-btn-sm"><i data-lucide="trash-2" class="w-4 h-4" stroke-width="1.5"></i></button>
+                  </div>
+                </div>
+                <div class="unavail-row">
+                  <div class="when">14 avril 2026</div>
+                  <div class="flex-1 text-sm">
+                    <p class="text-[var(--color-ink-900)]">Rendez-vous médical</p>
+                    <p class="text-xs text-[var(--color-ink-500)] mt-1">10:00 → 12:00 · Passé</p>
+                  </div>
+                  <span class="badge badge-neutral self-center">Passé</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-end justify-between mb-3">
+                <div>
+                  <p class="section-eyebrow mb-2">RecurringUnavailability</p>
+                  <h2 class="text-[1.25rem] leading-tight">Blocages récurrents</h2>
+                </div>
+                <button class="btn btn-secondary btn-sm"><i data-lucide="plus" class="w-4 h-4" stroke-width="2"></i> Ajouter</button>
+              </div>
+              <div class="card overflow-hidden">
+                <div class="unavail-row">
+                  <div class="when">Tous les mardis</div>
+                  <div class="flex-1 text-sm">
+                    <p class="text-[var(--color-ink-900)]">14:00 → 19:00 · Compta &amp; gestion</p>
+                    <p class="text-xs text-[var(--color-ink-500)] mt-1">Depuis le 1 jan 2026 · Sans fin</p>
+                  </div>
+                  <div class="flex gap-1">
+                    <button class="icon-btn icon-btn-sm"><i data-lucide="pencil" class="w-4 h-4" stroke-width="1.5"></i></button>
+                    <button class="icon-btn icon-btn-sm"><i data-lucide="trash-2" class="w-4 h-4" stroke-width="1.5"></i></button>
+                  </div>
+                </div>
+                <div class="unavail-row">
+                  <div class="when">Tous les 1ers samedis</div>
+                  <div class="flex-1 text-sm">
+                    <p class="text-[var(--color-ink-900)]">09:00 → 13:00 · Marché créateurs</p>
+                    <p class="text-xs text-[var(--color-ink-500)] mt-1">Depuis le 1 mars 2026 · Jusqu'au 30 nov 2026</p>
+                  </div>
+                  <div class="flex gap-1">
+                    <button class="icon-btn icon-btn-sm"><i data-lucide="pencil" class="w-4 h-4" stroke-width="1.5"></i></button>
+                    <button class="icon-btn icon-btn-sm"><i data-lucide="trash-2" class="w-4 h-4" stroke-width="1.5"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ════════ DRAWER : Détail du jour ════════ -->
+  <aside class="drawer" id="drawer-day" role="dialog" aria-modal="true" aria-labelledby="drawer-day-title" aria-hidden="true">
+    <header class="drawer-header">
+      <div>
+        <p class="section-eyebrow mb-1">Détails du jour</p>
+        <h3 id="drawer-day-title" class="text-lg leading-tight">Jeudi 14 mai 2026</h3>
+      </div>
+      <button class="icon-btn" data-close-drawer aria-label="Fermer"><i data-lucide="x" class="w-5 h-5" stroke-width="1.5"></i></button>
+    </header>
+    <div class="drawer-body">
+      <section class="drawer-section">
+        <h4>Bookings du jour · 3</h4>
+        <ul class="space-y-2">
+          <li class="card p-3 cursor-pointer hover:border-[var(--color-violet-300)] transition" data-open-booking>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-serif text-base leading-none">10:00 — 11:30</p>
+                <p class="text-sm font-medium mt-1.5">Marie Laurent <span class="badge badge-violet">GC</span></p>
+                <p class="text-xs text-[var(--color-ink-500)] mt-0.5">Semi-permanent « Reflet »</p>
+              </div>
+              <span class="badge badge-success">Confirmé</span>
+            </div>
+          </li>
+          <li class="card p-3 cursor-pointer hover:border-[var(--color-violet-300)] transition">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-serif text-base leading-none">14:30 — 17:00</p>
+                <p class="text-sm font-medium mt-1.5">Sophie Dubreuil</p>
+                <p class="text-xs text-[var(--color-ink-500)] mt-0.5">Rallongement « Couture »</p>
+              </div>
+              <span class="badge badge-warning">En attente</span>
+            </div>
+          </li>
+          <li class="card p-3 cursor-pointer hover:border-[var(--color-violet-300)] transition">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-serif text-base leading-none">17:30 — 18:15</p>
+                <p class="text-sm font-medium mt-1.5">Léa Vidal</p>
+                <p class="text-xs text-[var(--color-ink-500)] mt-0.5">Retrait + soin</p>
+              </div>
+              <span class="badge badge-success">Confirmé</span>
+            </div>
+          </li>
+        </ul>
+      </section>
+      <section class="drawer-section">
+        <h4>Créneaux libres · selon horaires Jeu (09:00–12:00, 14:00–19:00)</h4>
+        <div class="flex flex-wrap gap-1.5">
+          <span class="px-2.5 py-1 rounded-[var(--radius-pill)] bg-[var(--color-bone)] text-xs">09:00</span>
+          <span class="px-2.5 py-1 rounded-[var(--radius-pill)] bg-[var(--color-bone)] text-xs">11:30</span>
+          <span class="px-2.5 py-1 rounded-[var(--radius-pill)] bg-[var(--color-bone)] text-xs">18:15</span>
+        </div>
+      </section>
+    </div>
+    <footer class="drawer-footer">
+      <button class="btn btn-secondary btn-sm flex-1"><i data-lucide="ban" class="w-4 h-4" stroke-width="1.5"></i> Bloquer la journée</button>
+      <button class="btn btn-ghost btn-sm flex-1"><i data-lucide="clock-alert" class="w-4 h-4" stroke-width="1.5"></i> Indispo partielle</button>
+    </footer>
+  </aside>
+
+  <!-- ════════ DRAWER : Détail booking ════════ -->
+  <aside class="drawer" id="drawer-booking" role="dialog" aria-modal="true" aria-labelledby="drawer-booking-title" aria-hidden="true">
+    <header class="drawer-header" style="border-top: 4px solid var(--color-cat-natural);">
+      <div>
+        <p class="section-eyebrow mb-1">Booking · BK-2026-0142</p>
+        <h3 id="drawer-booking-title" class="text-lg leading-tight">Jeudi 14 mai · 10:00</h3>
+      </div>
+      <button class="icon-btn" data-close-drawer aria-label="Fermer"><i data-lucide="x" class="w-5 h-5" stroke-width="1.5"></i></button>
+    </header>
+    <div class="drawer-body">
+      <section class="drawer-section">
+        <h4>Cliente</h4>
+        <p class="font-serif text-lg leading-tight">Marie Laurent</p>
+        <div class="text-sm text-[var(--color-ink-700)] mt-1 space-y-0.5">
+          <p class="flex items-center gap-1.5"><i data-lucide="mail" class="w-3.5 h-3.5" stroke-width="1.5"></i> marie.l@email.fr</p>
+          <p class="flex items-center gap-1.5"><i data-lucide="phone" class="w-3.5 h-3.5" stroke-width="1.5"></i> +33 6 12 34 56 78</p>
+        </div>
+        <button class="btn btn-secondary btn-sm mt-3"><i data-lucide="send" class="w-3.5 h-3.5" stroke-width="1.5"></i> Envoyer un email</button>
+      </section>
+
+      <section class="drawer-section">
+        <h4>Prestation</h4>
+        <p class="text-sm font-medium">Semi-permanent « Reflet »</p>
+        <p class="text-xs text-[var(--color-ink-500)] mt-1">+ Nail-art léger (3 ongles)</p>
+        <p class="text-xs text-[var(--color-ink-500)] mt-2"><i data-lucide="clock" class="inline w-3 h-3" stroke-width="1.5"></i> Durée totale : 1h30</p>
+      </section>
+
+      <section class="drawer-section">
+        <h4>Paiement</h4>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm">Statut</span>
+          <span class="badge badge-success">Confirmé</span>
+        </div>
+        <dl class="text-sm space-y-1">
+          <div class="flex justify-between"><dt class="text-[var(--color-ink-500)]">Total prestation</dt><dd class="font-medium">80,00 €</dd></div>
+          <div class="flex justify-between"><dt class="text-[var(--color-ink-500)]">Acompte versé</dt><dd class="font-medium">24,00 €</dd></div>
+          <div class="flex justify-between"><dt class="text-[var(--color-ink-500)]">Stripe</dt><dd class="font-mono text-xs">pi_3OqxK...j82F</dd></div>
+          <div class="flex justify-between"><dt class="text-[var(--color-ink-500)]">Payé le</dt><dd>11 mai 14:32</dd></div>
+        </dl>
+
+        <div class="gc-box">
+          <div class="flex items-center gap-2 mb-2">
+            <i data-lucide="gift" class="w-4 h-4 text-[var(--color-violet-700)]" stroke-width="1.5"></i>
+            <p class="text-sm font-medium text-[var(--color-violet-700)]">Carte cadeau utilisée pour l'acompte</p>
+          </div>
+          <p class="text-xs text-[var(--color-ink-500)] font-mono mb-2">Code : XXXX-XXXX-E5F6</p>
+          <dl>
+            <div class="gc-row"><dt>Solde initial</dt><dd>100,00 €</dd></div>
+            <div class="gc-row"><dt>Utilisé (acompte)</dt><dd>− 24,00 €</dd></div>
+            <div class="gc-row border-t border-[var(--color-violet-100)] pt-2 mt-1"><dt class="font-medium">Solde restant</dt><dd class="font-serif text-lg text-[var(--color-violet-700)]">76,00 €</dd></div>
+          </dl>
+          <button class="btn btn-primary btn-sm w-full mt-3" id="open-redemption">Encaisser le solde via carte cadeau</button>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <h4>Notes admin</h4>
+        <textarea class="input" rows="3" placeholder="Ajoutez des notes internes (visible uniquement par vous)…" id="admin-notes" style="resize: vertical;"></textarea>
+        <p class="text-xs text-[var(--color-ink-500)] mt-1.5 flex items-center gap-1"><span id="notes-status">Aucune modification</span></p>
+      </section>
+    </div>
+    <footer class="drawer-footer">
+      <button class="btn btn-secondary btn-sm"><i data-lucide="check" class="w-4 h-4" stroke-width="1.5"></i> Marquer terminé</button>
+      <button class="btn btn-ghost btn-sm" data-open-refund><i data-lucide="undo-2" class="w-4 h-4" stroke-width="1.5"></i> Refund</button>
+      <button class="btn btn-ghost btn-sm" style="color: var(--color-danger);"><i data-lucide="x-circle" class="w-4 h-4" stroke-width="1.5"></i> Annuler</button>
+      <button class="btn btn-ghost btn-sm"><i data-lucide="user-x" class="w-4 h-4" stroke-width="1.5"></i> No-show</button>
+    </footer>
+  </aside>
+
+  <!-- ════════ MODAL : Redemption ════════ -->
+  <div class="modal" id="modal-redemption" role="dialog" aria-modal="true" aria-labelledby="modal-redemption-title" aria-hidden="true">
+    <div class="modal-card">
+      <header class="modal-header">
+        <div>
+          <p class="section-eyebrow mb-1">Carte cadeau · ...E5F6</p>
+          <h3 id="modal-redemption-title" class="text-lg leading-tight">Encaisser via carte cadeau</h3>
+        </div>
+        <button class="icon-btn" data-close-modal><i data-lucide="x" class="w-5 h-5" stroke-width="1.5"></i></button>
+      </header>
+      <div class="modal-body">
+        <p class="section-eyebrow mb-1.5">Solde restant</p>
+        <p class="font-serif text-[2.25rem] leading-none text-[var(--color-violet-700)]">76,00 €</p>
+
+        <label class="block mt-5 text-sm" for="redeem-amount">Montant à débiter</label>
+        <div class="relative mt-1">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-500)]">€</span>
+          <input id="redeem-amount" class="input pl-7" type="number" min="0.01" max="76" step="0.01" value="56.00" />
+        </div>
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          <button class="btn btn-ghost btn-sm" data-quick="10">10 €</button>
+          <button class="btn btn-ghost btn-sm" data-quick="20">20 €</button>
+          <button class="btn btn-ghost btn-sm" data-quick="50">50 €</button>
+          <button class="btn btn-ghost btn-sm" data-quick="76">Solde complet</button>
+        </div>
+        <p class="text-xs text-[var(--color-ink-500)] mt-4 flex items-start gap-2">
+          <i data-lucide="mail" class="w-3.5 h-3.5 mt-0.5 flex-shrink-0" stroke-width="1.5"></i>
+          La cliente recevra un email de confirmation avec le solde restant.
+        </p>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-ghost btn-sm" data-close-modal>Annuler</button>
+        <button class="btn btn-primary btn-sm">Encaisser 56,00 €</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ════════ MODAL : Refund ════════ -->
+  <div class="modal" id="modal-refund" role="dialog" aria-modal="true" aria-labelledby="modal-refund-title" aria-hidden="true">
+    <div class="modal-card">
+      <header class="modal-header">
+        <div>
+          <p class="section-eyebrow mb-1">Booking · BK-2026-0142</p>
+          <h3 id="modal-refund-title" class="text-lg leading-tight">Rembourser un acompte</h3>
+        </div>
+        <button class="icon-btn" data-close-modal><i data-lucide="x" class="w-5 h-5" stroke-width="1.5"></i></button>
+      </header>
+      <div class="modal-body space-y-4">
+        <div>
+          <p class="section-eyebrow mb-2">Type</p>
+          <div class="view-toggle w-full">
+            <button class="is-active flex-1" data-refund-type="total">Total</button>
+            <button class="flex-1" data-refund-type="partial">Partiel</button>
+          </div>
+        </div>
+
+        <div id="refund-partial-block" class="hidden">
+          <p class="section-eyebrow mb-2">Montant</p>
+          <div class="view-toggle mb-2">
+            <button class="is-active" data-refund-unit="eur">€</button>
+            <button data-refund-unit="pct">%</button>
+          </div>
+          <input class="input" type="number" min="0" max="24" step="0.01" value="14.00" />
+        </div>
+
+        <div class="card p-3 bg-[var(--color-bone)] text-sm">
+          <div class="flex justify-between"><span class="text-[var(--color-ink-500)]">Acompte initial</span><span>24,00 €</span></div>
+          <div class="flex justify-between"><span class="text-[var(--color-ink-500)]">Pénalité d'annulation</span><span>− 0,00 €</span></div>
+          <div class="flex justify-between border-t border-[var(--color-line)] pt-2 mt-2"><span class="font-medium">Remboursé à la cliente</span><span class="font-serif text-base">24,00 €</span></div>
+        </div>
+
+        <label class="block">
+          <p class="section-eyebrow mb-1.5">Raison (audit)</p>
+          <textarea class="input" rows="2" placeholder="Annulation cliente, force majeure…" style="resize: vertical;"></textarea>
+        </label>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-ghost btn-sm" data-close-modal>Annuler</button>
+        <button class="btn btn-danger btn-sm">Rembourser 24,00 €</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ════════ MODAL : Bloquer une période ════════ -->
+  <div class="modal" id="modal-unavail" role="dialog" aria-modal="true" aria-labelledby="modal-unavail-title" aria-hidden="true">
+    <div class="modal-card">
+      <header class="modal-header">
+        <div>
+          <p class="section-eyebrow mb-1">Unavailability</p>
+          <h3 id="modal-unavail-title" class="text-lg leading-tight">Bloquer une période</h3>
+        </div>
+        <button class="icon-btn" data-close-modal><i data-lucide="x" class="w-5 h-5" stroke-width="1.5"></i></button>
+      </header>
+      <div class="modal-body space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <label class="block"><p class="section-eyebrow mb-1.5">Date début</p><input class="input" type="date" /></label>
+          <label class="block"><p class="section-eyebrow mb-1.5">Date fin</p><input class="input" type="date" /></label>
+        </div>
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" class="rounded" id="partial-day" />
+          <span>Journée partielle (heures spécifiques)</span>
+        </label>
+        <div class="grid grid-cols-2 gap-3 hidden" id="partial-times">
+          <label class="block"><p class="section-eyebrow mb-1.5">De</p><input class="input" type="time" value="09:00" /></label>
+          <label class="block"><p class="section-eyebrow mb-1.5">À</p><input class="input" type="time" value="12:00" /></label>
+        </div>
+        <label class="block">
+          <p class="section-eyebrow mb-1.5">Raison (interne)</p>
+          <input class="input" placeholder="Vacances, formation, indispo…" />
+        </label>
+      </div>
+      <footer class="modal-footer">
+        <button class="btn btn-ghost btn-sm" data-close-modal>Annuler</button>
+        <button class="btn btn-primary btn-sm">Bloquer la période</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    lucide.createIcons();
+    const $ = (s, ctx = document) => ctx.querySelector(s);
+    const $$ = (s, ctx = document) => [...ctx.querySelectorAll(s)];
+
+    // ───────── State ─────────
+    const today = new Date(2026, 4, 11); // mardi 11 mai 2026 (démo)
+    let viewMonth = new Date(2026, 4, 1);
+    let selectedDay = null;
+
+    // mois ouverts (BookableMonth) — set de "YYYY-MM"
+    const openMonths = new Set(['2026-05', '2026-06', '2026-07']);
+
+    // Indispos : map "YYYY-MM-DD" → libellé
+    const unavail = new Map([
+      ['2026-05-14', 'Formation 14:00–18:00'],
+      ['2026-05-22', 'Vacances familiales'],
+      ['2026-05-23', 'Vacances familiales'],
+      ['2026-05-24', 'Vacances familiales'],
+      ['2026-05-25', 'Vacances familiales'],
+      ['2026-05-26', 'Vacances familiales'],
+      ['2026-05-27', 'Vacances familiales'],
+      ['2026-05-28', 'Vacances familiales'],
+    ]);
+
+    // jours fermés (BusinessHours) : 2=mercredi, 6=dimanche (1=lundi … 7=dimanche ISO)
+    const closedDays = new Set([3, 0]); // JS: 0=dim, 3=mer
+
+    // Bookings démo
+    const bookings = {
+      '2026-05-11': [
+        { id: 'BK1', time: '09:30', client: 'Julie M.', service: 'French moderne', cat: 'french', status: 'CONFIRMED' },
+        { id: 'BK2', time: '14:00', client: 'Inès P.', service: 'Naturel court', cat: 'natural', status: 'CONFIRMED' },
+      ],
+      '2026-05-12': [
+        { id: 'BK3', time: '10:00', client: 'Camille R.', service: 'Beauté des mains', cat: 'soin', status: 'CONFIRMED', gc: true },
+        { id: 'BK4', time: '15:30', client: 'Anaïs P.', service: 'Nail-art atelier', cat: 'art', status: 'AWAITING_DEPOSIT' },
+      ],
+      '2026-05-13': [
+        { id: 'BK5', time: '11:00', client: 'Sarah B.', service: 'Retrait + soin', cat: 'retir', status: 'CONFIRMED' },
+      ],
+      '2026-05-14': [
+        { id: 'BK6', time: '10:00', client: 'Marie L.', service: 'Semi-perm Reflet', cat: 'natural', status: 'CONFIRMED', gc: true },
+      ],
+      '2026-05-15': [
+        { id: 'BK7', time: '09:30', client: 'Julie M.', service: 'French moderne', cat: 'french', status: 'CONFIRMED' },
+        { id: 'BK8', time: '13:00', client: 'Camille R.', service: 'Beauté des mains', cat: 'soin', status: 'CONFIRMED', gc: true },
+        { id: 'BK9', time: '16:00', client: 'Léa V.', service: 'Rallong. Couture', cat: 'rallong', status: 'CONFIRMED' },
+      ],
+      '2026-05-16': [
+        { id: 'BK10', time: '11:00', client: 'Anaïs P.', service: 'Nail-art', cat: 'art', status: 'AWAITING_DEPOSIT' },
+        { id: 'BK11', time: '14:30', client: 'Pauline D.', service: 'Naturel long', cat: 'natural', status: 'CONFIRMED' },
+      ],
+      '2026-05-18': [
+        { id: 'BK12', time: '10:00', client: 'Sophie D.', service: 'Rallong. Couture', cat: 'rallong', status: 'AWAITING_DEPOSIT' },
+      ],
+      '2026-05-19': [
+        { id: 'BK13', time: '09:00', client: 'Émilie F.', service: 'Naturel court', cat: 'natural', status: 'CONFIRMED' },
+        { id: 'BK14', time: '11:30', client: 'Charlotte L.', service: 'French', cat: 'french', status: 'CONFIRMED' },
+        { id: 'BK15', time: '15:00', client: 'Mathilde G.', service: 'Soin paraffine', cat: 'soin', status: 'CONFIRMED' },
+        { id: 'BK16', time: '17:00', client: 'Léa V.', service: 'Retouche', cat: 'natural', status: 'CONFIRMED' },
+      ],
+      '2026-05-20': [
+        { id: 'BK17', time: '10:00', client: 'Nina B.', service: 'Naturel', cat: 'natural', status: 'CONFIRMED' },
+      ],
+      '2026-05-21': [
+        { id: 'BK18', time: '14:00', client: 'Clara S.', service: 'Nail-art', cat: 'art', status: 'CONFIRMED' },
+      ],
+      '2026-05-29': [
+        { id: 'BK19', time: '10:00', client: 'Lisa T.', service: 'Naturel', cat: 'natural', status: 'CONFIRMED' },
+      ],
+      '2026-05-30': [
+        { id: 'BK20', time: '11:30', client: 'Aurélie M.', service: 'Soin', cat: 'soin', status: 'CONFIRMED' },
+        { id: 'BK21', time: '15:00', client: 'Justine B.', service: 'French', cat: 'french', status: 'CONFIRMED' },
+      ],
+    };
+
+    // ───────── Rendering : grid mois ─────────
+    const MONTH_NAMES = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    const ymKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const ymdKey = (y,m,d) => `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const sameDay = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+
+    function renderGrid() {
+      $('#month-label').textContent = `${MONTH_NAMES[viewMonth.getMonth()]} ${viewMonth.getFullYear()}`;
+      const body = $('#cal-body');
+      body.innerHTML = '';
+      const firstDay = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+      // Lun=1, Dim=0 ; on veut Lun=0
+      const startOffset = (firstDay.getDay() + 6) % 7;
+      const daysInMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 0).getDate();
+      const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+      const monthOpen = openMonths.has(ymKey(viewMonth));
+
+      for (let i = 0; i < totalCells; i++) {
+        const dayIdx = i - startOffset + 1;
+        const out = dayIdx < 1 || dayIdx > daysInMonth;
+        let cellDate, dow;
+        if (!out) {
+          cellDate = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), dayIdx);
+          dow = cellDate.getDay();
+        }
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+        cell.setAttribute('role', 'gridcell');
+        if (out) cell.classList.add('cal-cell--out');
+        else {
+          const key = ymdKey(viewMonth.getFullYear(), viewMonth.getMonth(), dayIdx);
+          if (!monthOpen) cell.classList.add('cal-cell--unbookable');
+          if (closedDays.has(dow)) cell.classList.add('cal-cell--closed');
+          if (sameDay(cellDate, today)) cell.classList.add('cal-cell--today');
+          if (selectedDay && sameDay(cellDate, selectedDay)) cell.classList.add('cal-cell--selected');
+          if (unavail.has(key)) cell.classList.add('cal-cell--unavail');
+          cell.tabIndex = 0;
+          cell.dataset.date = key;
+
+          // num
+          const top = document.createElement('div');
+          top.className = 'flex items-center justify-between';
+          const num = document.createElement('span');
+          num.className = 'cal-day-num';
+          num.textContent = dayIdx;
+          top.appendChild(num);
+          const flags = document.createElement('div');
+          flags.className = 'cal-cell-flags';
+          if (sameDay(cellDate, today)) {
+            const f = document.createElement('span'); f.className = 'cal-flag cal-flag-today'; f.textContent = 'Auj.'; flags.appendChild(f);
+          }
+          if (unavail.has(key)) {
+            const f = document.createElement('span'); f.className = 'cal-flag'; f.textContent = 'Indispo'; flags.appendChild(f);
+          }
+          top.appendChild(flags);
+          cell.appendChild(top);
+
+          // bookings
+          const dayBookings = bookings[key] || [];
+          const visible = dayBookings.slice(0, 3);
+          visible.forEach(b => {
+            const chip = document.createElement('button');
+            chip.className = `booking-chip booking-chip--${b.cat}`;
+            if (b.status === 'AWAITING_DEPOSIT') chip.classList.add('booking-chip--awaiting');
+            chip.tabIndex = 0;
+            chip.setAttribute('aria-label', `Booking ${b.client} à ${b.time}, ${b.service}, statut ${b.status === 'CONFIRMED' ? 'confirmé' : 'en attente'}`);
+            chip.innerHTML = `<span class="chip-time">${b.time}</span> · ${b.client}`;
+            chip.dataset.bookingId = b.id;
+            chip.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openDrawer('drawer-booking');
+            });
+            cell.appendChild(chip);
+          });
+          if (dayBookings.length > 3) {
+            const more = document.createElement('span');
+            more.className = 'more-chip';
+            more.textContent = `+${dayBookings.length - 3} autres`;
+            cell.appendChild(more);
+          }
+
+          cell.addEventListener('click', () => {
+            if (cell.classList.contains('cal-cell--closed') || cell.classList.contains('cal-cell--unbookable')) return;
+            selectedDay = cellDate;
+            renderGrid();
+            const dayName = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][cellDate.getDay()];
+            $('#drawer-day-title').textContent = `${dayName} ${dayIdx} ${MONTH_NAMES[viewMonth.getMonth()].toLowerCase()} ${viewMonth.getFullYear()}`;
+            openDrawer('drawer-day');
+          });
+          cell.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cell.click(); }
+          });
+        }
+        body.appendChild(cell);
+      }
+    }
+    renderGrid();
+
+    $('#prev-month').addEventListener('click', () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()-1, 1); renderGrid(); });
+    $('#next-month').addEventListener('click', () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth()+1, 1); renderGrid(); });
+    $('#today-btn').addEventListener('click', () => { viewMonth = new Date(today.getFullYear(), today.getMonth(), 1); selectedDay = today; renderGrid(); });
+
+    // Vue toggle (mois / sem / jour) — démo : seul "mois" opérationnel
+    $$('.view-toggle button[data-view]').forEach(b => {
+      b.addEventListener('click', () => {
+        $$('.view-toggle button[data-view]').forEach(x => x.classList.remove('is-active'));
+        b.classList.add('is-active');
+        if (b.dataset.view !== 'month') toast('Vue ' + b.dataset.view + ' à implémenter en Phase 1');
+      });
+    });
+
+    // ───────── Tabs ─────────
+    $$('.tab-trigger').forEach(t => {
+      t.addEventListener('click', () => {
+        $$('.tab-trigger').forEach(x => { x.classList.remove('is-active'); x.setAttribute('aria-selected','false'); });
+        t.classList.add('is-active'); t.setAttribute('aria-selected', 'true');
+        $$('.tab-panel').forEach(p => p.classList.remove('is-active'));
+        $(`.tab-panel[data-panel="${t.dataset.tab}"]`).classList.add('is-active');
+        // re-init icons
+        lucide.createIcons();
+      });
+    });
+
+    // ───────── Tab 2 — Mois ouverts ─────────
+    function renderMonths() {
+      const grid = $('#months-grid');
+      grid.innerHTML = '';
+      const start = new Date(2026, 0, 1);
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+        const key = ymKey(d);
+        const isOpen = openMonths.has(key);
+        const card = document.createElement('div');
+        card.className = 'card month-card' + (isOpen ? ' is-open-month' : '');
+        card.innerHTML = `
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <p class="font-serif text-lg leading-tight">${MONTH_NAMES[d.getMonth()]}</p>
+              <p class="text-xs text-[var(--color-ink-500)]" style="font-family: var(--font-display); letter-spacing: 0.1em;">${d.getFullYear()}</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" ${isOpen ? 'checked' : ''} data-month-key="${key}" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+          <div>
+            ${isOpen
+              ? `<span class="badge badge-success">Réservable</span><p class="text-xs text-[var(--color-ink-500)] mt-2">${Math.floor(Math.random()*15)+3} bookings ce mois</p>`
+              : `<span class="badge badge-neutral">Non réservable</span><p class="text-xs text-[var(--color-ink-500)] mt-2">Activez pour permettre les réservations</p>`}
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+      $$('#months-grid input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const key = cb.dataset.monthKey;
+          if (cb.checked) { openMonths.add(key); toast(`${key} ouvert à la réservation`); }
+          else { openMonths.delete(key); toast(`${key} fermé`); }
+          renderMonths();
+          renderGrid();
+        });
+      });
+    }
+    renderMonths();
+
+    // ───────── Tab 3 — Horaires hebdo ─────────
+    const DAYS_FR = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+    const defaultHours = [
+      { open: '09:00', breakStart: '12:00', breakEnd: '14:00', close: '19:00', isOpen: true },
+      { open: '09:00', breakStart: '12:00', breakEnd: '14:00', close: '19:00', isOpen: true },
+      { open: '',      breakStart: '',      breakEnd: '',      close: '',      isOpen: false },
+      { open: '09:00', breakStart: '12:00', breakEnd: '14:00', close: '19:00', isOpen: true },
+      { open: '09:00', breakStart: '12:00', breakEnd: '14:00', close: '19:00', isOpen: true },
+      { open: '09:00', breakStart: '12:00', breakEnd: '14:00', close: '18:00', isOpen: true },
+      { open: '',      breakStart: '',      breakEnd: '',      close: '',      isOpen: false },
+    ];
+    let hoursState = JSON.parse(JSON.stringify(defaultHours));
+
+    function renderHours() {
+      const list = $('#hours-list');
+      list.innerHTML = '';
+      hoursState.forEach((h, idx) => {
+        const row = document.createElement('div');
+        row.className = 'hours-row' + (h.isOpen ? '' : ' hours-row--closed');
+        row.innerHTML = `
+          <p class="font-medium">${DAYS_FR[idx]}</p>
+          <label class="switch">
+            <input type="checkbox" ${h.isOpen ? 'checked' : ''} data-day-idx="${idx}" />
+            <span class="switch-slider"></span>
+          </label>
+          ${h.isOpen ? `
+            <div class="hours-inputs">
+              <input class="input input-time" type="time" value="${h.open}" data-field="open" data-day-idx="${idx}" />
+              <span>—</span>
+              <input class="input input-time" type="time" value="${h.breakStart}" data-field="breakStart" data-day-idx="${idx}" />
+              <span class="text-xs">pause</span>
+              <input class="input input-time" type="time" value="${h.breakEnd}" data-field="breakEnd" data-day-idx="${idx}" />
+              <span>—</span>
+              <input class="input input-time" type="time" value="${h.close}" data-field="close" data-day-idx="${idx}" />
+            </div>
+          ` : `<div class="hours-inputs"><span class="badge badge-neutral">Fermé</span></div>`}
+        `;
+        list.appendChild(row);
+      });
+      $$('#hours-list input[type=checkbox]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          hoursState[+cb.dataset.dayIdx].isOpen = cb.checked;
+          renderHours(); markHoursDirty();
+        });
+      });
+      $$('#hours-list input[type=time]').forEach(inp => {
+        inp.addEventListener('input', () => {
+          hoursState[+inp.dataset.dayIdx][inp.dataset.field] = inp.value;
+          markHoursDirty();
+        });
+      });
+    }
+    function markHoursDirty() { $('#hours-savebar').classList.add('is-visible'); }
+    $('#hours-save').addEventListener('click', () => {
+      $('#hours-savebar').classList.remove('is-visible');
+      toast('Horaires hebdomadaires sauvegardés');
+    });
+    $('#hours-cancel').addEventListener('click', () => {
+      hoursState = JSON.parse(JSON.stringify(defaultHours));
+      $('#hours-savebar').classList.remove('is-visible');
+      renderHours();
+    });
+    renderHours();
+
+    // ───────── Drawer & Modal handlers ─────────
+    function openDrawer(id) {
+      $('#drawer-backdrop').classList.add('is-open');
+      $('#' + id).classList.add('is-open');
+      $('#' + id).setAttribute('aria-hidden', 'false');
+    }
+    function closeAllDrawers() {
+      $$('.drawer').forEach(d => { d.classList.remove('is-open'); d.setAttribute('aria-hidden','true'); });
+      $('#drawer-backdrop').classList.remove('is-open');
+    }
+    function openModal(id) {
+      $('#' + id).classList.add('is-open');
+      $('#' + id).setAttribute('aria-hidden', 'false');
+      $('#drawer-backdrop').classList.add('is-open');
+    }
+    function closeAllModals() {
+      $$('.modal').forEach(m => { m.classList.remove('is-open'); m.setAttribute('aria-hidden','true'); });
+      if (!$$('.drawer.is-open').length) $('#drawer-backdrop').classList.remove('is-open');
+    }
+    $('#drawer-backdrop').addEventListener('click', () => { closeAllDrawers(); closeAllModals(); });
+    $$('[data-close-drawer]').forEach(b => b.addEventListener('click', closeAllDrawers));
+    $$('[data-close-modal]').forEach(b => b.addEventListener('click', closeAllModals));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeAllDrawers(); closeAllModals(); } });
+
+    $$('[data-open-booking]').forEach(b => b.addEventListener('click', () => openDrawer('drawer-booking')));
+    $$('[data-open-unavail-modal]').forEach(b => b.addEventListener('click', () => openModal('modal-unavail')));
+    $('#open-redemption')?.addEventListener('click', () => openModal('modal-redemption'));
+    $$('[data-open-refund]').forEach(b => b.addEventListener('click', () => openModal('modal-refund')));
+
+    // ── Redemption quick buttons
+    $$('#modal-redemption [data-quick]').forEach(b => {
+      b.addEventListener('click', () => { $('#redeem-amount').value = b.dataset.quick; });
+    });
+
+    // ── Refund toggles
+    $$('#modal-refund [data-refund-type]').forEach(b => {
+      b.addEventListener('click', () => {
+        $$('#modal-refund [data-refund-type]').forEach(x => x.classList.remove('is-active'));
+        b.classList.add('is-active');
+        $('#refund-partial-block').classList.toggle('hidden', b.dataset.refundType !== 'partial');
+      });
+    });
+    $$('#modal-refund [data-refund-unit]').forEach(b => {
+      b.addEventListener('click', () => {
+        $$('#modal-refund [data-refund-unit]').forEach(x => x.classList.remove('is-active'));
+        b.classList.add('is-active');
+      });
+    });
+
+    // ── Unavail modal partial-day toggle
+    $('#partial-day')?.addEventListener('change', (e) => {
+      $('#partial-times').classList.toggle('hidden', !e.target.checked);
+    });
+
+    // ── Admin notes auto-save (debounce 1.5s)
+    const notes = $('#admin-notes');
+    const notesStatus = $('#notes-status');
+    let notesTimer = null;
+    notes?.addEventListener('input', () => {
+      notesStatus.textContent = 'Modification en cours…';
+      clearTimeout(notesTimer);
+      notesTimer = setTimeout(() => {
+        notesStatus.innerHTML = '<i data-lucide="check" class="inline w-3 h-3 text-[var(--color-success)]" stroke-width="2"></i> Enregistré';
+        lucide.createIcons();
+        setTimeout(() => { notesStatus.textContent = 'Aucune modification'; }, 1800);
+      }, 1500);
+    });
+
+    // ── Toast
+    function toast(msg) {
+      const t = $('#toast');
+      t.textContent = msg;
+      t.classList.add('is-visible');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('is-visible'), 2200);
+    }
+
+    // ── Burger
+    $('#burger')?.addEventListener('click', () => {
+      $('#sidebar').classList.toggle('is-open');
+    });
+  </script>
+</body>
+</html>
