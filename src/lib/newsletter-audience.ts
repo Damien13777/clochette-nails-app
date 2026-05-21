@@ -27,14 +27,9 @@ export type AudienceFilters = {
   createdBefore?: string | null; // ISO date
 };
 
-/** Sources connues actuellement loguées en DB. À étendre quand on en ajoute. */
-export const KNOWN_SOURCES = [
-  "footer",
-  "blog-cta",
-  "ebook-thankyou",
-  "reservation",
-  "admin",
-] as const;
+// Re-export client-safe pour ne pas casser les imports existants. Pour les
+// composants client, importer directement depuis `@/lib/newsletter-sources`.
+export { KNOWN_SOURCES, SOURCE_LABELS } from "@/lib/newsletter-sources";
 
 export function buildAudienceWhere(
   filters: AudienceFilters | null | undefined,

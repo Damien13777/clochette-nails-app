@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { NewsletterCampaignStatus } from "@prisma/client";
 import { RichTextEditor } from "@/components/admin/rich-text-editor";
-import { KNOWN_SOURCES } from "@/lib/newsletter-audience";
+import { KNOWN_SOURCES } from "@/lib/newsletter-sources";
 import {
   cancelSchedule,
   createCampaign,
