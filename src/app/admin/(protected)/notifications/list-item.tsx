@@ -40,6 +40,7 @@ const TYPE_META: Record<
   CONTACT_MESSAGE: { icon: "message", color: "var(--color-violet-700)", label: "Message contact" },
   REFUND_PROCESSED: { icon: "wallet", color: "var(--color-warning)", label: "Remboursement" },
   NEWSLETTER_SUBSCRIBE: { icon: "mail-plus", color: "var(--color-violet-700)", label: "Inscription newsletter" },
+  NEWSLETTER_SENT: { icon: "mail-plus", color: "var(--color-success)", label: "Campagne envoyée" },
   GIFT_CARD_EXPIRING: { icon: "gift", color: "var(--color-warning)", label: "Carte cadeau expire" },
   GIFT_CARD_PURCHASED: { icon: "gift", color: "var(--color-success)", label: "Carte cadeau vendue" },
 };
