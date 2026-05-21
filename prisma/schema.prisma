@@ -494,6 +494,10 @@ model Booking {
   pendingGiftCardId         String?
   pendingGiftCardAmountCents Int?
 
+  // Rappels par mail (cron) — null tant que pas envoyé
+  reminderJ7SentAt DateTime?
+  reminderJ1SentAt DateTime?
+
   // Audit dates
   confirmedAt        DateTime?
   completedAt        DateTime?

@@ -1,12 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/v1/cron/expire-pending",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/v1/cron/send-scheduled-newsletters",
-      "schedule": "*/5 * * * *"
-    }
-  ]
+  "_note": "Fichier hérité. Le déploiement réel se fait sur VPS Hostinger via crontab (cf. PHASE_2.md et la mémoire de déploiement). Les crons listés ici ne sont PAS exécutés en prod.",
+  "crons": []
 }

@@ -24,6 +24,7 @@ import {
 } from "@/lib/booking-display";
 import { BookingActions } from "./booking-actions";
 import { BookingNotes } from "./booking-notes";
+import { BookingReminders } from "./booking-reminders";
 import { PaymentBlock } from "./payment-block";
 
 export const dynamic = "force-dynamic";
@@ -484,6 +485,17 @@ export default async function BookingDetailPage({
               })()}
             </Section>
           )}
+
+          {/* Rappels par mail (J-7 / J-1) */}
+          <Section title="Rappels par mail">
+            <BookingReminders
+              bookingId={booking.id}
+              bookingDate={booking.date.toISOString()}
+              status={booking.status}
+              reminderJ7SentAt={booking.reminderJ7SentAt?.toISOString() ?? null}
+              reminderJ1SentAt={booking.reminderJ1SentAt?.toISOString() ?? null}
+            />
+          </Section>
 
           {/* Notes admin (éditable) */}
           <Section title="Notes admin (visible uniquement par toi)">
