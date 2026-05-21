@@ -600,11 +600,22 @@ async function handleChargeUpdated(
       ? charge.payment_intent
       : charge.payment_intent.id;
 
-  // Met à jour la booking correspondante (si elle existe)
-  await prisma.booking.updateMany({
-    where: { stripePaymentId: paymentIntentId },
-    data: { stripeFeeCents: balanceTx.fee },
-  });
+  // Met à jour la ressource correspondante au PaymentIntent. Un seul
+  // des 3 sera matché (les 3 tables ont stripePaymentId distinct).
+  await Promise.all([
+    prisma.booking.updateMany({
+      where: { stripePaymentId: paymentIntentId },
+      data: { stripeFeeCents: balanceTx.fee },
+    }),
+    prisma.giftCard.updateMany({
+      where: { stripePaymentId: paymentIntentId },
+      data: { stripeFeeCents: balanceTx.fee },
+    }),
+    prisma.ebookPurchase.updateMany({
+      where: { stripePaymentId: paymentIntentId },
+      data: { stripeFeeCents: balanceTx.fee },
+    }),
+  ]);
 }
 
 async function handlePaymentFailed(
