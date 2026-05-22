@@ -73,6 +73,35 @@ sont vraiment lus.
 
 ## Réservation — features confort
 
+### Combo natif : multi-prestations dans une même réservation
+Permettre à la cliente de combiner librement N prestations dans un seul RDV
+(ex : pose semi mains + soin pieds), avec durée cumulée, prix sommé, options
+applicables par prestation.
+
+**Pourquoi différé :** au lancement V1, on couvre le besoin via la catégorie
+`PACK_SPECIAL` (services pré-composés saisis en admin — "Pose semi mains +
+pieds", etc.). C'est figé mais zéro dev. La compo libre par la cliente demande
+un refacto large.
+
+**Refacto attendu :**
+- Schema Prisma : table pivot `BookingService` (Booking 1-N Service) avec
+  `addedDurationMinutes` / `addedPriceCents` snapshotés
+- `createBookingAction` + outbound `booking.created` payload : passer en `serviceIds[]`
+- `ReservationFlow` state : `serviceIds: string[]` au lieu de `serviceId: string`
+- `OptionsPicker` : choisir à quelle prestation rattacher l'option (UX épineuse)
+- `BookingCalendar` : recalcul durée totale dynamique
+- `ReservationSummary` + templates emails (confirm + rappels J-7/J-1) + admin
+  (détail booking, calendrier, liste) : afficher la liste des prestations
+- Webhook Stripe `checkout.session.completed` : déjà ok via metadata mais
+  vérifier le label de session
+- Migration : convertir les Bookings existants en `BookingService` à 1 entrée
+
+**À ajouter quand :** Chloé observe que les clientes demandent régulièrement
+des combos non prévus dans le catalogue PACK_SPECIAL, ou que l'admin du
+catalogue devient lourd à maintenir (multiplication des packs).
+
+**Effort :** ~2-3 jours dev + 1 jour de migration/tests.
+
 ### Inspirations / album de tendances
 Permettre à la cliente de parcourir un mini-album d'inspirations avant son RDV
 et de "favoriser" celles qui lui plaisent, transmises automatiquement à Chloé.
