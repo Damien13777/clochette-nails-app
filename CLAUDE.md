@@ -230,79 +230,31 @@ l'ebook (cf. dashboard `revenueCents` calc).
 
 ## Outbound API — Intégration future Management
 
-**Contexte stratégique** : Clochette Nails est destiné à devenir un satellite
-d'une **app de gestion centrale** (à construire séparément) qui sera le main
-point du projet global. Ce site doit **émettre des events** vers cette app
-pour qu'elle puisse centraliser la compta, le pilotage multi-sites, le CRM, etc.
+Clochette Nails est destiné à devenir un satellite d'une **app de gestion
+centrale** (le "main point" du projet global). Ce site doit émettre les
+events business vers cette app pour qu'elle puisse agréger compta, CRM,
+pilotage multi-sites.
 
-**Infra déjà en place** (préparée dès la conception) :
+**Infra déjà en place** : table `OutboundEvent` (queue persistante avec
+retry/backoff), helper `emitOutboundEvent(type, payload)`, viewer admin
+sur `/admin/webhooks` onglet "Sortants". Pas encore de worker qui dépile.
 
-- **Modèle `OutboundEvent`** (`prisma/schema.prisma`) — queue persistante avec :
-  - `type` (ex: `booking.confirmed`, `ebook.purchased`)
-  - `payload` (JSON)
-  - `targetUrl`, `targetService` (défaut `"management"`)
-  - `status` : `PENDING / DELIVERED / FAILED / DEAD`
-  - `attempts`, `maxAttempts: 5`, `nextAttemptAt` (pour retry exponentiel)
-  - `lastError`, `deliveredAt`
-- **Helper `emitOutboundEvent(type, payload)`** (actuellement dupliqué dans
-  `lib/actions/booking.ts` et `app/api/webhooks/stripe/route.ts` → à DRY-er
-  dans `lib/outbound-events.ts` lors de la finalisation).
-  - Si `MANAGEMENT_API_URL` env var **non set** → log console uniquement
-    (pas de row créée). Mode dev sans Management.
-  - Si **set** → row `PENDING` créée dans la queue.
-- **Env var `MANAGEMENT_API_URL`** : pas encore référencée dans `.env.example`.
+**État actuel** : 2 events émis sur ~30 prévus (`booking.created`,
+`booking.confirmed`).
 
-**Events déjà émis aujourd'hui** (état audité, à maintenir à jour) :
-- `booking.created` (résa créée, status `AWAITING_DEPOSIT`)
-- `booking.confirmed` (paiement Stripe ou gift card 100% via webhook)
+**Principe à appliquer pour chaque nouvelle feature** : **émettre l'event
+business** via `emitOutboundEvent(...)` dans la queue, même si le worker
+n'existe pas encore. Sinon l'app de gestion n'aura aucune trace
+rétroactive. Les rows accumulées partiront dans l'ordre chronologique le
+jour où le worker arrive.
 
-**Tout le reste de la vie business n'est PAS encore émis dans la queue.**
-Ce qui veut dire qu'une app de gestion qui écouterait la queue aujourd'hui ne
-verrait que les créations et confirmations de RDV — rien d'autre.
+➡️ **Spec complète : [`MANAGEMENT_API.md`](MANAGEMENT_API.md)**
 
-**Events à ajouter quand on finalisera** (à émettre côté server actions
-/ webhooks correspondants — recherche `// TODO emitOutboundEvent` puis
-ajout systématique aux endroits qui modifient l'état métier) :
-- **Bookings** : `cancelled`, `completed`, `no_show`, `refunded`, `rescheduled`, `marked_completed`
-- **Cartes cadeau** : `purchased`, `redeemed` (booking_deposit / booking_service / ebook), `refunded`, `expired`, `reversed`, `depleted`, `admin_gift_issued`
-- **Ebooks** : `purchased`, `refunded`, `downloaded`, `reissued`
-- **Contacts** : `received` (annoncé dans `lib/actions/contact.ts` mais TODO)
-- **Newsletter** : `subscriber_added`, `subscriber_confirmed`, `subscriber_unsubscribed`, `subscriber_complained`, `campaign_sent`, `campaign_failed`
-- **Photos** : `uploaded`, `deleted` (utile pour la sync media future)
-- **Settings** : `platform_settings_updated`, `email_globals_updated`
-- **Services** : `created`, `updated`, `archived`
-
-**Principe à appliquer pour chaque nouvelle feature** : **émettre l'event business**
-dans la queue, même si le worker n'existe pas encore. Sinon l'app de gestion
-n'aura aucune trace rétroactive. Émettre = ligne en DB en `PENDING`, gratuit
-côté perf, et c'est garanti d'être envoyé quand le worker arrivera (FIFO via
-`nextAttemptAt`).
-
-**Ce qui manque pour rendre l'intégration opérationnelle** (Phase 2 / quand
-l'API cible existera) :
-
-1. **Worker / cron** qui dépile la queue : `GET /api/v1/cron/dispatch-outbound-events`
-   → scan `WHERE status=PENDING AND nextAttemptAt <= now` → POST sur `targetUrl`
-   → maj status + incr `attempts` + retry exponentiel (5min, 15min, 1h, 6h, 24h)
-   après échec, puis `DEAD` à `maxAttempts`.
-2. **Étendre `emitOutboundEvent`** à tous les domaines listés ci-dessus.
-3. **DRY** : centraliser le helper dans `lib/outbound-events.ts`.
-4. **Auth** entre les 2 apps : HMAC signature header (`x-cn-signature`) avec
-   secret partagé, ou Bearer token, ou mTLS — à décider avec l'équipe Management.
-5. **Contrat versionné** : prefix `v1.` sur les `type` ? Schéma de payload
-   documenté (Zod côté émetteur + côté Management) ?
-6. **Page admin** `/admin/outbound-events` pour voir la queue, status, retries,
-   forcer un re-dispatch. Pattern proche du futur "A-13 Webhook events viewer"
-   mais côté outbound (alors qu'A-13 c'est inbound = events Stripe/Resend reçus).
-7. **`MANAGEMENT_API_URL`** + secret HMAC à ajouter dans `.env.example` au
-   moment de la finalisation.
-
-**Principe à garder** : tout nouveau domaine ajouté à l'app **DOIT** émettre
-ses events business via `emitOutboundEvent(...)`. Même si le worker n'existe
-pas encore, les rows seront déjà en queue → quand l'app de gestion sera prête
-à recevoir, on déploie le worker et les events partent dans l'ordre
-chronologique. **Penser scalabilité dès l'écriture du code**, pas en
-rétro-engineering.
+Y figurent : catalogue exhaustif des events à émettre par domaine
+(bookings, cartes cadeau, ebooks, newsletter, contacts, photos, settings),
+format de payload standardisé (versionné v1), spec auth (HMAC envisagé),
+schéma retry/backoff du worker, roadmap d'implémentation en 6 étapes, env
+vars à ajouter, et state factuel "✅ émis vs 🚧 à émettre" tenu à jour.
 
 ## Conventions code
 
