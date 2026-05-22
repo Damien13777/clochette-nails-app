@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Cinzel, Julius_Sans_One, Inria_Serif, Manrope } from "next/font/google";
 import "./globals.css";
@@ -64,6 +64,20 @@ export const metadata: Metadata = {
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
+  // Manifest PWA — cf. src/app/manifest.ts
+  manifest: "/manifest.webmanifest",
+  // Icônes : apple-touch-icon (180×180) servi depuis /public/ si présent.
+  // Le manifest référence aussi icon-192.png et icon-512.png à ajouter.
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#5E4392", // violet-700 — barre d'URL mobile colorée
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
