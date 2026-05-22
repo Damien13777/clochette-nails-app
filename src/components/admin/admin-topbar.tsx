@@ -14,6 +14,8 @@
 import { AdminIcon } from "./admin-icon";
 import { UserMenu } from "./user-menu";
 import { NotificationsBell, type NotificationItem } from "./notifications-bell";
+import { GlobalSearch } from "./global-search";
+import { GlobalSearchMobile } from "./global-search-mobile";
 
 type Props = {
   user: { name?: string | null; email?: string | null };
@@ -41,30 +43,8 @@ export function AdminTopbar({
           <AdminIcon name="menu" size={20} />
         </button>
 
-        {/* Search (placeholder UI) */}
-        <div className="flex-1 max-w-md relative hidden sm:block" role="search">
-          <label htmlFor="admin-search" className="sr-only">
-            Rechercher
-          </label>
-          <AdminIcon
-            name="search"
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-500)] pointer-events-none"
-          />
-          <input
-            id="admin-search"
-            type="search"
-            placeholder="Rechercher…"
-            className="w-full h-10 pl-10 pr-14 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-full text-sm text-[var(--color-ink-900)] focus:outline-none focus:border-[var(--color-violet-600)] focus:shadow-[var(--shadow-focus)] transition-all"
-            style={{ fontFamily: "var(--font-ui)" }}
-          />
-          <kbd
-            className="hidden md:inline-flex items-center absolute right-3 top-1/2 -translate-y-1/2 px-1.5 h-5 rounded text-[10px] bg-[var(--color-bone)] text-[var(--color-ink-500)]"
-            style={{ fontFamily: "var(--font-ui)" }}
-          >
-            ⌘K
-          </kbd>
-        </div>
+        {/* Recherche globale cross-entités — barre inline ≥ sm */}
+        <GlobalSearch />
 
         {/* Pousse les éléments suivants à droite */}
         <div className="flex-1 sm:flex-none" />
@@ -80,6 +60,9 @@ export function AdminTopbar({
           <AdminIcon name="plus" size={14} />
           Nouveau
         </button>
+
+        {/* Bouton loupe mobile — ouvre la modale de recherche plein écran */}
+        <GlobalSearchMobile />
 
         {/* Cloche notifications — live */}
         <NotificationsBell
