@@ -252,17 +252,31 @@ pour qu'elle puisse centraliser la compta, le pilotage multi-sites, le CRM, etc.
   - Si **set** → row `PENDING` créée dans la queue.
 - **Env var `MANAGEMENT_API_URL`** : pas encore référencée dans `.env.example`.
 
-**Events déjà émis aujourd'hui** :
+**Events déjà émis aujourd'hui** (état audité, à maintenir à jour) :
 - `booking.created` (résa créée, status `AWAITING_DEPOSIT`)
-- `booking.confirmed` (paiement Stripe ou gift card 100%)
+- `booking.confirmed` (paiement Stripe ou gift card 100% via webhook)
 
-**Events à émettre quand on finalisera** (TODO, à émettre côté server
-actions / webhooks correspondants) :
-- `booking.cancelled`, `booking.completed`, `booking.no_show`, `booking.refunded`, `booking.rescheduled`
-- `gift_card.purchased`, `gift_card.redeemed`, `gift_card.refunded`, `gift_card.expired`
-- `ebook.purchased`, `ebook.refunded`
-- `contact.received` (annoncé dans `lib/actions/contact.ts` mais TODO)
-- `newsletter.subscribed`, `newsletter.unsubscribed`, `newsletter.campaign_sent`
+**Tout le reste de la vie business n'est PAS encore émis dans la queue.**
+Ce qui veut dire qu'une app de gestion qui écouterait la queue aujourd'hui ne
+verrait que les créations et confirmations de RDV — rien d'autre.
+
+**Events à ajouter quand on finalisera** (à émettre côté server actions
+/ webhooks correspondants — recherche `// TODO emitOutboundEvent` puis
+ajout systématique aux endroits qui modifient l'état métier) :
+- **Bookings** : `cancelled`, `completed`, `no_show`, `refunded`, `rescheduled`, `marked_completed`
+- **Cartes cadeau** : `purchased`, `redeemed` (booking_deposit / booking_service / ebook), `refunded`, `expired`, `reversed`, `depleted`, `admin_gift_issued`
+- **Ebooks** : `purchased`, `refunded`, `downloaded`, `reissued`
+- **Contacts** : `received` (annoncé dans `lib/actions/contact.ts` mais TODO)
+- **Newsletter** : `subscriber_added`, `subscriber_confirmed`, `subscriber_unsubscribed`, `subscriber_complained`, `campaign_sent`, `campaign_failed`
+- **Photos** : `uploaded`, `deleted` (utile pour la sync media future)
+- **Settings** : `platform_settings_updated`, `email_globals_updated`
+- **Services** : `created`, `updated`, `archived`
+
+**Principe à appliquer pour chaque nouvelle feature** : **émettre l'event business**
+dans la queue, même si le worker n'existe pas encore. Sinon l'app de gestion
+n'aura aucune trace rétroactive. Émettre = ligne en DB en `PENDING`, gratuit
+côté perf, et c'est garanti d'être envoyé quand le worker arrivera (FIFO via
+`nextAttemptAt`).
 
 **Ce qui manque pour rendre l'intégration opérationnelle** (Phase 2 / quand
 l'API cible existera) :

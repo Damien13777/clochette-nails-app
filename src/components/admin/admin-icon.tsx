@@ -90,6 +90,9 @@ const PATHS: Record<IconProps["name"], React.ReactNode> = {
       <path d="M19 17V5a2 2 0 0 0-2-2H4" />
     </>
   ),
+  zap: (
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  ),
   search: (
     <>
       <circle cx="11" cy="11" r="8" />
