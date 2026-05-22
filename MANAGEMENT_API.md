@@ -32,6 +32,32 @@ idempotence côté receveur.
 
 ---
 
+## Stack présumée (app Management)
+
+L'app de gestion sera construite par les mêmes mains que Clochette (cf.
+`CLAUDE.md`) → autant mutualiser la stack pour copier les patterns et garder
+une cohérence de code entre les 2 repos.
+
+- **Next.js 16** (App Router, Server Components, Server Actions)
+- **Prisma 7** + Postgres (DB dédiée Management, séparée de celle de Clochette)
+- **NextAuth v5** (admin Chloé + à terme : un compte par business agrégé,
+  ou multi-tenant simple)
+- **Resend** + templates email maison (alerts, digests hebdo, etc.)
+- **Tailwind v4** + même design system (custom properties dans
+  `@theme` de `globals.css`, polices `serif/display/ui`, classe `rich-content`)
+- **TipTap** si on a besoin de WYSIWYG (notes business, etc.)
+- **pnpm 11** + même hook `postinstall` pour Prisma
+
+L'app Management a son **propre repo et son propre VPS** (ou même VPS séparé
+des sites satellites). Pas de mono-repo — chaque satellite reste indépendant
+et peut se déployer seul. Le couplage est strict : juste la queue de events
+HTTPS via `MANAGEMENT_API_URL`.
+
+→ Section "Réutilisation depuis Clochette" plus bas liste les helpers qu'on
+peut copier-coller directement.
+
+---
+
 ## Architecture actuelle (en DB)
 
 ### Table `OutboundEvent`
@@ -229,33 +255,165 @@ Structure unique pour tous les events :
 
 ---
 
-## Auth
+## Auth — HMAC signature
 
-**À décider entre les 2 équipes** (Clochette + Management). 3 options :
+Headers de chaque request POST vers l'API Management :
 
-### Option A — HMAC signature (recommandé MVP)
+```
+x-cn-signature: t=<unix_timestamp>,v1=<base64_hmac>
+x-cn-site-id: clochette-nails
+content-type: application/json
+```
 
-Header `x-cn-signature: t=<timestamp>,v1=<base64-hmac>` avec :
-- `signedPayload = ${timestamp}.${body}`
-- HMAC-SHA256 avec un secret partagé `MANAGEMENT_API_HMAC_SECRET`
-- Le receveur vérifie la signature, refuse si tolérance > 5 min
+Calcul de la signature :
 
-**Pour** : simple, stateless, pas de credentials qui voyagent
-**Contre** : si le secret fuit (logs, fuites repo), tout est compromis
+```
+signedPayload = `${timestamp}.${siteId}.${rawBody}`
+signature = base64( HMAC_SHA256(MANAGEMENT_API_HMAC_SECRET, signedPayload) )
+```
 
-### Option B — Bearer token
+**Vérification côté receveur** (cf. section "Côté receveur" plus bas pour
+l'implémentation) :
+- Refuse si `timestamp` plus vieux que 5 min (anti-replay)
+- Refuse si signature ne correspond pas
+- Comparaison via `timingSafeEqual` (pas d'égalité string naïve)
 
-Header `Authorization: Bearer <token>`.
-**Pour** : familier
-**Contre** : le token voyage à chaque request
+Le secret `MANAGEMENT_API_HMAC_SECRET` est partagé entre Clochette et
+Management, **distinct** pour chaque environnement (dev / prod). Le faire
+rotate en cas de fuite suspectée.
 
-### Option C — mTLS
+---
 
-Auth via certificats clients.
-**Pour** : très sécurisé, audit network-level
-**Contre** : ops complexes côté VPS Hostinger + side de gestion
+## Côté receveur (app Management)
 
-**Reco** : HMAC (Option A) pour MVP. Migration mTLS possible plus tard si besoin.
+L'autre moitié de l'intégration : ce qu'on aura à coder dans le repo Management
+quand on l'attaquera. Cette section est la **spec implementable** côté
+réception.
+
+### Endpoint
+
+`POST /api/v1/incoming/clochette` (ou plus générique : `/api/v1/incoming/[siteId]`
+pour préparer le multi-sites).
+
+Body : JSON brut (cf. format "Format de payload" plus haut).
+
+### Modèle Prisma `IncomingEvent`
+
+Table principale pour stocker tous les events reçus. Sert à la fois de log,
+de mécanisme d'idempotence, et de point de dispatch interne.
+
+```prisma
+model IncomingEvent {
+  id          String   @id @default(cuid())
+  // Idempotence : (siteId, eventId) doit être unique pour empêcher
+  // de retraiter un event que Clochette aurait rejoué (retry naturel)
+  siteId      String
+  eventId     String   // = OutboundEvent.id de Clochette
+  type        String   // ex: "booking.confirmed"
+  version     String   // "v1"
+  timestamp   DateTime // celui envoyé par Clochette
+  payload     Json     // data complète
+  signature   String   // pour audit / debug
+  receivedAt  DateTime @default(now())
+
+  // Dispatch interne
+  processedAt DateTime?
+  processError String? @db.Text
+
+  @@unique([siteId, eventId])
+  @@index([siteId, type, receivedAt(sort: Desc)])
+  @@index([processedAt]) // pour scanner les non-traités
+  @@map("incoming_events")
+}
+```
+
+### Flow de réception
+
+```
+1. Vérifier headers : x-cn-site-id + x-cn-signature présents
+2. Vérifier la signature HMAC (timingSafeEqual, fenêtre 5 min)
+   → si KO : 401 Unauthorized
+3. Parser le body JSON
+4. Validation Zod du format (event, version, timestamp, siteId, data)
+   → si KO : 400 Bad Request
+5. Upsert IncomingEvent avec @@unique(siteId, eventId) :
+   - Si existe déjà : 200 OK { idempotent: true } (Clochette ne rejouera pas)
+   - Sinon : créer la row
+6. Retourner 200 OK { received: true } AVANT de traiter
+   (sinon timeout côté Clochette → retry inutile)
+7. Dispatcher en async vers le handler interne (cf. plus bas)
+```
+
+**Important** : la réponse 2xx est envoyée **dès que la row est stockée**.
+Le traitement métier (mise à jour des stats agrégées, alertes, etc.) se
+fait après, en background. Si le traitement échoue, on log dans
+`IncomingEvent.processError` et on peut rejouer manuellement depuis
+l'admin Management. **Clochette ne doit pas savoir si Management a réussi
+à traiter** — elle sait juste qu'elle a livré.
+
+### Vérification HMAC (TypeScript)
+
+Pattern copiable depuis Clochette (`src/app/api/webhooks/resend/route.ts`
+implémente déjà Svix qui est très proche) :
+
+```ts
+function verifyCnSignature(
+  headers: Headers,
+  body: string,
+  secret: string,
+): boolean {
+  const sigHeader = headers.get("x-cn-signature");
+  const siteId = headers.get("x-cn-site-id");
+  if (!sigHeader || !siteId) return false;
+
+  // Parse "t=...,v1=..."
+  const parts = Object.fromEntries(
+    sigHeader.split(",").map((p) => p.split("=", 2) as [string, string]),
+  );
+  const ts = parseInt(parts.t ?? "", 10);
+  const sig = parts.v1;
+  if (!ts || !sig) return false;
+  if (Math.abs(Date.now() / 1000 - ts) > 300) return false; // 5 min
+
+  const signedPayload = `${ts}.${siteId}.${body}`;
+  const expected = createHmac("sha256", secret)
+    .update(signedPayload)
+    .digest("base64");
+
+  return timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+}
+```
+
+### Dispatch interne (handlers par type d'event)
+
+Pattern conseillé : un objet `EVENT_HANDLERS` indexé par `event.type` qui
+mappe vers une fonction `async (event) => void`. Le worker async (ou un
+trigger DB Postgres) parcourt les rows `IncomingEvent` où `processedAt IS
+NULL` et appelle le bon handler.
+
+```ts
+const EVENT_HANDLERS: Record<string, EventHandler> = {
+  "booking.created": handleBookingCreated,
+  "booking.confirmed": handleBookingConfirmed,
+  // ... un par type d'event de Clochette
+};
+```
+
+Chaque handler :
+- Update les stats agrégées par site (table `SiteMetrics` à designer)
+- Crée/update une vue dénormalisée si besoin (table `Booking` côté Management
+  qui mirror celle de Clochette mais étendue avec multi-sites)
+- Déclenche éventuellement une alerte (notification cloche, email digest)
+
+### Multi-sites
+
+Le `siteId` est tracé sur chaque `IncomingEvent`. L'app Management aura
+naturellement une table `Site` (id, label, type, contact, etc.) et toutes
+les vues agrégées (CA mensuel, RDV semaine, etc.) seront filtrables par
+site. Quand on rajoutera un 2ᵉ business satellite, il suffira de :
+- Créer une row `Site` dans Management
+- Configurer `OUTBOUND_SITE_ID` + `MANAGEMENT_API_URL` + `MANAGEMENT_API_HMAC_SECRET` dans son `.env`
+- Étendre `EVENT_HANDLERS` si le nouveau site émet des events que Clochette n'a pas
 
 ---
 
@@ -374,11 +532,65 @@ OUTBOUND_SITE_ID="clochette-nails"
 
 ---
 
+## Réutilisation depuis Clochette
+
+Pour mutualiser le travail, voici les helpers/patterns de Clochette qu'on
+peut **copier-coller directement** dans le repo Management (avec adaptations
+mineures de nommage / d'imports).
+
+### Fichiers à copier tels quels
+
+| Fichier Clochette | Usage côté Management |
+|---|---|
+| `src/lib/sanitize-html.ts` | Sanitization DOMPurify si Management utilise aussi TipTap (notes business) |
+| `src/lib/rate-limit.ts` | Anti-abuse sur l'endpoint `/api/v1/incoming/[siteId]` (au cas où) |
+| `src/lib/email/send.ts` + `email/globals.ts` + `email/templates/layout.ts` | Système d'envoi unifié pour les alertes / digests Management |
+| `src/components/admin/modal.tsx` | Modal réutilisable |
+| `src/components/admin/admin-icon.tsx` | Icônes SVG inline (à étendre) |
+| `src/components/admin/admin-shell.tsx` + `admin-topbar.tsx` + `admin-sidebar.tsx` | Layout admin entier — adapter la sidebar à la nav Management |
+| `src/components/admin/notifications-bell.tsx` + `user-menu.tsx` | Système de notifications in-app + menu utilisateur |
+| `src/components/admin/global-search.tsx` + `global-search-mobile.tsx` + `use-global-search.ts` | Recherche globale (adapter l'endpoint cible) |
+| `src/auth.ts` + `src/proxy.ts` | NextAuth v5 setup + middleware admin |
+| `src/app/globals.css` (section `@theme` + `rich-content` CSS) | Design tokens + rendering rich text |
+| `prisma.config.ts` + `package.json` (scripts + postinstall) | Setup Prisma identique |
+| `vercel.json` (vide) | Marqueur "déploiement VPS, pas Vercel" |
+| `.gitignore` | Liste identique des exclusions |
+
+### Patterns à reproduire (pas à copier mot pour mot)
+
+| Pattern Clochette | Application Management |
+|---|---|
+| Server action `{ ok: true, ... } \| { ok: false, error, fieldErrors? }` | Standard pour toutes les actions admin Management |
+| Audit log via table `AuditLog` + helper `audit(adminId, resourceId, action, metadata)` | Tracer toutes les actions admin Management (refunds manuels, ré-émissions, etc.) |
+| `_tabs.tsx` pattern (sous-nav admin) | Réutiliser pour les sections multi-vues |
+| `<ExpandableCard>` (KPI cards cliquables) | Pour les KPI dashboards Management |
+| Pattern Prisma `revalidatePath('/admin/...')` après mutation | Idem dans Management |
+| Pattern double-flag mobile/desktop pour les tables (cards mobile + table desktop) | Pour les tableaux longs côté Management |
+
+### Données mirror
+
+Côté Management, on aura potentiellement à **mirror** certaines entités de
+Clochette pour les requêter rapidement sans réinterroger l'API :
+- `Booking` (vue dénormalisée, alimentée par les `booking.*` events)
+- `GiftCard` (idem)
+- `EbookPurchase` (idem)
+- `NewsletterSubscriber` + stats agrégées
+
+**Source de vérité** = Clochette. Management = vue read-only mirror, mis à
+jour par les events. Pas de bidirectionnel pour MVP (si Chloé modifie un RDV
+dans Management, elle doit ouvrir l'admin Clochette — sauf si on construit
+un flow inverse plus tard, mais c'est une autre brique).
+
+---
+
 ## Maintenance de ce fichier
 
-- À chaque ajout d'un `emitOutboundEvent(...)` dans le code, mettre à jour le
-  tableau "Events à émettre" (passer 🚧 → ✅)
+- À chaque ajout d'un `emitOutboundEvent(...)` dans le code Clochette, mettre
+  à jour le tableau "Events à émettre" (passer 🚧 → ✅)
 - À chaque changement de structure de payload, bump la version dans le
   payload + documenter la migration ici
-- Quand l'app de gestion existe et qu'on choisit définitivement l'auth :
-  retirer les Options B/C de la section Auth et garder uniquement la retenue
+- Côté Management : tenir à jour `EVENT_HANDLERS` en parallèle. Si un event
+  est listé ici mais pas géré côté Management, ajouter un fallback handler
+  qui log seulement (pour pas planter sur un type inconnu)
+- Le `Stack présumée` peut être révisé : si on choisit autre chose qu'un
+  Next.js / Prisma stack, mettre à jour cette section
