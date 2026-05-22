@@ -17,10 +17,12 @@ import { TestimonialsSection } from "@/components/landing/testimonials-section";
 import { ContactSection } from "@/components/landing/contact-section";
 import { FinalCTA } from "@/components/landing/final-cta";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { LocalBusinessJsonLd } from "@/components/landing/local-business-jsonld";
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
     <>
+      <LocalBusinessJsonLd />
       <SiteHeader />
       <main>
         <Hero />
