@@ -31,7 +31,8 @@ export type AdminIconName =
   | "message"
   | "wallet"
   | "settings"
-  | "scroll";
+  | "scroll"
+  | "zap";
 
 export const ADMIN_NAV: readonly AdminNavGroup[] = [
   {
@@ -78,6 +79,7 @@ export const ADMIN_NAV: readonly AdminNavGroup[] = [
     label: "Système",
     items: [
       { href: "/admin/finances", label: "Finances", icon: "wallet" },
+      { href: "/admin/webhooks", label: "Webhooks", icon: "zap" },
       { href: "/admin/parametres", label: "Paramètres", icon: "settings" },
       { href: "/admin/logs", label: "Logs", icon: "scroll" },
     ],
