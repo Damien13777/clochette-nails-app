@@ -16,6 +16,7 @@ import type { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { startOfTodayParisAsUtc } from "@/lib/paris-day";
+import { upcomingBookingsWhere } from "@/lib/booking-where";
 import {
   STATUS_VISUAL,
   formatBookingDateShort,
@@ -318,7 +319,7 @@ function buildWhere(filter: FilterKey, today: Date): Prisma.BookingWhereInput {
       return { date: today };
     case "upcoming":
       return {
-        date: { gte: today },
+        ...upcomingBookingsWhere(),
         status: { in: ["CONFIRMED", "AWAITING_DEPOSIT"] },
       };
     case "awaiting":
@@ -346,7 +347,7 @@ async function fetchFilterCounts(
       prisma.booking.count({ where: { date: today } }),
       prisma.booking.count({
         where: {
-          date: { gte: today },
+          ...upcomingBookingsWhere(),
           status: { in: ["CONFIRMED", "AWAITING_DEPOSIT"] },
         },
       }),

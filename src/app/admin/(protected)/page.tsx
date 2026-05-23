@@ -21,9 +21,9 @@ import {
   formatCents,
 } from "@/lib/booking-display";
 import {
-  currentTimeHHMMParis,
-  startOfTodayParisAsUtc,
-} from "@/lib/paris-day";
+  pastBookingsWhere,
+  upcomingBookingsWhere,
+} from "@/lib/booking-where";
 
 export const dynamic = "force-dynamic";
 
@@ -40,14 +40,8 @@ export default async function AdminDashboard() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const weekStart = startOfWeek(now);
-  // Tz-safe : minuit du jour Paris exprimé en UTC, pour comparaison avec
-  // Booking.date (@db.Date). Évite le décalage été/hiver qui faisait inclure
-  // les RDV de la veille. Cf. lib/paris-day.ts.
-  const todayDateOnly = startOfTodayParisAsUtc();
   const thirtyDaysAhead = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-
-  const currentHHMM = currentTimeHHMMParis();
 
   const [
     bookingsForRevenue,
@@ -118,7 +112,7 @@ export default async function AdminDashboard() {
     prisma.contactMessage.count({ where: { status: "NEW" } }),
     prisma.booking.findMany({
       where: {
-        date: { gte: todayDateOnly },
+        ...upcomingBookingsWhere(),
         status: { in: ["CONFIRMED", "AWAITING_DEPOSIT"] },
       },
       orderBy: [{ date: "asc" }, { startTime: "asc" }],
@@ -166,19 +160,10 @@ export default async function AdminDashboard() {
       },
     }),
     // RDV passés encore CONFIRMED → à marquer honoré (ou no-show)
-    // Critère : date < aujourd'hui OU (date = aujourd'hui ET endTime < maintenant)
     prisma.booking.findMany({
       where: {
+        ...pastBookingsWhere(),
         status: "CONFIRMED",
-        OR: [
-          { date: { lt: todayDateOnly } },
-          {
-            AND: [
-              { date: todayDateOnly },
-              { endTime: { lt: currentHHMM } },
-            ],
-          },
-        ],
       },
       orderBy: [{ date: "desc" }, { startTime: "desc" }],
       take: 10,
