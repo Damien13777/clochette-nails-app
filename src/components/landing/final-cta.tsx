@@ -15,7 +15,7 @@ export function FinalCTA() {
           On se retrouve au salon ?
         </p>
         <h2
-          className="mt-4 text-[clamp(1.375rem,2.8vw,2rem)] uppercase tracking-[0.04em] whitespace-nowrap"
+          className="mt-4 text-[clamp(1.375rem,2.8vw,2rem)] uppercase tracking-[0.04em] md:whitespace-nowrap"
           style={{ fontFamily: "var(--font-serif)" }}
         >
           PRÊTE À <span className="text-[var(--color-violet-700)]">PRENDRE RENDEZ-VOUS</span> ?
