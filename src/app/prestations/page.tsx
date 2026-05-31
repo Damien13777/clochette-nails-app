@@ -240,13 +240,13 @@ export default async function PrestationsPage() {
 
                         <div className="p-5 flex-1 flex flex-col">
                           <h3
-                            className="text-lg leading-tight"
+                            className="text-lg leading-tight line-clamp-2 min-h-[2lh]"
                             style={{ fontFamily: "var(--font-serif)" }}
                           >
                             {svc.title}
                           </h3>
                           <p
-                            className="text-sm text-[var(--color-ink-700)] mt-2 pb-4 leading-relaxed line-clamp-3"
+                            className="text-sm text-[var(--color-ink-700)] mt-2 mb-5 leading-relaxed"
                             style={{ fontFamily: "var(--font-ui)" }}
                           >
                             {svc.shortDesc}
