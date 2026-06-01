@@ -31,18 +31,19 @@ async function loadGoogleFont(
   const url = `https://fonts.googleapis.com/css2?family=${family}:wght@${weight}&text=${encodeURIComponent(
     text,
   )}`;
-  const cssRes = await fetch(url, {
-    headers: {
-      // Sans User-Agent moderne, Google sert du TTF (plus lourd). On force woff2.
-      "User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-    },
-  });
+  // IMPORTANT : ne PAS envoyer un User-Agent moderne. Avec un UA récent Google
+  // sert du woff2, que Satori (next/og) ne sait pas décoder
+  // (« Unsupported OpenType signature wOF2 »). Sans UA — ou avec un UA ancien —
+  // l'API css2 renvoie une @font-face en TTF, seul format accepté par Satori.
+  const cssRes = await fetch(url);
   const css = await cssRes.text();
+  // On capture l'URL servie en format truetype/opentype (jamais woff/woff2).
+  // L'URL Google est dynamique (/l/font?kit=…), sans extension de fichier :
+  // on s'appuie donc sur le `format('truetype')`, pas sur l'extension.
   const match = css.match(
-    /src: url\((.+?)\) format\('(?:opentype|truetype|woff2?)'\)/,
+    /src: url\(([^)]+)\) format\('(?:opentype|truetype)'\)/,
   );
-  if (!match) throw new Error(`Font URL not found in CSS for ${family}`);
+  if (!match) throw new Error(`TTF font URL not found in CSS for ${family}`);
   const fontRes = await fetch(match[1]);
   return fontRes.arrayBuffer();
 }

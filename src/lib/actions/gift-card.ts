@@ -47,13 +47,19 @@ export async function validateGiftCardCode(
     h.get("x-forwarded-for")?.split(",")[0].trim() ??
     h.get("x-real-ip") ??
     "unknown";
-  if (!checkRateLimit(GIFT_CARD_VALIDATE, ip)) {
+  const rl = checkRateLimit(
+    GIFT_CARD_VALIDATE.bucket,
+    ip,
+    GIFT_CARD_VALIDATE.max,
+    GIFT_CARD_VALIDATE.windowMs,
+  );
+  if (!rl.allowed) {
     return {
       ok: false,
-      error: "Trop de tentatives. Réessayez dans une heure.",
+      error: "Trop de tentatives. Réessayez dans un instant.",
     };
   }
-  recordRateLimit(GIFT_CARD_VALIDATE, ip);
+  recordRateLimit(GIFT_CARD_VALIDATE.bucket, ip, GIFT_CARD_VALIDATE.windowMs);
 
   const card = await prisma.giftCard.findUnique({
     where: { code: trimmed },

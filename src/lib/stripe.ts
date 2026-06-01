@@ -15,8 +15,10 @@ const key = process.env.STRIPE_SECRET_KEY;
 
 export const stripe: Stripe | null = key
   ? new Stripe(key, {
-      // Épingler la version API pour éviter les surprises au upgrade
-      apiVersion: "2025-09-30.clover",
+      // Version API épinglée sur celle que ce SDK embarque (LatestApiVersion).
+      // À chaque bump majeur du paquet `stripe`, recaler cette valeur sur la
+      // nouvelle version épinglée (cf. CHANGELOG du SDK) — sinon erreur de type.
+      apiVersion: "2026-04-22.dahlia",
       typescript: true,
     })
   : null;
