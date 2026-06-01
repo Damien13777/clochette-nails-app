@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SITE_URL, BEAUTYSALON_ID } from "@/lib/seo-jsonld";
 import { Suspense } from "react";
 import { Cinzel, Julius_Sans_One, Inria_Serif, Manrope } from "next/font/google";
 import "./globals.css";
@@ -90,6 +91,21 @@ export default function RootLayout({
       className={`${cinzel.variable} ${julius.variable} ${inria.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "@id": `${SITE_URL}/#website`,
+              name: "Clochette Nails",
+              url: SITE_URL,
+              inLanguage: "fr-FR",
+              publisher: { "@id": BEAUTYSALON_ID },
+            }),
+          }}
+        />
         {children}
         <CookieBanner />
         {gaTrackingId && (

@@ -11,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { GiftCardPurchaseForm } from "./purchase-form";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { SITE_URL, BEAUTYSALON_ID, breadcrumbJsonLd } from "@/lib/seo-jsonld";
 
 export const metadata: Metadata = {
   title: "Cartes cadeau · Clochette Nails",
@@ -56,6 +57,42 @@ export default async function GiftCardsPublicPage() {
   return (
     <>
       <SiteHeader />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: "Carte cadeau Clochette Nails",
+            description: `Carte cadeau utilisable sur toutes les prestations du salon Clochette Nails, valable ${validityMonths} mois.`,
+            brand: { "@type": "Brand", name: "Clochette Nails" },
+            category: "Gift Card",
+            image: `${SITE_URL}/opengraph-image.png`,
+            offers: {
+              "@type": "AggregateOffer",
+              priceCurrency: "EUR",
+              lowPrice: "10",
+              highPrice: "1000",
+              availability: "https://schema.org/InStock",
+              url: `${SITE_URL}/cartes-cadeau`,
+              seller: { "@id": BEAUTYSALON_ID },
+            },
+          }),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Accueil", path: "/" },
+              { name: "Cartes cadeau", path: "/cartes-cadeau" },
+            ]),
+          ),
+        }}
+      />
       <main className="min-h-screen bg-[var(--color-cream)] pt-32 pb-20">
         <div className="max-w-2xl mx-auto px-5 lg:px-8">
           {/* Hero */}

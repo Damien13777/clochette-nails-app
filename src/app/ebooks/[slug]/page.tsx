@@ -14,6 +14,7 @@ import { sanitizeHtml } from "@/lib/sanitize-html";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { EbookPurchaseForm } from "./purchase-form";
+import { breadcrumbJsonLd } from "@/lib/seo-jsonld";
 
 export const dynamic = "force-dynamic";
 
@@ -135,6 +136,19 @@ export default async function EbookDetailPage({
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Accueil", path: "/" },
+              { name: "Ebooks", path: "/ebooks" },
+              { name: ebook.title, path: `/ebooks/${ebook.slug}` },
+            ]),
+          ),
+        }}
       />
 
       <main className="min-h-screen bg-[var(--color-cream)] pt-32 pb-20">

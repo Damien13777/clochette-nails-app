@@ -20,6 +20,7 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { buildSrcSet } from "@/lib/image-srcset";
 import { PrestationGallery } from "@/components/prestation-gallery";
+import { breadcrumbJsonLd } from "@/lib/seo-jsonld";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.clochette-nails.fr";
@@ -238,6 +239,19 @@ export default async function ServiceDetailPage({
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Accueil", path: "/" },
+              { name: "Prestations", path: "/prestations" },
+              { name: service.title, path: `/prestations/${service.slug}` },
+            ]),
+          ),
+        }}
       />
       <main className="bg-[var(--color-cream)]">
         <div className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pt-32 md:pt-40 pb-16">
