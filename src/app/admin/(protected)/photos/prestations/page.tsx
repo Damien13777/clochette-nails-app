@@ -1,9 +1,9 @@
 /**
  * /admin/photos/prestations — gestion des covers de prestations.
  *
- * Liste les prestations PUBLIÉES (ordre displayOrder) avec leur cover
- * actuelle (= ServicePhoto featured=true) ou un placeholder. Les prestations
- * en brouillon / archivées ne sont pas gérées ici.
+ * Liste les prestations publiées ET brouillons (publiées d'abord, brouillons
+ * ensuite ; archivées exclues), ordre displayOrder, avec leur cover actuelle
+ * (= ServicePhoto featured=true) ou un placeholder.
  *
  * Chaque card = ServiceCoverCard (Client) gère upload/replace/delete/alt.
  */
@@ -29,7 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default async function PrestationsPhotosPage() {
   const services = await prisma.service.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: { in: ["PUBLISHED", "DRAFT"] } },
     orderBy: { displayOrder: "asc" },
     select: {
       id: true,
@@ -52,6 +52,12 @@ export default async function PrestationsPhotosPage() {
       },
     },
   });
+
+  // Publiées d'abord, brouillons ensuite (tri stable → displayOrder préservé dans chaque groupe).
+  const STATUS_RANK: Record<string, number> = { PUBLISHED: 0, DRAFT: 1 };
+  services.sort(
+    (a, b) => (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9),
+  );
 
   if (services.length === 0) {
     return (
