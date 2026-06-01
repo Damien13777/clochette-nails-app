@@ -62,9 +62,16 @@ type Props = {
   mode: Mode;
   optionId?: string;
   initialValues?: OptionFormValues;
+  /** Lien retour (préserve le filtre de la liste d'origine). */
+  backHref?: string;
 };
 
-export function OptionForm({ mode, optionId, initialValues }: Props) {
+export function OptionForm({
+  mode,
+  optionId,
+  initialValues,
+  backHref = "/admin/prestations/options",
+}: Props) {
   const router = useRouter();
   const [values, setValues] = useState<OptionFormValues>(
     initialValues ?? DEFAULTS,
@@ -383,7 +390,7 @@ export function OptionForm({ mode, optionId, initialValues }: Props) {
           {mode === "edit" && (
             <button
               type="button"
-              onClick={() => router.push("/admin/prestations/options")}
+              onClick={() => router.push(backHref)}
               disabled={isPending}
               className="inline-flex items-center px-5 py-2.5 rounded-full border border-[var(--color-line)] text-[var(--color-ink-700)] text-xs uppercase tracking-[0.06em] hover:bg-[var(--color-bone)] disabled:opacity-50 transition-colors"
               style={{ fontFamily: "var(--font-display)" }}

@@ -124,6 +124,7 @@ export default async function EditServicePage({
         mode="edit"
         serviceId={service.id}
         initialValues={initialValues}
+        backHref={backHref}
       />
 
       {service.status === "ARCHIVED" && (

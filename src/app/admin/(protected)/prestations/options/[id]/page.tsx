@@ -83,7 +83,7 @@ export default async function EditOptionPage({
         </h1>
       </header>
 
-      <OptionForm mode="edit" optionId={option.id} initialValues={initialValues} />
+      <OptionForm mode="edit" optionId={option.id} initialValues={initialValues} backHref={backHref} />
 
       {option.status === "ARCHIVED" && (
         <DeleteArchivedButton
