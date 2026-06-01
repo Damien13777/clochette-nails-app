@@ -114,6 +114,11 @@ export default async function GiftCardsPage({
     FILTERS.find((f) => f.key === "active")!;
   const q = (params.q ?? "").trim();
 
+  const backParams = new URLSearchParams();
+  if (filter.key !== "active") backParams.set("status", filter.key);
+  if (q) backParams.set("q", q);
+  const backTo = backParams.toString();
+
   const where: Prisma.GiftCardWhereInput = {};
   if (filter.statuses) where.status = { in: filter.statuses };
   if (q.length > 0) {
@@ -282,7 +287,7 @@ export default async function GiftCardsPage({
             return (
               <li key={c.id}>
                 <Link
-                  href={`/admin/cartes-cadeau/${c.id}`}
+                  href={`/admin/cartes-cadeau/${c.id}${backTo ? `?from=${encodeURIComponent(backTo)}` : ""}`}
                   className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[110px_1fr_auto_auto_auto] gap-3 sm:gap-5 items-center px-5 py-4 hover:bg-[var(--color-bone)] transition-colors"
                 >
                   <span

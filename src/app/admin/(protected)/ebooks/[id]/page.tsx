@@ -19,8 +19,10 @@ function centsToEurosString(cents: number | null | undefined): string {
 
 export default async function EditEbookPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -28,6 +30,8 @@ export default async function EditEbookPage({
   }
 
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = from ? `/admin/ebooks?${from}` : "/admin/ebooks";
   const ebook = await prisma.ebook.findUnique({ where: { id } });
   if (!ebook) notFound();
 
@@ -53,7 +57,7 @@ export default async function EditEbookPage({
     <div className="max-w-[900px] px-5 lg:px-8 py-10 space-y-8">
       <nav>
         <Link
-          href="/admin/ebooks"
+          href={backHref}
           className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-700)] hover:text-[var(--color-violet-700)] transition-colors"
           style={{ fontFamily: "var(--font-display)" }}
         >
@@ -93,7 +97,7 @@ export default async function EditEbookPage({
         )}
       </header>
 
-      <EbookForm mode="edit" ebookId={ebook.id} initialValues={initialValues} />
+      <EbookForm mode="edit" ebookId={ebook.id} initialValues={initialValues} backHref={backHref} />
     </div>
   );
 }

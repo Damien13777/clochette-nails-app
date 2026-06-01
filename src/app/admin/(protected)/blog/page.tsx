@@ -63,6 +63,7 @@ export default async function BlogListPage({
 
   const params = await searchParams;
   const filter = FILTERS.find((f) => f.key === params.status) ?? FILTERS[0];
+  const backTo = filter.key !== "all" ? `status=${filter.key}` : "";
 
   const where: Prisma.BlogPostWhereInput = filter.status
     ? { status: filter.status }
@@ -172,7 +173,7 @@ export default async function BlogListPage({
             return (
               <li key={p.id}>
                 <Link
-                  href={`/admin/blog/${p.id}`}
+                  href={`/admin/blog/${p.id}${backTo ? `?from=${encodeURIComponent(backTo)}` : ""}`}
                   className="grid grid-cols-[64px_1fr_auto] gap-4 items-start p-4 hover:bg-[var(--color-bone)] transition-colors"
                 >
                   <div className="w-16 h-16 rounded-[var(--radius-sm)] overflow-hidden bg-[var(--color-bone)] border border-[var(--color-line)] shrink-0">

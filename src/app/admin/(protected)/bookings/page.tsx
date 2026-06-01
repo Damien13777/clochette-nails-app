@@ -68,6 +68,11 @@ export default async function AdminBookingsPage({
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const skip = (page - 1) * PAGE_SIZE;
 
+  const backParams = new URLSearchParams();
+  if (filter !== "all") backParams.set("filter", filter);
+  if (page > 1) backParams.set("page", String(page));
+  const backTo = backParams.toString();
+
   const today = startOfTodayParisAsUtc();
   const where = buildWhere(filter, today);
   const orderBy: Prisma.BookingOrderByWithRelationInput[] =
@@ -160,7 +165,7 @@ export default async function AdminBookingsPage({
             return (
               <li key={b.id}>
                 <Link
-                  href={`/admin/bookings/${b.id}`}
+                  href={`/admin/bookings/${b.id}${backTo ? `?from=${encodeURIComponent(backTo)}` : ""}`}
                   className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-3 md:gap-6 items-center px-5 py-4 hover:bg-[var(--color-bone)] transition-colors"
                 >
                   {/* Date + horaire */}

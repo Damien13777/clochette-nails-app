@@ -60,9 +60,16 @@ type Props = {
   mode: Mode;
   ebookId?: string;
   initialValues?: EbookFormValues;
+  /** Lien retour (préserve le filtre de la liste d'origine). */
+  backHref?: string;
 };
 
-export function EbookForm({ mode, ebookId, initialValues }: Props) {
+export function EbookForm({
+  mode,
+  ebookId,
+  initialValues,
+  backHref = "/admin/ebooks",
+}: Props) {
   const router = useRouter();
   const [values, setValues] = useState<EbookFormValues>(
     initialValues ?? DEFAULTS,
@@ -595,7 +602,7 @@ export function EbookForm({ mode, ebookId, initialValues }: Props) {
           {mode === "edit" && (
             <button
               type="button"
-              onClick={() => router.push("/admin/ebooks")}
+              onClick={() => router.push(backHref)}
               disabled={isPending}
               className="inline-flex items-center px-5 py-2.5 rounded-full border border-[var(--color-line)] text-[var(--color-ink-700)] text-xs uppercase tracking-[0.06em] hover:bg-[var(--color-bone)] disabled:opacity-50 transition-colors"
               style={{ fontFamily: "var(--font-display)" }}
