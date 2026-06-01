@@ -104,7 +104,7 @@ export function TestimonialsSection() {
               {t.quote}
             </p>
 
-            <div className="flex gap-0.5 mt-4" aria-label={`${t.rating} sur 5`}>
+            <div className="flex gap-0.5 mt-4" role="img" aria-label={`${t.rating} sur 5`}>
               {[...Array(t.rating)].map((_, i) => (
                 <svg
                   key={i}
