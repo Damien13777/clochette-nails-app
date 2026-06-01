@@ -193,8 +193,12 @@ export default async function ServiceDetailPage({
     name: service.title,
     description: service.metaDesc?.trim() || service.shortDesc,
     serviceType: CATEGORY_LABELS[service.category],
+    category: CATEGORY_LABELS[service.category],
     url: `${SITE_URL}/prestations/${service.slug}`,
     ...(cover ? { image: `${SITE_URL}${cover.url}` } : {}),
+    ...(service.tags.length > 0
+      ? { keywords: service.tags.join(", ") }
+      : {}),
     provider: {
       "@type": "BeautySalon",
       "@id": `${SITE_URL}/#beautysalon`,
@@ -207,6 +211,23 @@ export default async function ServiceDetailPage({
       price: (service.priceCents / 100).toFixed(2),
       url: `${SITE_URL}/prestations/${service.slug}`,
       availability: "https://schema.org/InStock",
+      businessFunction: "http://purl.org/goodrelations/v1#ProvideService",
+      availableAtOrFrom: { "@id": `${SITE_URL}/#beautysalon` },
+    },
+    potentialAction: {
+      "@type": "ReserveAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/reservation`,
+        actionPlatform: [
+          "https://schema.org/DesktopWebPlatform",
+          "https://schema.org/MobileWebPlatform",
+        ],
+      },
+      result: {
+        "@type": "Reservation",
+        name: `Réservation — ${service.title}`,
+      },
     },
   };
 
