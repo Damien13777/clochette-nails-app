@@ -58,6 +58,9 @@ export default async function EditServicePage({
       priceCents: true,
       displayOrder: true,
       disclaimer: true,
+      metaTitle: true,
+      metaDesc: true,
+      tags: true,
       status: true,
       updatedAt: true,
       _count: { select: { bookings: true } },
@@ -76,6 +79,9 @@ export default async function EditServicePage({
     priceEuros: service.priceCents / 100,
     displayOrder: service.displayOrder,
     disclaimer: service.disclaimer ?? "",
+    metaTitle: service.metaTitle ?? "",
+    metaDesc: service.metaDesc ?? "",
+    tags: service.tags.join(", "),
     status: service.status,
   };
 

@@ -62,6 +62,9 @@ type ParsedFields = {
   priceCents: number;
   displayOrder: number;
   disclaimer: string | null;
+  metaTitle: string | null;
+  metaDesc: string | null;
+  tags: string[];
 };
 
 function parseFormData(
@@ -117,6 +120,18 @@ function parseFormData(
   if (disclaimer && disclaimer.length > 500)
     fieldErrors.disclaimer = "Avertissement trop long (500 chars max).";
 
+  const tags = String(formData.get("tags") ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0 && t.length <= 40)
+    .slice(0, 10);
+
+  const metaTitleRaw = String(formData.get("metaTitle") ?? "").trim();
+  const metaTitle = metaTitleRaw.length > 0 ? metaTitleRaw.slice(0, 70) : null;
+
+  const metaDescRaw = String(formData.get("metaDesc") ?? "").trim();
+  const metaDesc = metaDescRaw.length > 0 ? metaDescRaw.slice(0, 160) : null;
+
   if (Object.keys(fieldErrors).length > 0) {
     return { ok: false, fieldErrors };
   }
@@ -133,6 +148,9 @@ function parseFormData(
       priceCents,
       displayOrder,
       disclaimer,
+      metaTitle,
+      metaDesc,
+      tags,
     },
   };
 }
@@ -201,6 +219,8 @@ export async function updateService(
 
   revalidatePath("/admin/prestations");
   revalidatePath(`/admin/prestations/${id}`);
+  revalidatePath("/prestations");
+  revalidatePath(`/prestations/${parsed.data.slug}`);
   revalidatePath("/");
   return { ok: true, id };
 }
