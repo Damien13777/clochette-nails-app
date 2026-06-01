@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  POSE_NATURELS: "Pose naturels",
+  POSE_NATURELS: "Pose sur ongles naturels",
   RALLONGEMENT: "Rallongement",
   PACK_SPECIAL: "Pack spécial",
   SOIN_MAINS: "Soin mains",

@@ -50,7 +50,7 @@ const DEFAULTS: OptionFormValues = {
 };
 
 const CATEGORY_OPTIONS: { value: ServiceCategory; label: string }[] = [
-  { value: "POSE_NATURELS", label: "Pose naturels" },
+  { value: "POSE_NATURELS", label: "Pose sur ongles naturels" },
   { value: "RALLONGEMENT", label: "Rallongement" },
   { value: "PACK_SPECIAL", label: "Pack spécial" },
   { value: "SOIN_MAINS", label: "Soin mains" },
