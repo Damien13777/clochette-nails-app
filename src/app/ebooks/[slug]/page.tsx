@@ -50,7 +50,7 @@ export async function generateMetadata({
   const ogImage = e.coverImage ? `${SITE_URL}${e.coverImage}` : undefined;
 
   return {
-    title: `${title} — Clochette Nails`,
+    title: { absolute: `${title} — Clochette Nails` },
     description,
     alternates: { canonical: `/ebooks/${slug}` },
     keywords: e.tags.length > 0 ? e.tags : undefined,

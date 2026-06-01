@@ -61,7 +61,7 @@ export async function generateMetadata({
   const ogImage = post.coverImage ? `${SITE_URL}${post.coverImage}` : undefined;
 
   return {
-    title: `${title} — Clochette Nails`,
+    title: { absolute: `${title} — Clochette Nails` },
     description,
     alternates: { canonical: `/blog/${slug}` },
     keywords: post.tags.length > 0 ? post.tags : undefined,
