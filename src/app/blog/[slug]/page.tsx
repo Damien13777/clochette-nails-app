@@ -19,6 +19,7 @@ import { prisma } from "@/lib/prisma";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { breadcrumbJsonLd } from "@/lib/seo-jsonld";
 import {
   BLOG_CATEGORY_LABELS,
   BLOG_CATEGORY_SLUGS,
@@ -157,6 +158,19 @@ export default async function BlogArticlePage({
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Accueil", path: "/" },
+              { name: "Journal", path: "/blog" },
+              { name: post.title, path: `/blog/${slug}` },
+            ]),
+          ),
+        }}
       />
 
       <main className="min-h-screen bg-[var(--color-cream)] pt-32 pb-20">
