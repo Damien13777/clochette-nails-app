@@ -67,7 +67,7 @@ export async function generateMetadata({
   const description = svc.metaDesc?.trim() || svc.shortDesc;
   const ogImage = svc.photos[0]?.url;
   return {
-    title,
+    title: { absolute: title },
     description,
     alternates: { canonical: `/prestations/${slug}` },
     openGraph: {
