@@ -94,12 +94,12 @@ export function ServiceSelector({
               }`}
             >
               <div className="flex items-start justify-between gap-3 mb-2">
-                <h4
+                <h2
                   className="text-base leading-tight"
                   style={{ fontFamily: "var(--font-serif)" }}
                 >
                   {svc.title}
-                </h4>
+                </h2>
                 {isSelected && (
                   <span className="shrink-0 w-5 h-5 rounded-full bg-[var(--color-violet-600)] text-white grid place-items-center text-xs">
                     ✓
