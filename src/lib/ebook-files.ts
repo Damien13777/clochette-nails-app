@@ -15,6 +15,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { applyWatermark } from "@/lib/watermark";
 
 // ─── Cover ─────────────────────────────────────────────────
 
@@ -65,15 +66,17 @@ export async function processEbookCoverUpload(file: File): Promise<CoverResult> 
   const input = Buffer.from(await file.arrayBuffer());
   let output: Buffer;
   try {
-    output = await sharp(input)
+    const resized = await sharp(input)
       .rotate()
       .resize({
         width: COVER_MAX_WIDTH,
         withoutEnlargement: true,
         fit: "inside",
       })
-      .webp({ quality: COVER_WEBP_QUALITY })
+      .png()
       .toBuffer();
+    const stamped = await applyWatermark(resized);
+    output = await sharp(stamped).webp({ quality: COVER_WEBP_QUALITY }).toBuffer();
   } catch (err) {
     const reason = err instanceof Error ? err.message : "format non décodable";
     return { ok: false, error: `Image illisible (${reason}).` };

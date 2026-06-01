@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { applyWatermark } from "@/lib/watermark";
 
 export const BLOG_COVER_DIR = path.join(
   process.cwd(),
@@ -71,15 +72,17 @@ export async function processBlogCoverUpload(
   const inputBuffer = Buffer.from(await file.arrayBuffer());
   let outputBuffer: Buffer;
   try {
-    outputBuffer = await sharp(inputBuffer)
+    const resized = await sharp(inputBuffer)
       .rotate()
       .resize({
         width: MAX_OUTPUT_WIDTH,
         withoutEnlargement: true,
         fit: "inside",
       })
-      .webp({ quality: WEBP_QUALITY })
+      .png()
       .toBuffer();
+    const stamped = await applyWatermark(resized);
+    outputBuffer = await sharp(stamped).webp({ quality: WEBP_QUALITY }).toBuffer();
   } catch (err) {
     const reason = err instanceof Error ? err.message : "format non décodable";
     return { ok: false, error: `Image illisible (${reason}).` };

@@ -126,6 +126,38 @@ prestations (tags "été", "fête", "discret"…) qui n'existe pas encore en DB.
 
 ---
 
+## Médias / Branding
+
+### Filigrane (watermark) sur les photos uploadées
+Appliquer automatiquement un filigrane (logo transparent fourni par Damien) sur
+**chaque photo uploadée côté public** : hero landing, covers prestations, covers
+blog, portfolio, et tout futur asset public.
+
+**Implémentation :** dans le pipeline Sharp existant (compression WebP q82, cap
+par type d'asset). Compositer le logo via `sharp().composite([{ input, gravity,
+blend }])` à l'upload — filigrane **baké** dans la variante stockée (plus simple
+et moins de CPU sur le VPS qu'un overlay on-the-fly). Conséquence assumée :
+changer le logo plus tard impose de reprocesser les images existantes (prévoir
+un script batch de re-watermark).
+
+**Contrainte produit duplicable :** ne rien hardcoder. Logo, position (gravity),
+opacité, taille relative (% de la largeur image) et un **on/off par type
+d'asset** doivent être paramétrables via `PlatformSettings` + écran admin, pour
+que chaque instance cliente mette son propre logo sans toucher au code.
+
+**Reco technique :** largeur du filigrane ≈ 12–18 % de l'image, gravity
+`southeast` par défaut + marge interne, opacité ~50–70 %. Tester la lisibilité
+sur fond clair ET foncé (logo transparent qui tient sur les deux).
+
+**Pourquoi différé :** bloqué tant que le logo PNG transparent n'est pas fourni ;
+feature de branding/IP non bloquante pour le tunnel de réservation. **À promouvoir
+en pré-déploiement** si on veut les filigranes dès la mise en ligne publique.
+
+**Effort :** moyen — brique Sharp réutilisable (Nails Academy, vitrine perso) +
+settings admin + éventuel script de re-watermark batch.
+
+---
+
 ## Notes générales
 
 - Avant chaque item de cette liste, vérifier si le problème qu'il résout existe

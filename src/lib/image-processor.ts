@@ -14,6 +14,7 @@
  */
 
 import sharp from "sharp";
+import { applyWatermark } from "@/lib/watermark";
 
 export const ACCEPTED_MIME = [
   "image/jpeg",
@@ -76,7 +77,7 @@ export async function processImage(
         ? Math.min(maxSize, metadata.width)
         : Math.min(maxSize, metadata.height);
 
-    const buffer = await sharp(input)
+    const resized = await sharp(input)
       .rotate() // Auto-orient selon EXIF AVANT de stripper
       .resize({
         width: metadata.width >= metadata.height ? targetSize : undefined,
@@ -84,6 +85,13 @@ export async function processImage(
         withoutEnlargement: true,
         fit: "inside",
       })
+      .png()
+      .toBuffer();
+
+    // Filigrane baké, dimensionné sur la largeur de CHAQUE variante.
+    const stamped = await applyWatermark(resized);
+
+    const buffer = await sharp(stamped)
       .webp({ quality: 82, effort: 4 })
       .withMetadata({ exif: undefined }) // Strip EXIF (privacy + bytes)
       .toBuffer();
