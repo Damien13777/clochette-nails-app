@@ -41,8 +41,10 @@ export async function generateMetadata({
 
 export default async function BookingDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -50,6 +52,8 @@ export default async function BookingDetailPage({
   }
 
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = from ? `/admin/bookings?${from}` : "/admin/bookings";
 
   const booking = await prisma.booking.findUnique({
     where: { id },
@@ -87,7 +91,7 @@ export default async function BookingDetailPage({
     <div className="max-w-[1400px] px-5 lg:px-8 py-10">
       {/* Back link */}
       <Link
-        href="/admin/bookings"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-500)] hover:text-[var(--color-violet-700)] mb-4 transition-colors"
         style={{ fontFamily: "var(--font-ui)" }}
       >

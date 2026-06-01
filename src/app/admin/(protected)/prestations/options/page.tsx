@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const CATEGORY_LABELS: Record<ServiceCategory, string> = {
-  POSE_NATURELS: "Pose naturels",
+  POSE_NATURELS: "Pose sur ongles naturels",
   RALLONGEMENT: "Rallongement",
   PACK_SPECIAL: "Pack",
   SOIN_MAINS: "Soin mains",
@@ -167,7 +167,7 @@ export default async function OptionsListPage({
             return (
               <li key={o.id}>
                 <Link
-                  href={`/admin/prestations/options/${o.id}`}
+                  href={`/admin/prestations/options/${o.id}${filter.key !== "all" ? `?from=${filter.key}` : ""}`}
                   className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 md:gap-6 items-center px-5 py-4 hover:bg-[var(--color-bone)] transition-colors"
                 >
                   <div className="min-w-0">

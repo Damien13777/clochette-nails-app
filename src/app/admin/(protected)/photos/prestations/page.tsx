@@ -1,8 +1,9 @@
 /**
  * /admin/photos/prestations — gestion des covers de prestations.
  *
- * Liste les prestations (toutes status, ordre displayOrder) avec leur
- * cover actuelle (= ServicePhoto featured=true) ou un placeholder.
+ * Liste les prestations publiées ET brouillons (publiées d'abord, brouillons
+ * ensuite ; archivées exclues), ordre displayOrder, avec leur cover actuelle
+ * (= ServicePhoto featured=true) ou un placeholder.
  *
  * Chaque card = ServiceCoverCard (Client) gère upload/replace/delete/alt.
  */
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 const CATEGORY_LABELS: Record<string, string> = {
-  POSE_NATURELS: "Pose naturels",
+  POSE_NATURELS: "Pose sur ongles naturels",
   RALLONGEMENT: "Rallongement",
   PACK_SPECIAL: "Pack spécial",
   SOIN_MAINS: "Soin mains",
@@ -28,6 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default async function PrestationsPhotosPage() {
   const services = await prisma.service.findMany({
+    where: { status: { in: ["PUBLISHED", "DRAFT"] } },
     orderBy: { displayOrder: "asc" },
     select: {
       id: true,
@@ -50,6 +52,12 @@ export default async function PrestationsPhotosPage() {
       },
     },
   });
+
+  // Publiées d'abord, brouillons ensuite (tri stable → displayOrder préservé dans chaque groupe).
+  const STATUS_RANK: Record<string, number> = { PUBLISHED: 0, DRAFT: 1 };
+  services.sort(
+    (a, b) => (STATUS_RANK[a.status] ?? 9) - (STATUS_RANK[b.status] ?? 9),
+  );
 
   if (services.length === 0) {
     return (

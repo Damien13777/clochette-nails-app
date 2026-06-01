@@ -99,8 +99,10 @@ function formatDateTime(d: Date): string {
 
 export default async function GiftCardDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -108,6 +110,8 @@ export default async function GiftCardDetailPage({
   }
 
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = from ? `/admin/cartes-cadeau?${from}` : "/admin/cartes-cadeau";
   const card = await prisma.giftCard.findUnique({
     where: { id },
     include: {
@@ -142,7 +146,7 @@ export default async function GiftCardDetailPage({
     <div className="max-w-[1200px] mx-auto p-6 lg:p-8 space-y-6">
       <nav>
         <Link
-          href="/admin/cartes-cadeau"
+          href={backHref}
           className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-700)] hover:text-[var(--color-violet-700)] transition-colors"
           style={{ fontFamily: "var(--font-display)" }}
         >

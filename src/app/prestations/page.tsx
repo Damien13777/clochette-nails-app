@@ -30,7 +30,7 @@ const CATEGORY_META: Record<
   { label: string; intro: string; order: number }
 > = {
   POSE_NATURELS: {
-    label: "Ongles naturels",
+    label: "Pose sur ongles naturels",
     intro: "Renforcement et embellissement de l'ongle naturel, en finition discrète.",
     order: 1,
   },

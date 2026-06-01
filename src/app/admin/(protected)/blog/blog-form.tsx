@@ -63,9 +63,16 @@ type Props = {
   mode: Mode;
   postId?: string;
   initialValues?: BlogFormValues;
+  /** Lien retour (préserve le filtre de la liste d'origine). */
+  backHref?: string;
 };
 
-export function BlogForm({ mode, postId, initialValues }: Props) {
+export function BlogForm({
+  mode,
+  postId,
+  initialValues,
+  backHref = "/admin/blog",
+}: Props) {
   const router = useRouter();
   const [values, setValues] = useState<BlogFormValues>(
     initialValues ?? DEFAULTS,
@@ -591,7 +598,7 @@ export function BlogForm({ mode, postId, initialValues }: Props) {
           {mode === "edit" && (
             <button
               type="button"
-              onClick={() => router.push("/admin/blog")}
+              onClick={() => router.push(backHref)}
               disabled={isPending}
               className="inline-flex items-center px-5 py-2.5 rounded-full border border-[var(--color-line)] text-[var(--color-ink-700)] text-xs uppercase tracking-[0.06em] hover:bg-[var(--color-bone)] disabled:opacity-50 transition-colors"
               style={{ fontFamily: "var(--font-display)" }}

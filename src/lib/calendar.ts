@@ -176,7 +176,7 @@ export const SERVICE_CATEGORY_COLORS: Record<
     bg: "#f5f0ff",
     border: "#a78bda",
     text: "#553c9a",
-    label: "Pose ongles naturels",
+    label: "Pose sur ongles naturels",
   },
   RALLONGEMENT: {
     bg: "#fce7f3",

@@ -50,7 +50,7 @@ const DEFAULTS: ServiceFormValues = {
 };
 
 const CATEGORY_OPTIONS: { value: ServiceCategory; label: string }[] = [
-  { value: "POSE_NATURELS", label: "Pose naturels" },
+  { value: "POSE_NATURELS", label: "Pose sur ongles naturels" },
   { value: "RALLONGEMENT", label: "Rallongement" },
   { value: "PACK_SPECIAL", label: "Pack spécial" },
   { value: "SOIN_MAINS", label: "Soin mains" },
@@ -62,9 +62,16 @@ type Props = {
   mode: Mode;
   serviceId?: string;
   initialValues?: ServiceFormValues;
+  /** Lien retour (préserve le filtre de la liste d'origine). */
+  backHref?: string;
 };
 
-export function ServiceForm({ mode, serviceId, initialValues }: Props) {
+export function ServiceForm({
+  mode,
+  serviceId,
+  initialValues,
+  backHref = "/admin/prestations",
+}: Props) {
   const router = useRouter();
   const [values, setValues] = useState<ServiceFormValues>(
     initialValues ?? DEFAULTS,
@@ -388,7 +395,7 @@ export function ServiceForm({ mode, serviceId, initialValues }: Props) {
           {mode === "edit" && (
             <button
               type="button"
-              onClick={() => router.push("/admin/prestations")}
+              onClick={() => router.push(backHref)}
               disabled={isPending}
               className="inline-flex items-center px-5 py-2.5 rounded-full border border-[var(--color-line)] text-[var(--color-ink-700)] text-xs uppercase tracking-[0.06em] hover:bg-[var(--color-bone)] disabled:opacity-50 transition-colors"
               style={{ fontFamily: "var(--font-display)" }}

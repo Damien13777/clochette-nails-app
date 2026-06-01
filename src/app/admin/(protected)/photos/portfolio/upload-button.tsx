@@ -23,7 +23,7 @@ import type { ServiceCategory } from "@prisma/client";
 import { uploadPortfolioPhotos } from "@/lib/actions/medias";
 
 const CATEGORY_OPTIONS: { value: ServiceCategory; label: string }[] = [
-  { value: "POSE_NATURELS", label: "Ongles naturels" },
+  { value: "POSE_NATURELS", label: "Pose sur ongles naturels" },
   { value: "RALLONGEMENT", label: "Rallongements" },
   { value: "PACK_SPECIAL", label: "Packs" },
   { value: "SOIN_MAINS", label: "Soin mains" },

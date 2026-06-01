@@ -22,7 +22,7 @@ import { buildSrcSet } from "@/lib/image-srcset";
 import { PrestationGallery } from "@/components/prestation-gallery";
 
 const CATEGORY_LABELS: Record<ServiceCategory, string> = {
-  POSE_NATURELS: "Ongles naturels",
+  POSE_NATURELS: "Pose sur ongles naturels",
   RALLONGEMENT: "Rallongement",
   PACK_SPECIAL: "Pack sur mesure",
   SOIN_MAINS: "Soin mains",

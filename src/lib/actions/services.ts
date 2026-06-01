@@ -19,6 +19,7 @@ import { revalidatePath } from "next/cache";
 import type { ContentStatus, ServiceCategory } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getStorage } from "@/lib/storage";
 
 type ActionResult =
   | { ok: true; id?: string }
@@ -220,4 +221,71 @@ export async function changeServiceStatus(
   revalidatePath(`/admin/prestations/${id}`);
   revalidatePath("/");
   return { ok: true, id };
+}
+
+/**
+ * Suppression définitive d'une prestation ARCHIVÉE.
+ * Refusée si des réservations y sont liées (Booking onDelete: Restrict) →
+ * l'historique reste intègre. Nettoie au passage les photos de couverture
+ * (fichiers + records) liées à la prestation.
+ */
+export async function deleteService(id: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Non autorisé" };
+
+  const service = await prisma.service.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      _count: { select: { bookings: true } },
+    },
+  });
+  if (!service) return { ok: false, error: "Prestation introuvable." };
+  if (service.status !== "ARCHIVED") {
+    return {
+      ok: false,
+      error: "Seules les prestations archivées peuvent être supprimées définitivement.",
+    };
+  }
+  if (service._count.bookings > 0) {
+    return {
+      ok: false,
+      error: `Impossible : ${service._count.bookings} réservation(s) liée(s). La prestation reste archivée pour préserver l'historique.`,
+    };
+  }
+
+  // Nettoyage des photos de couverture liées (fichiers + records)
+  const photos = await prisma.servicePhoto.findMany({
+    where: { serviceId: id },
+    select: { storageKey: true, variants: true },
+  });
+  const storage = getStorage();
+  for (const photo of photos) {
+    const keys: string[] = [];
+    if (photo.storageKey) keys.push(photo.storageKey);
+    if (photo.variants && typeof photo.variants === "object") {
+      for (const v of Object.values(
+        photo.variants as Record<string, { key?: string }>,
+      )) {
+        if (v?.key) keys.push(v.key);
+      }
+    }
+    await Promise.all(keys.map((k) => storage.remove(k).catch(() => {})));
+  }
+  await prisma.servicePhoto.deleteMany({ where: { serviceId: id } });
+
+  await prisma.service.delete({ where: { id } });
+  await prisma.auditLog.create({
+    data: {
+      adminId: admin.id,
+      action: "SERVICE_DELETED",
+      metadata: { serviceId: id, title: service.title } as object,
+    },
+  });
+
+  revalidatePath("/admin/prestations");
+  revalidatePath("/");
+  return { ok: true };
 }

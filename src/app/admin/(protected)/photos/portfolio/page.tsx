@@ -130,7 +130,7 @@ async function fetchCategoryCounts(): Promise<
 }
 
 export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
-  POSE_NATURELS: "Ongles naturels",
+  POSE_NATURELS: "Pose sur ongles naturels",
   RALLONGEMENT: "Rallongements",
   PACK_SPECIAL: "Packs",
   SOIN_MAINS: "Soin mains",

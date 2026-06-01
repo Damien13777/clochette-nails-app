@@ -7,6 +7,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteServiceOption } from "@/lib/actions/service-options";
+import { DeleteArchivedButton } from "@/components/admin/delete-archived-button";
 import { OptionForm, type OptionFormValues } from "../option-form";
 
 export const metadata: Metadata = {
@@ -15,10 +17,14 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+const LIST_FILTERS = ["draft", "published", "archived"] as const;
+
 export default async function EditOptionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -26,6 +32,10 @@ export default async function EditOptionPage({
   }
 
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = LIST_FILTERS.includes(from as (typeof LIST_FILTERS)[number])
+    ? `/admin/prestations/options?status=${from}`
+    : "/admin/prestations/options";
   const option = await prisma.serviceOption.findUnique({
     where: { id },
   });
@@ -47,7 +57,7 @@ export default async function EditOptionPage({
     <div className="max-w-[900px] px-5 lg:px-8 py-10 space-y-8">
       <nav>
         <Link
-          href="/admin/prestations/options"
+          href={backHref}
           className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-700)] hover:text-[var(--color-violet-700)] transition-colors"
           style={{ fontFamily: "var(--font-display)" }}
         >
@@ -73,7 +83,15 @@ export default async function EditOptionPage({
         </h1>
       </header>
 
-      <OptionForm mode="edit" optionId={option.id} initialValues={initialValues} />
+      <OptionForm mode="edit" optionId={option.id} initialValues={initialValues} backHref={backHref} />
+
+      {option.status === "ARCHIVED" && (
+        <DeleteArchivedButton
+          onDelete={deleteServiceOption.bind(null, option.id)}
+          redirectTo={backHref}
+          confirmLabel="cette option"
+        />
+      )}
     </div>
   );
 }

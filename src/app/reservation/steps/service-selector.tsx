@@ -12,7 +12,7 @@ import type { ServiceCategory } from "@prisma/client";
 import type { ServiceLite } from "../reservation-flow";
 
 const CATEGORY_LABELS: Record<ServiceCategory, string> = {
-  POSE_NATURELS: "Pose naturels",
+  POSE_NATURELS: "Pose sur ongles naturels",
   RALLONGEMENT: "Rallongements",
   PACK_SPECIAL: "Packs",
   SOIN_MAINS: "Soin mains",

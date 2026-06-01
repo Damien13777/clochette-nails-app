@@ -67,6 +67,7 @@ export default async function EbookListPage({
 
   const params = await searchParams;
   const filter = FILTERS.find((f) => f.key === params.status) ?? FILTERS[0];
+  const backTo = filter.key !== "all" ? `status=${filter.key}` : "";
 
   const where: Prisma.EbookWhereInput = filter.status
     ? { status: filter.status }
@@ -169,7 +170,7 @@ export default async function EbookListPage({
             return (
               <li key={e.id}>
                 <Link
-                  href={`/admin/ebooks/${e.id}`}
+                  href={`/admin/ebooks/${e.id}${backTo ? `?from=${encodeURIComponent(backTo)}` : ""}`}
                   className="grid grid-cols-[64px_1fr_auto] gap-4 items-start p-4 hover:bg-[var(--color-bone)] transition-colors"
                 >
                   <div className="w-16 h-16 rounded-[var(--radius-sm)] overflow-hidden bg-[var(--color-bone)] border border-[var(--color-line)] shrink-0">
