@@ -173,7 +173,7 @@ export default async function PrestationsListPage({
             return (
               <li key={s.id}>
                 <Link
-                  href={`/admin/prestations/${s.id}`}
+                  href={`/admin/prestations/${s.id}${filter.key !== "all" ? `?from=${filter.key}` : ""}`}
                   className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-3 md:gap-6 items-center px-5 py-4 hover:bg-[var(--color-bone)] transition-colors"
                 >
                   <div className="min-w-0">

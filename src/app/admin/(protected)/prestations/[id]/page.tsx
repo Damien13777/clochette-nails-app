@@ -24,10 +24,14 @@ export async function generateMetadata({
   return { title: svc ? `${svc.title} · Admin` : "Prestation · Admin" };
 }
 
+const LIST_FILTERS = ["draft", "published", "archived"] as const;
+
 export default async function EditServicePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -35,6 +39,10 @@ export default async function EditServicePage({
   }
 
   const { id } = await params;
+  const { from } = await searchParams;
+  const backHref = LIST_FILTERS.includes(from as (typeof LIST_FILTERS)[number])
+    ? `/admin/prestations?status=${from}`
+    : "/admin/prestations";
   const service = await prisma.service.findUnique({
     where: { id },
     select: {
@@ -72,7 +80,7 @@ export default async function EditServicePage({
   return (
     <div className="max-w-[1000px] px-5 lg:px-8 py-10">
       <Link
-        href="/admin/prestations"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-500)] hover:text-[var(--color-violet-700)] mb-4 transition-colors"
         style={{ fontFamily: "var(--font-ui)" }}
       >
