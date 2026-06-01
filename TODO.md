@@ -30,12 +30,12 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 
 ---
 
-## 🔧 Correctifs & polish admin
+## 🔧 Correctifs & polish admin — ✅ FAIT (2026-06-01)
 
-- [ ] **Rename catégorie** — `POSE_NATURELS` (badge affiché actuel « SIGNATURE », rose) → libellé affiché **« Pose sur ongle naturel »**. Changer le label affiché, garder l'enum DB (pas de migration).
-- [ ] **Retour vers liste filtrée** — quand on consulte une prestation/option depuis une liste filtrée (autre que « Toutes ») puis qu'on fait « retour », on revient par défaut sur « Toutes ». À corriger : revenir sur la liste/onglet consulté avant.
-- [ ] **Suppression des archivés** — permettre de supprimer définitivement les prestations, options et articles de blog **archivés**.
-- [ ] **Photos admin** — dans la section Photos, n'afficher que les prestations **publiées** (masquer les archivées).
+- [x] **Rename catégorie** — `POSE_NATURELS` → libellé affiché **« Pose sur ongles naturels »** partout (enum DB et badge marketing « Signature » inchangés).
+- [x] **Retour vers liste filtrée** — étendu à prestations, options, **bookings, cartes-cadeau, ebooks, blog** (lien retour + bouton form). Préserve le filtre + la pagination (bookings) + la recherche (cartes-cadeau).
+- [x] **Suppression des archivés** — prestations / options / articles : hard delete réservé aux ARCHIVÉS, refusé si réservations liées (gardes FK), nettoyage fichiers + audit log. Composant `<DeleteArchivedButton>`.
+- [x] **Photos admin** — affiche publiées + brouillons (publiées d'abord, brouillons ensuite), archives exclues.
 
 ---
 
