@@ -1,8 +1,9 @@
 /**
  * /admin/photos/prestations — gestion des covers de prestations.
  *
- * Liste les prestations (toutes status, ordre displayOrder) avec leur
- * cover actuelle (= ServicePhoto featured=true) ou un placeholder.
+ * Liste les prestations PUBLIÉES (ordre displayOrder) avec leur cover
+ * actuelle (= ServicePhoto featured=true) ou un placeholder. Les prestations
+ * en brouillon / archivées ne sont pas gérées ici.
  *
  * Chaque card = ServiceCoverCard (Client) gère upload/replace/delete/alt.
  */
@@ -28,6 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default async function PrestationsPhotosPage() {
   const services = await prisma.service.findMany({
+    where: { status: "PUBLISHED" },
     orderBy: { displayOrder: "asc" },
     select: {
       id: true,
