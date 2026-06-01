@@ -21,6 +21,9 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { buildSrcSet } from "@/lib/image-srcset";
 import { PrestationGallery } from "@/components/prestation-gallery";
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.clochette-nails.fr";
+
 const CATEGORY_LABELS: Record<ServiceCategory, string> = {
   POSE_NATURELS: "Pose sur ongles naturels",
   RALLONGEMENT: "Rallongement",
@@ -94,6 +97,8 @@ export default async function ServiceDetailPage({
       description: true,
       category: true,
       durationMinutes: true,
+      priceCents: true,
+      metaDesc: true,
       tags: true,
       postPurchaseInfo: true,
       photos: {
@@ -181,9 +186,38 @@ export default async function ServiceDetailPage({
     },
   });
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${SITE_URL}/prestations/${service.slug}#service`,
+    name: service.title,
+    description: service.metaDesc?.trim() || service.shortDesc,
+    serviceType: CATEGORY_LABELS[service.category],
+    url: `${SITE_URL}/prestations/${service.slug}`,
+    ...(cover ? { image: `${SITE_URL}${cover.url}` } : {}),
+    provider: {
+      "@type": "BeautySalon",
+      "@id": `${SITE_URL}/#beautysalon`,
+      name: "Clochette Nails",
+    },
+    areaServed: { "@type": "City", name: "Moncoutant-sur-Sèvre" },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "EUR",
+      price: (service.priceCents / 100).toFixed(2),
+      url: `${SITE_URL}/prestations/${service.slug}`,
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <>
       <SiteHeader />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <main className="bg-[var(--color-cream)]">
         <div className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pt-32 md:pt-40 pb-16">
           {/* Back link */}
