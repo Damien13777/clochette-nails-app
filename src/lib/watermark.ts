@@ -50,7 +50,7 @@ export const WATERMARK_CONFIG = {
   /** Décalage de l'ombre, en fraction de la largeur du filigrane. */
   shadowOffsetRatio: 0.016,
   /** Marge au coin, en fraction de la largeur de l'image de base. */
-  marginRatio: 0.035,
+  marginRatio: 0.06,
   /** En deçà de cette largeur d'image, on ne filigrane pas (vignettes). */
   minBaseWidth: 320,
   /** Seuil de luminance [0–1] au-dessus duquel le coin est "clair". */
