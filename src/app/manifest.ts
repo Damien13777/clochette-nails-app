@@ -4,15 +4,13 @@
  * Active "Ajouter à l'écran d'accueil" sur mobile (Safari iOS / Chrome
  * Android) — le site se comporte alors comme une app installée.
  *
- * Pour activer pleinement l'install PWA il faut **ajouter 2 PNG carrés**
- * dans `/public/` :
- *  - `icon-192.png` (192×192) — affiché sur l'écran d'accueil
- *  - `icon-512.png` (512×512) — splash screen + Play Store si conversion APK
- * Idéalement aussi `apple-touch-icon.png` (180×180) — iOS Safari.
- *
- * En attendant, le fallback `favicon.ico` permet au manifest d'être valide
- * mais Chrome ne proposera pas l'install tant que les vrais PNG ne sont pas
- * là (warning Lighthouse "Manifest doesn't have icon at least 144px").
+ * Icônes (toutes générées par `scripts/generate-brand-assets.ts`) :
+ *  - `public/icon-192.png` / `icon-512.png` — PWA "any" (écran d'accueil + splash)
+ *  - `public/icon-512-maskable.png` — adaptive icon Android (logo dans la safe-zone)
+ *  - `src/app/apple-icon.png` (180) — iOS Safari (convention Next metadata)
+ *  - `src/app/favicon.ico` (16/32/48) — onglet navigateur
+ * Toutes en plein cadre sur fond crème (pas de transparence → pas de coins noirs
+ * iOS). Theming via `PlatformSettings` à exposer plus tard (produit duplicable).
  */
 
 import type { MetadataRoute } from "next";
