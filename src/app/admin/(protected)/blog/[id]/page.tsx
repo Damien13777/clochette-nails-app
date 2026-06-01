@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteBlogPost } from "@/lib/actions/blog-admin";
+import { DeleteArchivedButton } from "@/components/admin/delete-archived-button";
 import { BlogForm, type BlogFormValues } from "../blog-form";
 
 export const metadata: Metadata = {
@@ -86,6 +88,14 @@ export default async function EditBlogPostPage({
       </header>
 
       <BlogForm mode="edit" postId={post.id} initialValues={initialValues} />
+
+      {post.status === "ARCHIVED" && (
+        <DeleteArchivedButton
+          onDelete={deleteBlogPost.bind(null, post.id)}
+          redirectTo="/admin/blog"
+          confirmLabel="cet article"
+        />
+      )}
     </div>
   );
 }

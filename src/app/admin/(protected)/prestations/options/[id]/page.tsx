@@ -7,6 +7,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteServiceOption } from "@/lib/actions/service-options";
+import { DeleteArchivedButton } from "@/components/admin/delete-archived-button";
 import { OptionForm, type OptionFormValues } from "../option-form";
 
 export const metadata: Metadata = {
@@ -82,6 +84,14 @@ export default async function EditOptionPage({
       </header>
 
       <OptionForm mode="edit" optionId={option.id} initialValues={initialValues} />
+
+      {option.status === "ARCHIVED" && (
+        <DeleteArchivedButton
+          onDelete={deleteServiceOption.bind(null, option.id)}
+          redirectTo={backHref}
+          confirmLabel="cette option"
+        />
+      )}
     </div>
   );
 }

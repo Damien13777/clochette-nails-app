@@ -223,3 +223,48 @@ export async function changeServiceOptionStatus(
   revalidatePath("/");
   return { ok: true, id };
 }
+
+/**
+ * Suppression définitive d'une option ARCHIVÉE.
+ * Refusée si l'option est utilisée dans des réservations (BookingOption
+ * onDelete: Restrict) → l'historique reste intègre.
+ */
+export async function deleteServiceOption(id: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Non autorisé" };
+
+  const option = await prisma.serviceOption.findUnique({
+    where: { id },
+    select: { id: true, title: true, status: true },
+  });
+  if (!option) return { ok: false, error: "Option introuvable." };
+  if (option.status !== "ARCHIVED") {
+    return {
+      ok: false,
+      error: "Seules les options archivées peuvent être supprimées définitivement.",
+    };
+  }
+
+  const usageCount = await prisma.bookingOption.count({
+    where: { serviceOptionId: id },
+  });
+  if (usageCount > 0) {
+    return {
+      ok: false,
+      error: `Impossible : option utilisée dans ${usageCount} réservation(s). Elle reste archivée pour préserver l'historique.`,
+    };
+  }
+
+  await prisma.serviceOption.delete({ where: { id } });
+  await prisma.auditLog.create({
+    data: {
+      adminId: admin.id,
+      action: "SERVICE_OPTION_DELETED",
+      metadata: { serviceOptionId: id, title: option.title } as object,
+    },
+  });
+
+  revalidatePath("/admin/prestations/options");
+  revalidatePath("/");
+  return { ok: true };
+}

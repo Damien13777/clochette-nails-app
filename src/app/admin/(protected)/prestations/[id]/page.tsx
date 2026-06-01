@@ -7,6 +7,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { deleteService } from "@/lib/actions/services";
+import { DeleteArchivedButton } from "@/components/admin/delete-archived-button";
 import { ServiceForm, type ServiceFormValues } from "../service-form";
 
 export const dynamic = "force-dynamic";
@@ -123,6 +125,14 @@ export default async function EditServicePage({
         serviceId={service.id}
         initialValues={initialValues}
       />
+
+      {service.status === "ARCHIVED" && (
+        <DeleteArchivedButton
+          onDelete={deleteService.bind(null, service.id)}
+          redirectTo={backHref}
+          confirmLabel="cette prestation"
+        />
+      )}
     </div>
   );
 }

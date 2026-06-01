@@ -268,6 +268,41 @@ export async function changeBlogPostStatus(
   return { ok: true, id };
 }
 
+/**
+ * Suppression définitive d'un article ARCHIVÉ (+ nettoyage du fichier cover).
+ */
+export async function deleteBlogPost(id: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Non autorisé" };
+
+  const post = await prisma.blogPost.findUnique({
+    where: { id },
+    select: { id: true, title: true, slug: true, status: true, coverImage: true },
+  });
+  if (!post) return { ok: false, error: "Article introuvable." };
+  if (post.status !== "ARCHIVED") {
+    return {
+      ok: false,
+      error: "Seuls les articles archivés peuvent être supprimés définitivement.",
+    };
+  }
+
+  if (post.coverImage) await deleteBlogCoverFile(post.coverImage);
+  await prisma.blogPost.delete({ where: { id } });
+  await prisma.auditLog.create({
+    data: {
+      adminId: admin.id,
+      action: "BLOG_POST_DELETED",
+      metadata: { blogPostId: id, title: post.title } as object,
+    },
+  });
+
+  revalidatePath("/admin/blog");
+  revalidatePath("/blog");
+  if (post.slug) revalidatePath(`/blog/${post.slug}`);
+  return { ok: true };
+}
+
 // ─── Cover image ────────────────────────────────────────────
 
 export async function uploadBlogCover(
