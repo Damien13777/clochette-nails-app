@@ -287,7 +287,7 @@ vars à ajouter, et state factuel "✅ émis vs 🚧 à émettre" tenu à jour.
 
 ## Roadmap
 
-- **Todo MVP en cours** : suivie dans la session (cf. tâches actives au démarrage). Items principaux restants : A-11 Finances · A-12 Recherche globale admin · A-13 Webhook events viewer · INFRA SEO+RGPD · Pré-déploiement (reCAPTCHA + tests E2E) · Setup VPS Hostinger.
+- **Todo MVP en cours** : suivie dans la session (cf. tâches actives au démarrage). Items principaux restants : A-11 Finances · A-12 Recherche globale admin · A-13 Webhook events viewer · INFRA SEO+RGPD · **Pré-déploiement** (reCAPTCHA + tests E2E) · **Déploiement** (Setup VPS Hostinger) · **Post-déploiement** : migration manuelle des médias existants vers la prod — fichiers `public/uploads/` (rsync) + lignes DB de contenu (`Service`, `ServicePhoto`, `SiteMedia`, `BlogPost`, `Ebook`…) ; NE PAS relancer le backfill filigrane (`scripts/backfill-watermark.ts`), déjà appliqué en local → fichiers déjà tatoués. Détail : mémoire `project_prod_deployment_notes`.
 - **`PHASE_2.md`** à la racine : backlog post-MVP (A/B testing newsletter, watermark PDF ebook, charge.refunded Stripe, tracking opens/clicks rappels RDV, inspirations, filtres/saison/recos prestations).
 
 ## Travailler avec ce repo

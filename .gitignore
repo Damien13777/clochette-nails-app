@@ -50,3 +50,7 @@ next-env.d.ts
 # IDE
 .idea/
 *.swp
+
+# Backfill filigrane (état local, non versionné)
+scripts/.watermark-backfill-manifest.json
+.backup-uploads-*/
