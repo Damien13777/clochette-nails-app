@@ -13,21 +13,12 @@ export function SiteFooter() {
         <div className="grid lg:grid-cols-12 gap-10">
           {/* Brand */}
           <div className="lg:col-span-4">
-            <div className="flex items-center gap-3 mb-4">
-              <span
-                className="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white text-sm"
-                style={{ fontFamily: "var(--font-serif)" }}
-                aria-hidden="true"
-              >
-                C
-              </span>
-              <span
-                className="text-lg"
-                style={{ fontFamily: "var(--font-serif)" }}
-              >
-                Clochette Nails
-              </span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/lockup-horizontal-couleur.svg"
+              alt="Clochette Nails"
+              className="h-16 w-auto mb-4"
+            />
             <p className="text-sm text-[var(--color-ink-500)] max-w-[36ch] leading-relaxed">
               Studio de prothésie ongulaire à Moncoutant-sur-Sèvre, par Chloé.
               Sur rendez-vous, du mardi au samedi.

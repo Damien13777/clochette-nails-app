@@ -61,20 +61,13 @@ export function SiteHeader() {
       >
         <div className="max-w-[1240px] mx-auto px-5 lg:px-12 h-full flex items-center justify-between">
           {/* Logo + brand */}
-          <Link href="/#accueil" className="flex items-center gap-3 group">
-            <span
-              className="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white text-sm shadow-[var(--shadow-sm)]"
-              style={{ fontFamily: "var(--font-serif)" }}
-              aria-hidden="true"
-            >
-              C
-            </span>
-            <span
-              className="text-[15px] hidden sm:inline"
-              style={{ fontFamily: "var(--font-serif)" }}
-            >
-              Clochette Nails
-            </span>
+          <Link href="/#accueil" className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/lockup-horizontal-couleur.svg"
+              alt="Clochette Nails"
+              className="h-14 w-auto"
+            />
           </Link>
 
           {/* Nav desktop */}

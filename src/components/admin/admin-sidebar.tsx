@@ -83,23 +83,16 @@ export function AdminSidebar({ open, onClose, badges = {} }: Props) {
         data-desktop="true"
       >
         {/* Logo */}
-        <div className="h-16 px-5 flex items-center gap-3 border-b border-[var(--color-line)] shrink-0">
-          <span
-            className="w-8 h-8 rounded-full bg-[var(--color-violet-600)] grid place-items-center text-white text-sm shadow-[var(--shadow-sm)]"
-            style={{ fontFamily: "var(--font-serif)" }}
-            aria-hidden="true"
-          >
-            C
-          </span>
+        <div className="h-16 px-5 flex items-center border-b border-[var(--color-line)] shrink-0">
           <div className="min-w-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/lockup-horizontal-couleur.svg"
+              alt="Clochette Nails"
+              className="h-11 w-auto"
+            />
             <div
-              className="text-[15px] truncate"
-              style={{ fontFamily: "var(--font-serif)" }}
-            >
-              Clochette Nails
-            </div>
-            <div
-              className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)]"
+              className="mt-1 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)]"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Administration
