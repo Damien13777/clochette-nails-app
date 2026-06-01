@@ -15,7 +15,8 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 
 ## 🔴 Pré-déploiement (bloquants avant mise en ligne)
 
-- [ ] **SEO catalogue prestations** — exposer `metaTitle` / `metaDescription` dans le form admin prestation (champs déjà en DB, lus par `/prestations/[slug]`), puis **remplir le catalogue** avec du contenu SEO.
+- [x] **SEO catalogue prestations** — ✅ champs `metaTitle`/`metaDesc`/tags éditables en admin + **11 prestations publiées remplies** (titles 51-60, desc 138-152). JSON-LD `Service` (enrichi : Offer, ReserveAction, keywords) sur chaque fiche.
+- [x] **Couverture JSON-LD** — ✅ `WebSite` sitewide, `BreadcrumbList` (prestation/blog/ebook), `Product` carte cadeau. Helper `src/lib/seo-jsonld.ts`. Fix marque en double dans les `<title>` (title.absolute). *(Avis : pas de Review schema first-party — consigne Google.)*
 - [ ] **reCAPTCHA V3** — formulaires publics contact + carte cadeau (aujourd'hui simples TODO → exposés au spam).
 - [ ] **Pages légales** — compléter les ~20 `<LegalTodo>` (CGV / mentions / confidentialité) : SIRET, forme juridique, code APE, adresse, dirigeante, assureur RC pro, médiateur conso, hébergeur. *Infos réelles requises (Chloé / Damien).*
 - [ ] **Vérif domaine Resend** (`clochette-nails.fr`) — sinon les emails ne partent qu'à l'owner du compte.
