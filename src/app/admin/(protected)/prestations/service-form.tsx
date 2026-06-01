@@ -34,6 +34,9 @@ export type ServiceFormValues = {
   priceEuros: number;
   displayOrder: number;
   disclaimer: string;
+  metaTitle: string;
+  metaDesc: string;
+  tags: string;
   status?: ContentStatus;
 };
 
@@ -47,6 +50,9 @@ const DEFAULTS: ServiceFormValues = {
   priceEuros: 35,
   displayOrder: 0,
   disclaimer: "",
+  metaTitle: "",
+  metaDesc: "",
+  tags: "",
 };
 
 const CATEGORY_OPTIONS: { value: ServiceCategory; label: string }[] = [
@@ -121,6 +127,9 @@ export function ServiceForm({
     formData.set("priceEuros", String(values.priceEuros));
     formData.set("displayOrder", String(values.displayOrder));
     formData.set("disclaimer", values.disclaimer);
+    formData.set("metaTitle", values.metaTitle);
+    formData.set("metaDesc", values.metaDesc);
+    formData.set("tags", values.tags);
 
     startTransition(async () => {
       const result =
@@ -379,6 +388,58 @@ export function ServiceForm({
           disabled={isPending}
           error={fieldErrors.disclaimer}
         />
+      </div>
+
+      {/* SEO & tags */}
+      <div className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 space-y-5">
+        <h2
+          className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          SEO & tags
+        </h2>
+
+        <Field
+          label="Tags (séparés par des virgules)"
+          hint="Max 10 tags. Affichés sur la fiche prestation publique + utiles au SEO."
+        >
+          <input
+            type="text"
+            value={values.tags}
+            onChange={(e) => update("tags", e.target.value)}
+            disabled={isPending}
+            className={inputCls}
+            placeholder="manucure russe, semi-permanent, nail art"
+          />
+        </Field>
+
+        <Field
+          label="Meta title (SEO)"
+          hint={`${values.metaTitle.length}/70 — vide = utilise le titre de la prestation.`}
+        >
+          <input
+            type="text"
+            value={values.metaTitle}
+            onChange={(e) => update("metaTitle", e.target.value)}
+            disabled={isPending}
+            className={inputCls}
+            maxLength={70}
+          />
+        </Field>
+
+        <Field
+          label="Meta description (SEO)"
+          hint={`${values.metaDesc.length}/160 — vide = utilise la description courte.`}
+        >
+          <textarea
+            rows={2}
+            value={values.metaDesc}
+            onChange={(e) => update("metaDesc", e.target.value)}
+            disabled={isPending}
+            className={inputCls}
+            maxLength={160}
+          />
+        </Field>
       </div>
 
       {/* Bouton submit + status (edit only) */}
