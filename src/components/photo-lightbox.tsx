@@ -10,6 +10,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { getVariantUrl } from "@/lib/image-srcset";
 
 export type LightboxPhoto = {
@@ -60,7 +61,10 @@ export function PhotoLightbox({ photos, startIndex, onClose }: Props) {
   if (!photo) return null;
   const fullUrl = getVariantUrl(photo.variants, "large") ?? photo.url;
 
-  return (
+  // Portal vers <body> : la lightbox doit échapper à tout ancêtre transformé
+  // (ex. wrappers <Reveal> en `will-change: transform`, qui créent un
+  // containing block et casseraient le `position: fixed` plein écran).
+  const overlay = (
     <div
       role="dialog"
       aria-modal="true"
@@ -141,4 +145,7 @@ export function PhotoLightbox({ photos, startIndex, onClose }: Props) {
       )}
     </div>
   );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(overlay, document.body);
 }
