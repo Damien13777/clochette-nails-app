@@ -26,7 +26,7 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 
 ## 🎨 Qualité & design (avant mise en ligne)
 
-- [ ] **Embellir la landing + les autres pages** — itérer le design, en s'appuyant sur les plugins (chrome-devtools / playwright pour visualiser et tester le rendu).
+- [x] **Embellir la landing + les autres pages** — ✅ système `<Reveal>` (scroll-reveal, prop `immediate` pour le 1er bloc sous une hero courte) + `.section-cta` (CTA climax) propagés : landing, prestations (liste + fiche), article de blog. Laissé volontairement sans reveal : listes blog/ebooks (grilles → hover-lift), fiche ebook + cartes-cadeau (pages d'achat/formulaire → ne pas masquer la conversion). Lighthouse prod **100/100/100 desktop + mobile** sur toutes les pages modifiées. Au passage : **fix a11y** menu mobile du header (`inert` quand fermé) → restaure mobile 100 site-wide.
 - [x] **Lighthouse 100/100 desktop ET mobile** — ✅ a11y / Best Practices / SEO = **100** sur toutes les pages publiques (home, prestations liste+fiche, blog liste+fiche, ebooks liste+fiche, cartes cadeau, réservation*). Perf : Core Web Vitals parfaits (LCP 179ms, CLS 0). *Réservation = `noindex` volontaire (page conversion). Au passage : **bug prod CSP corrigé** (hydratation) + heading-order + a11y étoiles. Score perf chiffré final = à mesurer via PageSpeed Insights une fois en prod.
 
 ---
