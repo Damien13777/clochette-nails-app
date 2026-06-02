@@ -21,6 +21,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { buildSrcSet } from "@/lib/image-srcset";
 import { PrestationGallery } from "@/components/prestation-gallery";
 import { breadcrumbJsonLd } from "@/lib/seo-jsonld";
+import { Reveal } from "@/components/reveal";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.clochette-nails.fr";
@@ -370,6 +371,7 @@ export default async function ServiceDetailPage({
           </div>
 
           {/* Description longue */}
+          <Reveal>
           <section className="mt-16 md:mt-20 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10 lg:gap-16">
             <div>
               <h2
@@ -450,9 +452,11 @@ export default async function ServiceDetailPage({
               </aside>
             )}
           </section>
+          </Reveal>
 
           {/* Galerie photos (non-cover) */}
           {otherPhotos.length > 0 && (
+            <Reveal>
             <section className="mt-16 md:mt-20">
               <h2
                 className="text-[clamp(1.25rem,2vw,1.5rem)] mb-5 pb-3 border-b border-[var(--color-line)]"
@@ -462,10 +466,12 @@ export default async function ServiceDetailPage({
               </h2>
               <PrestationGallery photos={otherPhotos} />
             </section>
+            </Reveal>
           )}
 
           {/* Post-purchase info / conseils */}
           {service.postPurchaseInfo && (
+            <Reveal>
             <section className="mt-16 md:mt-20 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 md:p-8">
               <h2
                 className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-ink-500)] mb-3"
@@ -480,10 +486,12 @@ export default async function ServiceDetailPage({
                 {service.postPurchaseInfo}
               </p>
             </section>
+            </Reveal>
           )}
 
           {/* CTA final */}
-          <section className="mt-16 md:mt-20 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-8 md:p-12 text-center">
+          <Reveal>
+          <section className="mt-16 md:mt-20 section-cta overflow-hidden border border-[var(--color-violet-100)] rounded-[var(--radius-md)] p-8 md:p-12 text-center">
             <p
               className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
               style={{ fontFamily: "var(--font-display)" }}
@@ -514,9 +522,11 @@ export default async function ServiceDetailPage({
               </svg>
             </Link>
           </section>
+          </Reveal>
 
           {/* Autres prestations de la catégorie */}
           {relatedServices.length > 0 && (
+            <Reveal>
             <section className="mt-16 md:mt-20">
               <header className="flex items-end justify-between gap-4 mb-8">
                 <h2
@@ -603,6 +613,7 @@ export default async function ServiceDetailPage({
                 })}
               </div>
             </section>
+            </Reveal>
           )}
         </div>
       </main>

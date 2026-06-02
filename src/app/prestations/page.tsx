@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { buildSrcSet } from "@/lib/image-srcset";
+import { Reveal } from "@/components/reveal";
 
 export const metadata: Metadata = {
   title: "Prestations · Manucure & soin des ongles",
@@ -178,8 +179,8 @@ export default async function PrestationsPage() {
         ) : (
           <div className="pt-10 md:pt-14 pb-20 md:pb-28 space-y-16 md:space-y-20">
             {orderedCategories.map((cat) => (
+              <Reveal key={cat}>
               <section
-                key={cat}
                 id={cat.toLowerCase()}
                 className="scroll-mt-32 md:scroll-mt-40 max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12"
               >
@@ -291,11 +292,13 @@ export default async function PrestationsPage() {
                   })}
                 </div>
               </section>
+              </Reveal>
             ))}
 
             {/* CTA bas de page */}
+            <Reveal>
             <section className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12">
-              <div className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-8 md:p-12 text-center">
+              <div className="section-cta overflow-hidden border border-[var(--color-violet-100)] rounded-[var(--radius-md)] p-8 md:p-12 text-center">
                 <p
                   className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
                   style={{ fontFamily: "var(--font-display)" }}
@@ -335,6 +338,7 @@ export default async function PrestationsPage() {
                 </Link>
               </div>
             </section>
+            </Reveal>
           </div>
         )}
       </main>
