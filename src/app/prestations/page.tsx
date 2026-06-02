@@ -178,8 +178,8 @@ export default async function PrestationsPage() {
           </section>
         ) : (
           <div className="pt-10 md:pt-14 pb-20 md:pb-28 space-y-16 md:space-y-20">
-            {orderedCategories.map((cat) => (
-              <Reveal key={cat}>
+            {orderedCategories.map((cat, i) => (
+              <Reveal key={cat} immediate={i === 0}>
               <section
                 id={cat.toLowerCase()}
                 className="scroll-mt-32 md:scroll-mt-40 max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12"

@@ -19,13 +19,19 @@ type Props = {
   /** Délai d'apparition en ms (effet cascade). */
   delay?: number;
   className?: string;
+  /** Si vrai : contenu visible d'emblée, sans animation. À utiliser sur le 1er
+   *  bloc sous une hero courte, pour éviter un vide blanc tant qu'on n'a pas
+   *  scrollé (l'IntersectionObserver ne se déclenche pas si l'élément est dans
+   *  les 20% bas du viewport au chargement). */
+  immediate?: boolean;
 };
 
-export function Reveal({ children, delay = 0, className }: Props) {
+export function Reveal({ children, delay = 0, className, immediate = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(immediate);
 
   useEffect(() => {
+    if (immediate) return;
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
@@ -39,7 +45,7 @@ export function Reveal({ children, delay = 0, className }: Props) {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [immediate]);
 
   return (
     <div

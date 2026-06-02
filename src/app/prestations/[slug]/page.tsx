@@ -371,7 +371,7 @@ export default async function ServiceDetailPage({
           </div>
 
           {/* Description longue */}
-          <Reveal>
+          <Reveal immediate>
           <section className="mt-16 md:mt-20 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-10 lg:gap-16">
             <div>
               <h2
