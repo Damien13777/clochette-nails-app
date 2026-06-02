@@ -10,6 +10,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { GiftCardActions } from "./gift-card-actions";
 import { RecalculateStripeFeeButton } from "@/components/admin/recalculate-stripe-fee";
+import { BackButton } from "@/components/admin/back-button";
 
 export const dynamic = "force-dynamic";
 
@@ -144,18 +145,7 @@ export default async function GiftCardDetailPage({
 
   return (
     <div className="max-w-[1200px] mx-auto p-6 lg:p-8 space-y-6">
-      <nav>
-        <Link
-          href={backHref}
-          className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-700)] hover:text-[var(--color-violet-700)] transition-colors"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Retour aux cartes
-        </Link>
-      </nav>
+      <BackButton fallbackHref={backHref} />
 
       <div className="grid lg:grid-cols-[1fr_320px] gap-6">
         {/* Colonne principale */}

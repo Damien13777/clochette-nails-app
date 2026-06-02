@@ -12,7 +12,6 @@
  */
 
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -27,6 +26,7 @@ import { BookingNotes } from "./booking-notes";
 import { BookingReminders } from "./booking-reminders";
 import { PaymentBlock } from "./payment-block";
 import { RecalculateStripeFeeButton } from "@/components/admin/recalculate-stripe-fee";
+import { BackButton } from "@/components/admin/back-button";
 
 export const dynamic = "force-dynamic";
 
@@ -89,17 +89,8 @@ export default async function BookingDetailPage({
 
   return (
     <div className="max-w-[1400px] px-5 lg:px-8 py-10">
-      {/* Back link */}
-      <Link
-        href={backHref}
-        className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-500)] hover:text-[var(--color-violet-700)] mb-4 transition-colors"
-        style={{ fontFamily: "var(--font-ui)" }}
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M19 12H5M12 5l-7 7 7 7" />
-        </svg>
-        Retour aux réservations
-      </Link>
+      {/* Back link — revient à la page précédente (calendrier+semaine, liste+filtre…) */}
+      <BackButton fallbackHref={backHref} />
 
       {/* Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8 mb-10">
