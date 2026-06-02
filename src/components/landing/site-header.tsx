@@ -144,7 +144,10 @@ export function SiteHeader() {
         role="dialog"
         aria-modal="true"
         aria-label="Menu de navigation mobile"
-        aria-hidden={!menuOpen}
+        // Menu fermé → inert : retire le panneau du tab order ET de l'arbre
+        // d'accessibilité (corrige aria-hidden-focus, qui laissait les liens
+        // focusables sous aria-hidden). React 19 gère l'attribut nativement.
+        inert={!menuOpen}
         className="md:hidden flex flex-col bg-[var(--color-cream)]"
         style={{
           position: "fixed",
