@@ -1,6 +1,6 @@
 # TODO — Clochette Nails v2
 
-> **Source de vérité unique du backlog.** Dernière mise à jour : 2026-06-01.
+> **Source de vérité unique du backlog.** Dernière mise à jour : 2026-06-02.
 > Convention : un item démarré → branche dédiée (`feat/*`, `fix/*`) ; un item livré → coché ici.
 > Le contexte/raison de report des items Phase 2 est détaillé dans [`PHASE_2.md`](PHASE_2.md).
 > L'intégration ERP (events sortants) est détaillée dans [`MANAGEMENT_API.md`](MANAGEMENT_API.md).
@@ -37,6 +37,17 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 - [x] **Retour vers liste filtrée** — étendu à prestations, options, **bookings, cartes-cadeau, ebooks, blog** (lien retour + bouton form). Préserve le filtre + la pagination (bookings) + la recherche (cartes-cadeau).
 - [x] **Suppression des archivés** — prestations / options / articles : hard delete réservé aux ARCHIVÉS, refusé si réservations liées (gardes FK), nettoyage fichiers + audit log. Composant `<DeleteArchivedButton>`.
 - [x] **Photos admin** — affiche publiées + brouillons (publiées d'abord, brouillons ensuite), archives exclues.
+
+---
+
+## 🔧 Correctifs UI / admin — ✅ FAIT (2026-06-02)
+
+- [x] **Calendrier journée complète** — affichage 00h–24h (au lieu d'une fenêtre dynamique), scroll vertical interne ouvert par défaut sur **07h00** (vue semaine desktop + vue jour mobile).
+- [x] **Fix calendrier iPad** — cards RDV désalignées (~15 min) + en-têtes sticky débordant sur la topbar : hauteur d'en-tête **mesurée** (fini le magic number) + `text-size-adjust:100%` (grossissement police iOS) + scroll différé (double rAF).
+- [x] **Bouton « Retour » contextuel** — composant `<BackButton>` (`router.back()` + fallback) généralisé aux 7 fiches détail admin → revient à l'URL exacte d'origine (calendrier+semaine, liste+filtre, notifications…).
+- [x] **Card d'indispo** — le motif wrappe au lieu de tronquer (`break-words` borné à la hauteur de la card).
+- [x] **Fix a11y menu mobile header** — `inert` quand fermé (corrige aria-hidden-focus + arbre a11y) → Lighthouse **mobile 100 site-wide**.
+- [x] **Fix lightbox portfolio/galeries** — `createPortal` vers `<body>` : la modale échappe au containing block des wrappers `<Reveal>` (`will-change: transform`) → plein écran correct.
 
 ---
 
