@@ -24,6 +24,7 @@ import {
   BLOG_CATEGORY_LABELS,
   BLOG_CATEGORY_SLUGS,
 } from "@/lib/blog-categories";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -249,7 +250,8 @@ export default async function BlogArticlePage({
           />
 
           {/* CTA réservation */}
-          <div className="mt-12 p-6 rounded-[var(--radius-md)] bg-[var(--color-violet-50)] border border-[var(--color-violet-100)] text-center">
+          <Reveal>
+          <div className="mt-12 p-6 rounded-[var(--radius-md)] section-cta overflow-hidden border border-[var(--color-violet-100)] text-center">
             <p
               className="text-sm text-[var(--color-ink-700)] mb-3"
               style={{ fontFamily: "var(--font-ui)" }}
@@ -264,10 +266,12 @@ export default async function BlogArticlePage({
               Prendre RDV
             </Link>
           </div>
+          </Reveal>
         </article>
 
         {/* Articles connexes */}
         {related.length > 0 && (
+          <Reveal>
           <section className="max-w-[1200px] mx-auto px-5 lg:px-8 mt-20">
             <h2
               className="text-2xl mb-6 text-center"
@@ -316,6 +320,7 @@ export default async function BlogArticlePage({
               ))}
             </ul>
           </section>
+          </Reveal>
         )}
       </main>
       <SiteFooter />
