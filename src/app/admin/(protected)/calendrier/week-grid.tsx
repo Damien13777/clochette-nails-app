@@ -140,14 +140,39 @@ export function WeekGrid({
   const totalHeight = totalMinutes * (SLOT_HEIGHT_PX / granularity);
 
   // Position d'ouverture par défaut : 07h00 en haut de la zone scrollable
-  // (scroll vers le haut → 00h00, vers le bas → 23h59).
+  // (scroll vers le haut → 00h00, vers le bas → 23h59). Le scroll est différé
+  // après le layout (double rAF) : sur iOS, l'appliquer au montage juste après
+  // une navigation faisait "sauter" les en-têtes sticky par-dessus la topbar.
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const hourPx = 60 * (SLOT_HEIGHT_PX / granularity);
-    el.scrollTop = Math.max(0, (7 - startHour) * hourPx);
+    const target = Math.max(0, (7 - startHour) * hourPx);
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        el.scrollTop = target;
+      }),
+    );
+    return () => cancelAnimationFrame(raf);
   }, [granularity, startHour]);
+
+  // Hauteur réelle de la rangée d'en-têtes (jours), mesurée plutôt que
+  // codée en dur : la couche RDV/indispos en absolute s'y cale exactement,
+  // quelle que soit la police rendue (évite le décalage iOS). La cellule
+  // "coin" s'étire à la hauteur de la rangée (grid align stretch).
+  const cornerRef = useRef<HTMLDivElement>(null);
+  const [headerH, setHeaderH] = useState(57);
+  useEffect(() => {
+    const el = cornerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // ─── State modales ──────────────────────────────────────
   const [editingDay, setEditingDay] = useState<
@@ -194,7 +219,10 @@ export function WeekGrid({
       >
         <div className="grid grid-cols-[60px_repeat(7,minmax(120px,1fr))] min-w-[920px]">
           {/* Coin top-left */}
-          <div className="sticky top-0 z-30 border-b border-r border-[var(--color-line)] bg-[var(--color-bone)]" />
+          <div
+            ref={cornerRef}
+            className="sticky top-0 z-30 border-b border-r border-[var(--color-line)] bg-[var(--color-bone)]"
+          />
 
           {/* En-têtes jours (cliquables → édition horaires) */}
           {days.map((dayIso, i) => {
@@ -269,10 +297,11 @@ export function WeekGrid({
           })}
         </div>
 
-        {/* Couche overlay absolue : bookings + indispos positionnés en pixels */}
+        {/* Couche overlay absolue : bookings + indispos positionnés en pixels.
+            top = hauteur réelle mesurée de la rangée d'en-têtes (pas de magic number). */}
         <div
-          className="pointer-events-none absolute top-[57px] left-[60px] right-0"
-          style={{ height: `${totalHeight}px` }}
+          className="pointer-events-none absolute left-[60px] right-0"
+          style={{ top: `${headerH}px`, height: `${totalHeight}px` }}
         >
           {/* 7 colonnes virtuelles pour positionner les overlays */}
           <div className="grid grid-cols-7 h-full relative">
