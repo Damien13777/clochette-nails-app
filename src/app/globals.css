@@ -199,11 +199,96 @@
 .stagger > *:nth-child(5) { animation-delay: 240ms; }
 .stagger > *:nth-child(6) { animation-delay: 300ms; }
 
+/* ── Reveal au scroll (landing publique) ─────────────────────
+ * Élément masqué (fondu + léger slide-up) jusqu'à son entrée dans le viewport,
+ * où le composant <Reveal> pose data-shown="true". Délai en cascade via
+ * --reveal-delay. Cf. components/reveal.tsx (IntersectionObserver). */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+[data-reveal][data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Fond "soft premium" — sections sans photo ───────────────
+ * Crème + halos radiaux très légers (violet haut-gauche, rosé bas-droite).
+ * Donne de la profondeur/présence aux blocs sans image, esthétique cosmétique
+ * premium, 100% CSS (aucun impact perf). À poser sur le <section>. */
+.section-soft {
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(50% 62% at 0% -2%, rgba(136, 104, 176, 0.16) 0%, transparent 55%),
+    radial-gradient(55% 66% at 100% 104%, rgba(233, 191, 196, 0.42) 0%, transparent 58%),
+    radial-gradient(42% 52% at 88% 0%, rgba(222, 194, 100, 0.08) 0%, transparent 60%);
+}
+
+/* Variante plus présente, violet-dominante — réservée au CTA final (climax).
+ * + halo flou central (filter: blur) pour un glow premium accrocheur. */
+.section-cta {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-violet-50);
+  background-image:
+    radial-gradient(58% 74% at 100% 0%, rgba(136, 104, 176, 0.26) 0%, transparent 62%),
+    radial-gradient(54% 68% at 0% 100%, rgba(233, 191, 196, 0.36) 0%, transparent 62%);
+}
+.section-cta::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  width: 62%;
+  height: 78%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(136, 104, 176, 0.3) 0%,
+    rgba(233, 191, 196, 0.22) 45%,
+    transparent 100%
+  );
+  filter: blur(72px);
+  pointer-events: none;
+}
+
+/* ── Décor optionnel (par-dessus .section-soft) ──────────────
+ * .section-monogram : monogramme géant en filigrane au coin supérieur gauche,
+ * posé en pseudo-élément (z-index:-1) pour ne pas écraser le dégradé soft. */
+.section-monogram {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.section-monogram::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -3%;
+  top: -12%;
+  width: min(46vw, 460px);
+  height: min(46vw, 460px);
+  background: url("/brand/monogramme-couleur.svg") no-repeat center / contain;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
 /* ── prefers-reduced-motion ──────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+  /* Toujours visible, jamais dépendant du JS/scroll pour ces utilisateurs. */
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

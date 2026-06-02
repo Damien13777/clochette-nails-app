@@ -18,6 +18,7 @@ import { ContactSection } from "@/components/landing/contact-section";
 import { FinalCTA } from "@/components/landing/final-cta";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LocalBusinessJsonLd } from "@/components/landing/local-business-jsonld";
+import { Reveal } from "@/components/reveal";
 
 export default async function HomePage() {
   return (
@@ -26,12 +27,24 @@ export default async function HomePage() {
       <SiteHeader />
       <main>
         <Hero />
-        <EngagementSection />
-        <ServicesSection />
-        <PortfolioSection />
-        <TestimonialsSection />
-        <ContactSection />
-        <FinalCTA />
+        <Reveal className="section-soft section-monogram border-y border-[var(--color-line)]">
+          <EngagementSection />
+        </Reveal>
+        <Reveal>
+          <ServicesSection />
+        </Reveal>
+        <Reveal>
+          <PortfolioSection />
+        </Reveal>
+        <Reveal className="section-soft section-monogram border-y border-[var(--color-line)]">
+          <TestimonialsSection />
+        </Reveal>
+        <Reveal>
+          <ContactSection />
+        </Reveal>
+        <Reveal className="section-cta border-y border-[var(--color-violet-100)]">
+          <FinalCTA />
+        </Reveal>
       </main>
       <SiteFooter />
     </>

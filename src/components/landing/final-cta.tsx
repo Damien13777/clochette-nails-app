@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export function FinalCTA() {
   return (
-    <section className="bg-[var(--color-violet-100)]/55 border-y border-[var(--color-violet-100)]">
+    <section>
       <div className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28 text-center">
         <p
           className="text-xs uppercase tracking-[0.22em] text-[var(--color-violet-700)]"
