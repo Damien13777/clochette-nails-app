@@ -207,6 +207,25 @@ export function SiteFooter() {
             </a>
           </div>
         </div>
+
+        {/* Signature auteur — Studio G4. CONSTANTE sur toutes les instances du
+            produit (crédit développeur, pas du branding client → ne pas rendre
+            paramétrable). Quand la vitrine Studio G4 sera en ligne : envelopper
+            le bloc dans un <a href="…" target="_blank" rel="noopener"> vers son site. */}
+        <div className="mt-8 flex items-center justify-center gap-2.5">
+          <span
+            className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)]"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Conçu &amp; développé par
+          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/studio-g4-encre.svg"
+            alt="Studio G4"
+            className="h-8 w-auto opacity-90"
+          />
+        </div>
       </div>
     </footer>
   );
