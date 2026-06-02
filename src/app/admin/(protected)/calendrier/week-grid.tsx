@@ -329,7 +329,7 @@ export function WeekGrid({
                         }}
                       >
                         <span
-                          className="absolute top-1 left-1.5 right-1.5 text-[10px] text-[#1e3a8a] truncate text-left"
+                          className="absolute top-1 left-1.5 right-1.5 bottom-1 text-[10px] leading-tight text-[#1e3a8a] break-words text-left overflow-hidden"
                           style={{ fontFamily: "var(--font-ui)" }}
                         >
                           {u.reason ?? "Indispo"}
@@ -376,7 +376,7 @@ export function WeekGrid({
                           }}
                         >
                           <span
-                            className="absolute top-1 left-1.5 right-1.5 text-[10px] text-[#1e3a8a] truncate text-left"
+                            className="absolute top-1 left-1.5 right-1.5 bottom-1 text-[10px] leading-tight text-[#1e3a8a] break-words text-left overflow-hidden"
                             style={{ fontFamily: "var(--font-ui)" }}
                           >
                             🔁 {r.reason ?? "Récurrent"}
