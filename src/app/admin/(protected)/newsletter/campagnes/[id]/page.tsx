@@ -4,7 +4,7 @@
  */
 
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BackButton } from "@/components/admin/back-button";
 import { notFound, redirect } from "next/navigation";
 import type { NewsletterCampaignStatus } from "@prisma/client";
 import { auth } from "@/auth";
@@ -86,28 +86,7 @@ export default async function CampaignDetailPage({
     <div className="max-w-[900px] px-5 lg:px-8 py-10 space-y-8">
       <NewsletterTabs current="campagnes" />
 
-      <nav>
-        <Link
-          href="/admin/newsletter/campagnes"
-          className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-700)] hover:text-[var(--color-violet-700)] transition-colors"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Retour aux campagnes
-        </Link>
-      </nav>
+      <BackButton fallbackHref="/admin/newsletter/campagnes" />
 
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">

@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { deleteBlogPost } from "@/lib/actions/blog-admin";
 import { DeleteArchivedButton } from "@/components/admin/delete-archived-button";
+import { BackButton } from "@/components/admin/back-button";
 import { BlogForm, type BlogFormValues } from "../blog-form";
 
 export const metadata: Metadata = {
@@ -49,18 +50,7 @@ export default async function EditBlogPostPage({
 
   return (
     <div className="max-w-[900px] px-5 lg:px-8 py-10 space-y-8">
-      <nav>
-        <Link
-          href={backHref}
-          className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-700)] hover:text-[var(--color-violet-700)] transition-colors"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          Retour aux articles
-        </Link>
-      </nav>
+      <BackButton fallbackHref={backHref} />
 
       <header>
         <p
