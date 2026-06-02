@@ -272,8 +272,8 @@
   z-index: -1;
   left: -3%;
   top: -12%;
-  width: min(46vw, 460px);
-  height: min(46vw, 460px);
+  width: clamp(240px, 50vw, 460px);
+  height: clamp(240px, 50vw, 460px);
   background: url("/brand/monogramme-couleur.svg") no-repeat center / contain;
   opacity: 0.05;
   pointer-events: none;
