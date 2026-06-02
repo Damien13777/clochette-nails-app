@@ -95,6 +95,11 @@
     font-weight: 300;
     color: var(--color-ink-900);
     background: var(--color-cream);
+    /* iOS/iPadOS : empêcher le grossissement auto des petites polices, qui
+     * dilate certaines hauteurs (ex. en-têtes du calendrier) → désaligne les
+     * couches positionnées en pixels. On rend l'affichage identique partout. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   body {
     font-feature-settings: "ss01", "cv11";
