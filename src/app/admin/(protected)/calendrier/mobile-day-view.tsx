@@ -13,7 +13,7 @@
  * Auto-scrolle vers l'heure actuelle au mount si jour = today.
  */
 
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -172,10 +172,15 @@ export function MobileDayView({
     { open: false } | { open: true; startTime: string }
   >({ open: false });
 
-  // Ref conservée pour usage futur (sticky nav, ancrage, etc.).
-  // Auto-scroll vers maintenant retiré (dégrade l'expérience utilisateur
-  // — la page sautait au chargement, peu intuitif).
+  // Timeline à scroll interne (zone scrollable dédiée, ne fait pas sauter la
+  // page) : journée complète 00h00→23h59, positionnée par défaut sur 07h00.
   const timelineRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = timelineRef.current;
+    if (!el) return;
+    const hourPx = 60 * (SLOT_HEIGHT_PX / granularity);
+    el.scrollTop = 12 + Math.max(0, (7 - startHour) * hourPx); // +12 = padding top
+  }, [granularity, startHour, selectedDayIso]);
 
   function gotoDay(direction: -1 | 1) {
     const newDayIso = addDaysIso(selectedDayIso, direction);
@@ -297,13 +302,12 @@ export function MobileDayView({
         </button>
       </div>
 
-      {/* Timeline verticale — pas de scroll interne, c'est la page qui scroll.
-          Radius réduit pour que la 1ère et la dernière heure ne soient pas rognées
-          par les coins arrondis (sans avoir besoin de padding qui crée des zones
-          blanches inesthétiques). */}
+      {/* Timeline verticale — zone à scroll interne (journée complète, ouverte
+          sur 07h00). Radius réduit pour que les heures ne soient pas rognées par
+          les coins arrondis. */}
       <div
         ref={timelineRef}
-        className="relative bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-sm)] overflow-hidden"
+        className="relative bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-sm)] overflow-auto max-h-[calc(100vh-240px)]"
       >
         <div className="grid grid-cols-[44px_1fr] relative" style={{ minHeight: `${totalHeight + 24}px` }}>
           {/* Padding top — 12px : bone à gauche + paper à droite pour respirer */}

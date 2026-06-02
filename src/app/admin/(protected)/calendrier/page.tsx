@@ -17,7 +17,6 @@ import { prisma } from "@/lib/prisma";
 import { mondayIsoForTodayParis, startOfTodayParisAsUtc } from "@/lib/paris-day";
 import {
   addDaysIso,
-  computeVisibleHourRange,
   getMondayIso,
   isoToUtcDate,
   weekDaysIso,
@@ -257,13 +256,10 @@ export default async function AdminCalendarPage({
     ? granularityParam
     : settings.bookingGranularityMinutes;
 
-  // Plage horaire à afficher (calculée d'après horaires + bookings + indispos)
-  const { startHour, endHour } = computeVisibleHourRange(
-    businessHours,
-    bookings.map((b) => ({ startTime: b.startTime, endTime: b.endTime })),
-    unavailabilities,
-    weekStartIso,
-  );
+  // Plage horaire : journée complète 00h00 → 23h59. La grille scrolle
+  // verticalement, positionnée par défaut sur 07h00 (cf. WeekGrid / MobileDayView).
+  const startHour = 0;
+  const endHour = 24;
 
   // Sérialisation partagée mobile + desktop
   const serializedBookings = bookings.map((b) => ({

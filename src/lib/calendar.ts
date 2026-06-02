@@ -117,56 +117,6 @@ export function generateDaySlots(
   return slots;
 }
 
-/**
- * Pour le rendu visuel : détermine la plage horaire à afficher pour la semaine
- * en fonction des horaires d'ouverture des 7 jours + bookings + indispos.
- * Évite d'afficher tout 00h-24h si le salon n'ouvre que 9h-19h.
- */
-export function computeVisibleHourRange(
-  businessHours: { dayOfWeek: number; isOpen: boolean; openingTime: string | null; closingTime: string | null }[],
-  bookings: { startTime: string; endTime: string }[],
-  unavailabilities: { startsAt: Date; endsAt: Date }[],
-  weekStartIso: string,
-): { startHour: number; endHour: number } {
-  let minMin = 9 * 60; // défaut 9h
-  let maxMin = 19 * 60; // défaut 19h
-
-  for (const bh of businessHours) {
-    if (bh.isOpen && bh.openingTime && bh.closingTime) {
-      minMin = Math.min(minMin, timeToMinutes(bh.openingTime));
-      maxMin = Math.max(maxMin, timeToMinutes(bh.closingTime));
-    }
-  }
-  for (const b of bookings) {
-    minMin = Math.min(minMin, timeToMinutes(b.startTime));
-    maxMin = Math.max(maxMin, timeToMinutes(b.endTime));
-  }
-  const weekStart = isoToUtcDate(weekStartIso).getTime();
-  const weekEnd = weekStart + 7 * 24 * 60 * 60 * 1000;
-  for (const u of unavailabilities) {
-    const uStart = u.startsAt.getTime();
-    const uEnd = u.endsAt.getTime();
-    if (uEnd > weekStart && uStart < weekEnd) {
-      const sM = u.startsAt.getUTCHours() * 60 + u.startsAt.getUTCMinutes();
-      const eM = u.endsAt.getUTCHours() * 60 + u.endsAt.getUTCMinutes();
-      // Si l'indispo s'étend sur plusieurs jours, on prend 0h-23h59
-      const sameDay =
-        u.startsAt.getUTCFullYear() === u.endsAt.getUTCFullYear() &&
-        u.startsAt.getUTCMonth() === u.endsAt.getUTCMonth() &&
-        u.startsAt.getUTCDate() === u.endsAt.getUTCDate();
-      if (sameDay) {
-        minMin = Math.min(minMin, sM);
-        maxMin = Math.max(maxMin, eM);
-      }
-    }
-  }
-
-  // Arrondi à l'heure pleine pour propreté visuelle
-  const startHour = Math.max(0, Math.floor(minMin / 60));
-  const endHour = Math.min(24, Math.ceil(maxMin / 60));
-  return { startHour, endHour };
-}
-
 /** Palette de couleurs par catégorie de service (utilisée dans la grille). */
 export const SERVICE_CATEGORY_COLORS: Record<
   string,

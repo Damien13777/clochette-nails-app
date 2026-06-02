@@ -14,7 +14,7 @@
  *  - Drag sur cellules vides (Session 2) — pour V1 : clic simple
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   DAY_LABELS_SHORT_FR,
@@ -139,6 +139,16 @@ export function WeekGrid({
   const totalMinutes = (endHour - startHour) * 60;
   const totalHeight = totalMinutes * (SLOT_HEIGHT_PX / granularity);
 
+  // Position d'ouverture par défaut : 07h00 en haut de la zone scrollable
+  // (scroll vers le haut → 00h00, vers le bas → 23h59).
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const hourPx = 60 * (SLOT_HEIGHT_PX / granularity);
+    el.scrollTop = Math.max(0, (7 - startHour) * hourPx);
+  }, [granularity, startHour]);
+
   // ─── State modales ──────────────────────────────────────
   const [editingDay, setEditingDay] = useState<
     { dayOfWeek: number; dateIso: string } | null
@@ -178,10 +188,13 @@ export function WeekGrid({
 
   return (
     <>
-      <div className="relative bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] overflow-x-auto">
+      <div
+        ref={scrollRef}
+        className="relative bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] overflow-auto max-h-[calc(100vh-220px)]"
+      >
         <div className="grid grid-cols-[60px_repeat(7,minmax(120px,1fr))] min-w-[920px]">
           {/* Coin top-left */}
-          <div className="border-b border-r border-[var(--color-line)] bg-[var(--color-bone)]" />
+          <div className="sticky top-0 z-30 border-b border-r border-[var(--color-line)] bg-[var(--color-bone)]" />
 
           {/* En-têtes jours (cliquables → édition horaires) */}
           {days.map((dayIso, i) => {
@@ -204,8 +217,8 @@ export function WeekGrid({
                 type="button"
                 onClick={() => setEditingDay({ dayOfWeek: dow, dateIso: dayIso })}
                 aria-label={`Modifier horaires ${DAY_LABELS_SHORT_FR[dow]}`}
-                className={`border-b border-r border-[var(--color-line)] last:border-r-0 p-2.5 text-left hover:bg-[var(--color-bone)] transition-colors ${
-                  isToday ? "bg-[var(--color-violet-50)]" : ""
+                className={`sticky top-0 z-20 border-b border-r border-[var(--color-line)] last:border-r-0 p-2.5 text-left hover:bg-[var(--color-bone)] transition-colors ${
+                  isToday ? "bg-[var(--color-violet-50)]" : "bg-[var(--color-paper)]"
                 }`}
               >
                 <div className="flex items-center justify-between gap-1">
