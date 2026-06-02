@@ -53,7 +53,7 @@ const ICONS: Record<string, React.ReactNode> = {
 
 export function EngagementSection() {
   return (
-    <section className="bg-[var(--color-bone)]/40 border-y border-[var(--color-line)]">
+    <section>
       <div className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28">
         <div className="text-center max-w-[36rem] mx-auto mb-14">
           <p
