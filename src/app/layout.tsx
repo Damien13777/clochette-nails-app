@@ -91,6 +91,10 @@ export default function RootLayout({
       className={`${cinzel.variable} ${julius.variable} ${inria.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Sans JS, le reveal ne se déclenche pas : on garde le contenu visible. */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
+        </noscript>
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
