@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# E2E (Playwright) — .env.test est déjà couvert par .env* plus bas
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
 # next.js
 /.next/
 /out/
