@@ -10,7 +10,7 @@
  */
 
 import type { Metadata } from "next";
-import { LegalLayout, LegalSection, LegalTodo } from "@/components/legal/legal-layout";
+import { LegalLayout, LegalSection } from "@/components/legal/legal-layout";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
@@ -33,24 +33,28 @@ const TOC = [
 
 export default function MentionsLegalesPage() {
   return (
-    <LegalLayout title="Mentions légales" lastUpdate="13 mai 2026" toc={TOC}>
+    <LegalLayout title="Mentions légales" lastUpdate="3 juin 2026" toc={TOC}>
       <LegalSection id="editeur" title="1. Éditeur du site">
         <p>
           Le site <a href="https://www.clochette-nails.fr">www.clochette-nails.fr</a> est
           édité par :
         </p>
         <p>
-          <strong>Clochette Nails</strong>
+          <strong>Clochette Nails</strong> — Chloé Girard
           <br />
-          Forme juridique : Entrepreneur Individuel <LegalTodo>[à confirmer]</LegalTodo>
+          Forme juridique : Entreprise individuelle (EI)
           <br />
-          SIRET : <LegalTodo>[à compléter — 14 chiffres]</LegalTodo>
+          SIREN : 889 014 155
           <br />
-          Code APE : <LegalTodo>[à compléter — typiquement 9602B « Soins de beauté »]</LegalTodo>
+          SIRET (siège) : 889 014 155 00036
           <br />
-          Numéro TVA intracommunautaire : Non applicable (franchise en base de TVA)
+          Immatriculation : non inscrite au RCS
           <br />
-          Adresse : <LegalTodo>[à compléter]</LegalTodo>, 79320 Moncoutant-sur-Sèvre, France
+          Code APE : 9602B (Soins de beauté)
+          <br />
+          TVA : non applicable — article 293 B du CGI (franchise en base de TVA)
+          <br />
+          Adresse : 1, lieu-dit La Cournolière, 79320 Moncoutant-sur-Sèvre, France
           <br />
           Téléphone : <a href="tel:0688686699">06 88 68 66 99</a>
           <br />
@@ -60,8 +64,8 @@ export default function MentionsLegalesPage() {
 
       <LegalSection id="directeur" title="2. Directeur de la publication">
         <p>
-          <LegalTodo>[Nom et prénom de la dirigeante à compléter]</LegalTodo>, en
-          qualité de propriétaire-gérante de Clochette Nails.
+          Madame Chloé Girard, en qualité d&apos;entrepreneuse individuelle,
+          éditrice du site Clochette Nails.
         </p>
         <p>
           Contact : <a href="mailto:contact@clochette-nails.fr">contact@clochette-nails.fr</a>
@@ -73,28 +77,20 @@ export default function MentionsLegalesPage() {
           Le site est hébergé par :
         </p>
         <p>
-          <LegalTodo>[À compléter selon hébergeur choisi]</LegalTodo>
+          <strong>Hostinger International Ltd.</strong>
+          <br />
+          61 Lordou Vironos Street, 6023 Larnaca, Chypre
+          <br />
+          Téléphone : <a href="tel:+35724655000">+357 24 655 000</a>
+          <br />
+          <a href="https://www.hostinger.fr" target="_blank" rel="noopener noreferrer">www.hostinger.fr</a>
         </p>
-        <p>
-          Exemples typiques (à remplacer par le nom du vrai hébergeur) :
-        </p>
-        <ul>
-          <li>
-            <strong>Vercel Inc.</strong>, 340 S Lemon Ave #4133, Walnut, CA 91789, USA — <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">vercel.com</a>
-          </li>
-          <li>
-            <strong>OVH SAS</strong>, 2 rue Kellermann, 59100 Roubaix, France — <a href="https://www.ovhcloud.com" target="_blank" rel="noopener noreferrer">ovhcloud.com</a>
-          </li>
-          <li>
-            <strong>Hostinger International Ltd.</strong>, 61 Lordou Vironos Street, 6023 Larnaca, Chypre
-          </li>
-        </ul>
       </LegalSection>
 
       <LegalSection id="conception" title="4. Conception et développement">
         <p>
           Conception graphique, design et développement réalisés par{" "}
-          <LegalTodo>[Damien Girard / nom à confirmer]</LegalTodo>.
+          <strong>Studio&nbsp;G4</strong> — Damien Girard.
         </p>
       </LegalSection>
 

@@ -13,7 +13,7 @@
  */
 
 import type { Metadata } from "next";
-import { LegalLayout, LegalSection, LegalTodo } from "@/components/legal/legal-layout";
+import { LegalLayout, LegalSection } from "@/components/legal/legal-layout";
 
 export const metadata: Metadata = {
   title: "Politique de Confidentialité",
@@ -42,7 +42,7 @@ export default function ConfidentialitePage() {
   return (
     <LegalLayout
       title="Politique de Confidentialité"
-      lastUpdate="13 mai 2026"
+      lastUpdate="3 juin 2026"
       toc={TOC}
     >
       <LegalSection id="preambule" title="1. Préambule">
@@ -58,13 +58,13 @@ export default function ConfidentialitePage() {
 
       <LegalSection id="responsable" title="2. Responsable du traitement">
         <p>
-          <strong>Clochette Nails</strong>
+          <strong>Clochette Nails</strong> — Chloé Girard
           <br />
-          Forme juridique : Entrepreneur Individuel <LegalTodo>[à confirmer]</LegalTodo>
+          Forme juridique : Entreprise individuelle (EI)
           <br />
-          SIRET : <LegalTodo>[à compléter]</LegalTodo>
+          SIRET : 889 014 155 00036
           <br />
-          Adresse : <LegalTodo>[à compléter]</LegalTodo>, 79320 Moncoutant-sur-Sèvre
+          Adresse : 1, lieu-dit La Cournolière, 79320 Moncoutant-sur-Sèvre
           <br />
           Contact RGPD : <a href="mailto:contact@clochette-nails.fr">contact@clochette-nails.fr</a>
         </p>
@@ -168,8 +168,8 @@ export default function ConfidentialitePage() {
         </p>
         <ul>
           <li><strong>Stripe Payments Europe Ltd.</strong> (sous-traitant paiement) : <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener noreferrer">stripe.com/fr/privacy</a></li>
-          <li><strong>Resend Inc.</strong> (sous-traitant email transactionnel) <LegalTodo>[si déployé]</LegalTodo> : <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">resend.com/legal/privacy-policy</a></li>
-          <li><strong>Hébergeur du site</strong> : <LegalTodo>[à compléter selon hébergeur final : Vercel / Cloudflare / OVH / Hostinger…]</LegalTodo></li>
+          <li><strong>Resend Inc.</strong> (sous-traitant email transactionnel) : <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">resend.com/legal/privacy-policy</a></li>
+          <li><strong>Hébergeur du site</strong> : Hostinger International Ltd. (Larnaca, Chypre) — <a href="https://www.hostinger.fr" target="_blank" rel="noopener noreferrer">hostinger.fr</a></li>
           <li><strong>Comptable / expert-comptable</strong> : pour les obligations légales (factures).</li>
           <li><strong>Autorités administratives ou judiciaires</strong> : sur réquisition légale uniquement.</li>
         </ul>

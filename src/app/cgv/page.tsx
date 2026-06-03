@@ -11,6 +11,7 @@
  */
 
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalLayout, LegalSection, LegalTodo } from "@/components/legal/legal-layout";
 
 export const metadata: Metadata = {
@@ -44,7 +45,7 @@ export default function CGVPage() {
   return (
     <LegalLayout
       title="Conditions Générales de Vente"
-      lastUpdate="13 mai 2026"
+      lastUpdate="3 juin 2026"
       toc={TOC}
     >
       <LegalSection id="preambule" title="1. Préambule">
@@ -67,13 +68,13 @@ export default function CGVPage() {
 
       <LegalSection id="identification" title="2. Identification du prestataire">
         <p>
-          <strong>Clochette Nails</strong>
+          <strong>Clochette Nails</strong> — Chloé Girard
           <br />
-          Forme juridique : Entrepreneur Individuel <LegalTodo>[à confirmer]</LegalTodo>
+          Forme juridique : Entreprise individuelle (EI)
           <br />
-          SIRET : <LegalTodo>[à compléter]</LegalTodo>
+          SIRET : 889 014 155 00036
           <br />
-          Siège social : <LegalTodo>[adresse complète à compléter]</LegalTodo>, 79320 Moncoutant-sur-Sèvre, France
+          Siège social : 1, lieu-dit La Cournolière, 79320 Moncoutant-sur-Sèvre, France
           <br />
           Email : <a href="mailto:contact@clochette-nails.fr">contact@clochette-nails.fr</a>
           <br />
@@ -105,7 +106,7 @@ export default function CGVPage() {
           Le Prestataire propose des prestations de prothésie ongulaire
           réalisées en cabine privée à son adresse de siège. Le détail des
           prestations (durée, options, contenu) est consultable sur la{" "}
-          <a href="/prestations">page Prestations</a> du site.
+          <Link href="/prestations">page Prestations</Link> du site.
         </p>
         <p>
           Le Prestataire se réserve le droit de refuser une Prestation pour
@@ -137,7 +138,7 @@ export default function CGVPage() {
       <LegalSection id="ebooks" title="7. Vente d'ebooks (biens numériques)">
         <p>
           Le Prestataire propose à la vente des ebooks (guides, tutoriels)
-          accessibles depuis la page <a href="/ebooks">Ebooks</a> du site.
+          accessibles depuis la page <Link href="/ebooks">Ebooks</Link> du site.
         </p>
         <p><strong>7.1. Modalités de commande</strong></p>
         <p>
@@ -266,11 +267,10 @@ export default function CGVPage() {
 
       <LegalSection id="tarifs" title="10. Tarifs">
         <p>
-          Les tarifs sont indiqués en euros toutes taxes comprises (TTC). Le
-          Prestataire bénéficie de la franchise en base de TVA (article 293 B
-          du CGI), la TVA n&apos;est donc pas applicable, conformément à
-          l&apos;article 293 B du Code Général des Impôts.{" "}
-          <LegalTodo>[à confirmer selon le statut fiscal réel]</LegalTodo>
+          Les tarifs sont indiqués en euros, nets de taxes. Le Prestataire
+          bénéficie de la franchise en base de TVA : la TVA n&apos;est pas
+          applicable, conformément à l&apos;article 293 B du Code général des
+          impôts.
         </p>
         <p>
           Les tarifs peuvent être modifiés à tout moment. Le tarif applicable
