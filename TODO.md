@@ -1,6 +1,6 @@
 # TODO — Clochette Nails v2
 
-> **Source de vérité unique du backlog.** Dernière mise à jour : 2026-06-02.
+> **Source de vérité unique du backlog.** Dernière mise à jour : 2026-06-03.
 > Convention : un item démarré → branche dédiée (`feat/*`, `fix/*`) ; un item livré → coché ici.
 > Le contexte/raison de report des items Phase 2 est détaillé dans [`PHASE_2.md`](PHASE_2.md).
 > L'intégration ERP (events sortants) est détaillée dans [`MANAGEMENT_API.md`](MANAGEMENT_API.md).
@@ -17,7 +17,7 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 
 - [x] **SEO catalogue prestations** — ✅ champs `metaTitle`/`metaDesc`/tags éditables en admin + **11 prestations publiées remplies** (titles 51-60, desc 138-152). JSON-LD `Service` (enrichi : Offer, ReserveAction, keywords) sur chaque fiche.
 - [x] **Couverture JSON-LD** — ✅ `WebSite` sitewide, `BreadcrumbList` (prestation/blog/ebook), `Product` carte cadeau. Helper `src/lib/seo-jsonld.ts`. Fix marque en double dans les `<title>` (title.absolute). *(Avis : pas de Review schema first-party — consigne Google.)*
-- [ ] **reCAPTCHA V3** — formulaires publics contact + carte cadeau (aujourd'hui simples TODO → exposés au spam).
+- [x] **reCAPTCHA V3** — ✅ sur les **4 formulaires publics** (contact, carte cadeau, réservation, ebook) : token client (script chargé paresseusement) + vérif serveur `verifyRecaptcha` (score ≥ 0.5) avant toute création. Badge masqué + mention légale sous chaque form. Skip gracieux si clés absentes (dev). **Reste à activer en prod** : créer le site reCAPTCHA v3 + renseigner `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` & `RECAPTCHA_SECRET_KEY`.
 - [ ] **Pages légales** — compléter les ~20 `<LegalTodo>` (CGV / mentions / confidentialité) : SIRET, forme juridique, code APE, adresse, dirigeante, assureur RC pro, médiateur conso, hébergeur. *Infos réelles requises (Chloé / Damien).*
 - [ ] **Vérif domaine Resend** (`clochette-nails.fr`) — sinon les emails ne partent qu'à l'owner du compte.
 - [ ] **Tests E2E** des parcours critiques (résa → acompte → confirmation).
@@ -48,6 +48,12 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 - [x] **Card d'indispo** — le motif wrappe au lieu de tronquer (`break-words` borné à la hauteur de la card).
 - [x] **Fix a11y menu mobile header** — `inert` quand fermé (corrige aria-hidden-focus + arbre a11y) → Lighthouse **mobile 100 site-wide**.
 - [x] **Fix lightbox portfolio/galeries** — `createPortal` vers `<body>` : la modale échappe au containing block des wrappers `<Reveal>` (`will-change: transform`) → plein écran correct.
+
+---
+
+## 🔧 Mode maintenance SEO — ✅ FAIT (2026-06-03)
+
+- [x] **Mode maintenance = vrai HTTP 503 + `noindex`** — enforcement déplacé dans `proxy.ts` (runtime Node imposé par Next 16, lit `maintenanceMode` via Prisma + cache mémoire 10 s, fail-open). Routes publiques en maintenance → **503** + `Retry-After` + `X-Robots-Tag: noindex` + page autoportante (`src/lib/maintenance-page.ts`). `/admin` + assets (logo, robots.txt, sitemap.xml) restent servis. Effet de bord : root layout repassé synchrone (plus de `headers()`) → home redevenue **statique**. Lighthouse home **100/100/100** desktop+mobile, LCP 110 ms / CLS 0.
 
 ---
 

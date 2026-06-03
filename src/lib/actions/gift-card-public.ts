@@ -33,6 +33,7 @@ import {
   checkRateLimit,
   recordRateLimit,
 } from "@/lib/rate-limit";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 const purchaseSchema = z.object({
   amountCents: z
@@ -52,6 +53,7 @@ const purchaseSchema = z.object({
   recipientEmail: z.string().trim().toLowerCase().max(150).optional().default(""),
   giftMessage: z.string().trim().max(500).optional().default(""),
   honeypot: z.string().max(0).optional(),
+  recaptchaToken: z.string().optional(), // reCAPTCHA v3 (vérifié côté serveur)
 });
 
 export type PurchaseInput = z.input<typeof purchaseSchema>;
@@ -121,6 +123,16 @@ export async function createGiftCardPublic(
       ok: false,
       error: "Erreur technique, contactez le salon.",
       code: "HONEYPOT",
+    };
+  }
+
+  // reCAPTCHA v3 (skip si pas de clé serveur → dev ; fail-open si Google down)
+  const captcha = await verifyRecaptcha(data.recaptchaToken, "gift_card", ip);
+  if (!captcha.ok) {
+    return {
+      ok: false,
+      error: "La vérification de sécurité a échoué. Merci de réessayer.",
+      code: "RECAPTCHA_FAILED",
     };
   }
 

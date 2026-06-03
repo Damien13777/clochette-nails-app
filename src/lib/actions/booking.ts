@@ -30,6 +30,7 @@ import {
   applyGiftCardRedemption,
   GiftCardRedemptionError,
 } from "@/lib/gift-card-redeem";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 import { computeDepositCents } from "@/lib/deposit";
 import { sendEmail } from "@/lib/email/send";
 import { ADMIN_EMAIL } from "@/lib/email/client";
@@ -50,6 +51,7 @@ export type CreateBookingResult =
         | "BOOKINGS_DISABLED"
         | "GIFT_CARD_INVALID"
         | "GIFT_CARD_EXPIRED"
+        | "RECAPTCHA_FAILED"
         | "INTERNAL_ERROR";
       fieldErrors?: Record<string, string>;
     };
@@ -100,6 +102,16 @@ export async function createBookingAction(
     h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     h.get("x-real-ip") ??
     "unknown";
+
+  // reCAPTCHA v3 (skip si pas de clé serveur → dev ; fail-open si Google down)
+  const captcha = await verifyRecaptcha(data.recaptchaToken, "booking", ip);
+  if (!captcha.ok) {
+    return {
+      ok: false,
+      error: "La vérification de sécurité a échoué. Merci de réessayer.",
+      code: "RECAPTCHA_FAILED",
+    };
+  }
 
   const rl = checkRateLimit(
     BOOKING_SUBMIT.bucket,

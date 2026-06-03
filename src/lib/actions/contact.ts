@@ -18,6 +18,7 @@ import { headers } from "next/headers";
 import { sendEmail } from "@/lib/email/send";
 import { ADMIN_EMAIL } from "@/lib/email/client";
 import { buildContactNotifAdminEmail } from "@/lib/email/templates/contact-notif-admin";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Nom trop court").max(100),
@@ -26,6 +27,7 @@ const contactSchema = z.object({
   subject: z.string().trim().max(120).optional().or(z.literal("")),
   message: z.string().trim().min(10, "Message trop court (10 char min)").max(2000),
   website: z.string().max(0).optional(), // honeypot
+  recaptchaToken: z.string().optional(), // reCAPTCHA v3 (vérifié côté serveur)
 });
 
 export type ContactState = {
@@ -63,6 +65,7 @@ export async function submitContactAction(
     subject: formData.get("subject"),
     message: formData.get("message"),
     website: formData.get("website"),
+    recaptchaToken: formData.get("recaptchaToken") ?? undefined,
   };
   // Valeurs ré-injectables côté form si échec (React 19 reset les inputs)
   const submittedValues: ContactState["values"] = {
@@ -106,6 +109,17 @@ export async function submitContactAction(
   if (data.website && data.website.length > 0) {
     await new Promise((r) => setTimeout(r, 600 + Math.random() * 600));
     return { ok: true }; // fake success
+  }
+
+  // reCAPTCHA v3 (skip si pas de clé serveur → dev ; fail-open si Google down)
+  const captcha = await verifyRecaptcha(data.recaptchaToken, "contact", ip);
+  if (!captcha.ok) {
+    return {
+      ok: false,
+      error: "La vérification de sécurité a échoué. Merci de réessayer.",
+      code: "RECAPTCHA_FAILED",
+      values: submittedValues,
+    };
   }
 
   recordRateLimit(CONTACT.bucket, ip, CONTACT.windowMs);

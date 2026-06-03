@@ -9,6 +9,8 @@
 
 import { useState, useTransition } from "react";
 import { createGiftCardPublic } from "@/lib/actions/gift-card-public";
+import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha-client";
+import { RecaptchaNotice } from "@/components/recaptcha-notice";
 
 const AMOUNT_PRESETS = [30, 50, 80, 100, 150];
 
@@ -35,6 +37,7 @@ export function GiftCardPurchaseForm() {
     setFieldErrors({});
 
     startTransition(async () => {
+      const token = await executeRecaptcha("gift_card");
       const result = await createGiftCardPublic({
         amountCents: Math.round(amountEuros * 100),
         buyerName,
@@ -44,6 +47,7 @@ export function GiftCardPurchaseForm() {
         recipientEmail: forSelf ? "" : recipientEmail,
         giftMessage,
         honeypot: "",
+        recaptchaToken: token ?? undefined,
       });
       if (result.ok) {
         window.location.href = result.checkoutUrl;
@@ -55,7 +59,12 @@ export function GiftCardPurchaseForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      onFocus={() => void loadRecaptcha()}
+      className="space-y-6"
+      noValidate
+    >
       {error && (
         <p
           role="alert"
@@ -232,6 +241,8 @@ export function GiftCardPurchaseForm() {
         Paiement sécurisé Stripe · La carte est envoyée immédiatement après
         confirmation du paiement.
       </p>
+
+      <RecaptchaNotice />
     </form>
   );
 }

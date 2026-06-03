@@ -31,6 +31,7 @@ import {
   applyGiftCardRedemption,
   GiftCardRedemptionError,
 } from "@/lib/gift-card-redeem";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 import {
   computeTokenExpiry,
   generateDownloadToken,
@@ -50,6 +51,7 @@ const purchaseSchema = z.object({
     .optional()
     .default(""),
   honeypot: z.string().max(0).optional(),
+  recaptchaToken: z.string().optional(), // reCAPTCHA v3 (vérifié côté serveur)
 });
 
 export type EbookPurchaseInput = z.input<typeof purchaseSchema>;
@@ -105,6 +107,16 @@ export async function purchaseEbookAction(
     return { ok: false, error: "Champs invalides.", fieldErrors };
   }
   const data = parsed.data;
+
+  // ── reCAPTCHA v3 (skip si pas de clé serveur → dev ; fail-open si Google down) ──
+  const captcha = await verifyRecaptcha(data.recaptchaToken, "ebook", ip);
+  if (!captcha.ok) {
+    return {
+      ok: false,
+      error: "La vérification de sécurité a échoué. Merci de réessayer.",
+      code: "RECAPTCHA_FAILED",
+    };
+  }
 
   // ── Ebook ────────────────────────────────────────────────
   const ebook = await prisma.ebook.findUnique({

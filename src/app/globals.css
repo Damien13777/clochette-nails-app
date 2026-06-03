@@ -429,3 +429,10 @@
 }
 
 /* Alignements TipTap (style="text-align:...") respectés tels quels. */
+
+/* reCAPTCHA v3 : badge flottant masqué — la mention légale (RecaptchaNotice)
+   est affichée sous chaque formulaire protégé, conformément aux conditions
+   Google qui imposent l'une OU l'autre. */
+.grecaptcha-badge {
+  visibility: hidden;
+}
