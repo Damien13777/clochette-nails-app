@@ -9,11 +9,24 @@
  */
 
 import NextAuth from "next-auth";
+import { NextResponse } from "next/server";
 import { authConfig } from "@/auth.config";
 
-export const { auth: middleware } = NextAuth(authConfig);
+export const { auth } = NextAuth(authConfig);
 
-export default middleware;
+/**
+ * On enveloppe le middleware d'auth : le callback `authorized` (auth.config.ts)
+ * continue de gérer la protection /admin EN AMONT (s'il refuse, la requête est
+ * redirigée et cette fonction ne s'exécute pas). Pour les requêtes autorisées,
+ * on injecte le pathname dans un header de requête afin que le root layout
+ * (Server Component, Node) puisse décider d'afficher le mode maintenance sur
+ * les routes publiques uniquement.
+ */
+export default auth((req) => {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-pathname", req.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: requestHeaders } });
+});
 
 export const config = {
   /**
