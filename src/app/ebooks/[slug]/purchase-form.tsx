@@ -10,6 +10,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { purchaseEbookAction } from "@/lib/actions/ebook-purchase";
 import { validateGiftCardCode } from "@/lib/actions/gift-card";
+import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha-client";
+import { RecaptchaNotice } from "@/components/recaptcha-notice";
 
 type Props = {
   ebookSlug: string;
@@ -87,12 +89,14 @@ export function EbookPurchaseForm({
     setFieldErrors({});
 
     startSubmit(async () => {
+      const token = await executeRecaptcha("ebook");
       const result = await purchaseEbookAction({
         ebookSlug,
         clientEmail: email,
         clientName: name,
         giftCardCode: giftValid?.code ?? "",
         honeypot,
+        recaptchaToken: token ?? undefined,
       });
 
       if (!result.ok) {
@@ -109,7 +113,12 @@ export function EbookPurchaseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5">
+    <form
+      onSubmit={handleSubmit}
+      onFocus={() => void loadRecaptcha()}
+      noValidate
+      className="space-y-5"
+    >
       {/* Honeypot anti-bot */}
       <div className="absolute -left-[9999px]" aria-hidden="true">
         <label>
@@ -284,6 +293,8 @@ export function EbookPurchaseForm({
         Paiement sécurisé Stripe. Le lien de téléchargement vous sera envoyé
         par email après confirmation du paiement.
       </p>
+
+      <RecaptchaNotice />
     </form>
   );
 }

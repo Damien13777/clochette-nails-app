@@ -5,14 +5,26 @@
  * Branché sur submitContactAction (Server Action).
  */
 
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import { submitContactAction, type ContactState } from "@/lib/actions/contact";
+import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha-client";
+import { RecaptchaNotice } from "@/components/recaptcha-notice";
 
 export function ContactForm() {
   const [state, formAction, isPending] = useActionState<
     ContactState | null,
     FormData
   >(submitContactAction, null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const token = await executeRecaptcha("contact");
+    if (token) formData.set("recaptchaToken", token);
+    startTransition(() => {
+      formAction(formData);
+    });
+  }
 
   if (state?.ok) {
     return (
@@ -35,7 +47,12 @@ export function ContactForm() {
   }
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      onFocus={() => void loadRecaptcha()}
+      className="space-y-5"
+      noValidate
+    >
       <div className="grid sm:grid-cols-2 gap-4">
         <Field
           name="name"
@@ -131,6 +148,8 @@ export function ContactForm() {
       >
         {isPending ? "Envoi…" : "Envoyer le message"}
       </button>
+
+      <RecaptchaNotice />
     </form>
   );
 }

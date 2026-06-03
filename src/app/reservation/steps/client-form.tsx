@@ -9,6 +9,7 @@
 import type { ClientInfo } from "../reservation-flow";
 import { GiftCardField } from "./gift-card-field";
 import { PhotoUpload, type UploadedFile } from "./photo-upload";
+import { RecaptchaNotice } from "@/components/recaptcha-notice";
 
 type Props = {
   value: ClientInfo;
@@ -200,6 +201,8 @@ export function ClientFormStep({
           </svg>
         )}
       </button>
+
+      <RecaptchaNotice />
     </form>
   );
 }

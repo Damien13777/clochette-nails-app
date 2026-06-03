@@ -25,6 +25,9 @@ export function buildCsp(isDev: boolean): string {
       "https://js.stripe.com",
       // Google Analytics (chargé seulement après consentement cookie)
       "https://www.googletagmanager.com",
+      // reCAPTCHA v3 (chargé paresseusement sur interaction formulaire)
+      "https://www.google.com/recaptcha/",
+      "https://www.gstatic.com/recaptcha/",
       // eval requis uniquement par le HMR Turbopack en dev ; jamais en prod.
       ...(isDev ? ["'unsafe-eval'"] : []),
     ],
@@ -47,7 +50,13 @@ export function buildCsp(isDev: boolean): string {
       "https://*.googletagmanager.com",
       ...(isDev ? ["ws://localhost:*", "ws://192.168.*:*"] : []),
     ],
-    "frame-src": ["'self'", "https://js.stripe.com", "https://hooks.stripe.com"],
+    "frame-src": [
+      "'self'",
+      "https://js.stripe.com",
+      "https://hooks.stripe.com",
+      // reCAPTCHA v3 (iframe de challenge invisible)
+      "https://www.google.com/recaptcha/",
+    ],
     "frame-ancestors": ["'none'"],
     "form-action": ["'self'"],
     "base-uri": ["'self'"],

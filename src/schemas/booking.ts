@@ -45,6 +45,7 @@ export const createBookingSchema = z.object({
     message: "Vous devez accepter les conditions",
   }),
   honeypot: z.string().max(0).optional(), // anti-bot
+  recaptchaToken: z.string().optional(), // reCAPTCHA v3 (vérifié côté serveur)
 });
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;

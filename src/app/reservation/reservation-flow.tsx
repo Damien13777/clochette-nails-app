@@ -15,7 +15,7 @@
  *   Mobile       → single column, récap collé en bas (sticky bar)
  */
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ServiceCategory } from "@prisma/client";
@@ -26,6 +26,7 @@ import { ClientFormStep } from "./steps/client-form";
 import type { UploadedFile } from "./steps/photo-upload";
 import { ReservationSummary } from "./summary";
 import { createBookingAction, type CreateBookingResult } from "@/lib/actions/booking";
+import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha-client";
 import { computeDepositCents } from "@/lib/deposit";
 
 export type ServiceLite = {
@@ -82,6 +83,12 @@ export function ReservationFlow({
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  // Précharge reCAPTCHA dès l'entrée dans le tunnel (la page /reservation est
+  // un funnel noindex/dynamique → pas d'impact Lighthouse sur les pages SEO).
+  useEffect(() => {
+    void loadRecaptcha();
+  }, []);
 
   // State du flow
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -175,6 +182,7 @@ export function ReservationFlow({
     setFieldErrors({});
 
     startTransition(async () => {
+      const token = await executeRecaptcha("booking");
       const result: CreateBookingResult = await createBookingAction({
         serviceId: selectedService.id,
         optionIds: optionIds,
@@ -196,6 +204,7 @@ export function ReservationFlow({
         })),
         consent: consent as true,
         honeypot: "",
+        recaptchaToken: token ?? undefined,
       });
 
       if (!result.ok) {
