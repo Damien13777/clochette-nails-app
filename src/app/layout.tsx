@@ -5,6 +5,9 @@ import { Cinzel, Julius_Sans_One, Inria_Serif, Manrope } from "next/font/google"
 import "./globals.css";
 import { CookieBanner } from "@/components/cookie-consent/cookie-banner";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { headers } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import { MaintenanceScreen } from "@/components/maintenance-screen";
 
 /* ────────────────────────────────────────────────────────────
  * Fonts du Design System v1.1
@@ -81,41 +84,65 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const gaTrackingId = process.env.NEXT_PUBLIC_GA_TRACKING_ID;
+
+  // Mode maintenance : remplace tout le site PUBLIC par l'écran de maintenance
+  // quand il est actif. L'admin (/admin/*) reste accessible pour le désactiver.
+  // Le pathname provient du header posé par le middleware (proxy.ts).
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const isAdminRoute = pathname.startsWith("/admin");
+  let inMaintenance = false;
+  let maintenanceMessage: string | null = null;
+  if (!isAdminRoute) {
+    const settings = await prisma.platformSettings.findFirst({
+      select: { maintenanceMode: true, maintenanceMessage: true },
+    });
+    if (settings?.maintenanceMode) {
+      inMaintenance = true;
+      maintenanceMessage = settings.maintenanceMessage;
+    }
+  }
+
   return (
     <html
       lang="fr"
       className={`${cinzel.variable} ${julius.variable} ${inria.variable} ${manrope.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {/* Sans JS, le reveal ne se déclenche pas : on garde le contenu visible. */}
-        <noscript>
-          <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
-        </noscript>
-        <script
-          type="application/ld+json"
-          // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              "@id": `${SITE_URL}/#website`,
-              name: "Clochette Nails",
-              url: SITE_URL,
-              inLanguage: "fr-FR",
-              publisher: { "@id": BEAUTYSALON_ID },
-            }),
-          }}
-        />
-        {children}
-        <CookieBanner />
-        {gaTrackingId && (
-          <Suspense fallback={null}>
-            <GoogleAnalytics trackingId={gaTrackingId} />
-          </Suspense>
+        {inMaintenance ? (
+          <MaintenanceScreen message={maintenanceMessage} />
+        ) : (
+          <>
+            {/* Sans JS, le reveal ne se déclenche pas : on garde le contenu visible. */}
+            <noscript>
+              <style>{`[data-reveal]{opacity:1 !important;transform:none !important}`}</style>
+            </noscript>
+            <script
+              type="application/ld+json"
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "WebSite",
+                  "@id": `${SITE_URL}/#website`,
+                  name: "Clochette Nails",
+                  url: SITE_URL,
+                  inLanguage: "fr-FR",
+                  publisher: { "@id": BEAUTYSALON_ID },
+                }),
+              }}
+            />
+            {children}
+            <CookieBanner />
+            {gaTrackingId && (
+              <Suspense fallback={null}>
+                <GoogleAnalytics trackingId={gaTrackingId} />
+              </Suspense>
+            )}
+          </>
         )}
       </body>
     </html>
