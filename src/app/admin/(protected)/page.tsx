@@ -2,8 +2,8 @@
  * Admin Dashboard — /admin
  *
  * Server Component qui fetch en parallèle :
- *  - 4 KPIs : CA mois (somme revenueCents COMPLETED), RDV semaine,
- *    GC actives, Contacts non lus
+ *  - 4 KPIs : CA mois, RDV cette semaine (+ sous-texte : mois en cours + à
+ *    venir au total), GC actives, Contacts non lus
  *  - 5 prochains RDV (date >= today, status CONFIRMED/AWAITING_DEPOSIT)
  *  - Alertes agrégées (GC expirantes 30j, RDV awaiting > 1h, contacts unread)
  *
@@ -24,6 +24,7 @@ import {
   pastBookingsWhere,
   upcomingBookingsWhere,
 } from "@/lib/booking-where";
+import { mondayIsoForTodayParis, todayIsoParis } from "@/lib/paris-day";
 
 export const dynamic = "force-dynamic";
 
@@ -39,15 +40,24 @@ export default async function AdminDashboard() {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const weekStart = startOfWeek(now);
   const thirtyDaysAhead = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+  // Bornes @db.Date (UTC-minuit calé sur le jour Paris) pour compter les RDV
+  // par période — Booking.date est un @db.Date (cf. paris-day.ts).
+  const weekStartDate = isoToUtcMidnight(mondayIsoForTodayParis());
+  const weekEndDate = addUtcDays(weekStartDate, 7);
+  const [parisYear, parisMonth] = todayIsoParis().split("-").map(Number);
+  const monthStartDate = new Date(Date.UTC(parisYear, parisMonth - 1, 1));
+  const nextMonthStartDate = new Date(Date.UTC(parisYear, parisMonth, 1));
 
   const [
     bookingsForRevenue,
     giftCardSalesAgg,
     ebookSalesRaw,
     bookingsThisWeek,
+    bookingsThisMonth,
+    upcomingBookingsCount,
     activeGiftCards,
     contactsUnread,
     upcomingBookings,
@@ -100,10 +110,25 @@ export default async function AdminDashboard() {
         },
       },
     }),
+    // RDV de la semaine en cours (lundi→dimanche, Paris)
     prisma.booking.count({
       where: {
         status: { in: ["CONFIRMED", "COMPLETED"] },
-        date: { gte: weekStart },
+        date: { gte: weekStartDate, lt: weekEndDate },
+      },
+    }),
+    // RDV du mois en cours
+    prisma.booking.count({
+      where: {
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+        date: { gte: monthStartDate, lt: nextMonthStartDate },
+      },
+    }),
+    // RDV à venir au total — confirmés uniquement (hors acomptes en attente)
+    prisma.booking.count({
+      where: {
+        ...upcomingBookingsWhere(),
+        status: "CONFIRMED",
       },
     }),
     prisma.giftCard.count({
@@ -278,6 +303,7 @@ export default async function AdminDashboard() {
         <Kpi
           label="RDV cette semaine"
           value={<CountUp value={bookingsThisWeek} />}
+          sub={`${bookingsThisMonth} ce mois · ${upcomingBookingsCount} à venir`}
         />
         <Kpi
           label="Cartes cadeau actives"
@@ -698,11 +724,15 @@ function EmptyState({
 // Helpers
 // ─────────────────────────────────────────────────────────
 
-function startOfWeek(d: Date): Date {
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() + diff);
-  return monday;
+function isoToUtcMidnight(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+function addUtcDays(d: Date, days: number): Date {
+  const r = new Date(d);
+  r.setUTCDate(r.getUTCDate() + days);
+  return r;
 }
 
 function formatDateFr(date: Date): string {
