@@ -82,6 +82,7 @@ export function CalendarSidePanel({
 
   // ESC pour fermer + mount flag pour createPortal (évite SSR mismatch)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- flag de mount pour createPortal (impossible au SSR)
     setMounted(true);
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();

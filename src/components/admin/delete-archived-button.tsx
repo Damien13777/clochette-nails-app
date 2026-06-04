@@ -41,7 +41,7 @@ export function DeleteArchivedButton({
         style={{ fontFamily: "var(--font-ui)" }}
       >
         La suppression est définitive. Elle est refusée si des réservations sont
-        liées (l'élément reste alors archivé pour préserver l'historique).
+        liées (l’élément reste alors archivé pour préserver l’historique).
       </p>
       <button
         type="button"

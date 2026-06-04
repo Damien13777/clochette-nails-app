@@ -157,12 +157,10 @@ export default async function BlogArticlePage({
 
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             breadcrumbJsonLd([
@@ -245,7 +243,6 @@ export default async function BlogArticlePage({
           <div
             className="rich-content max-w-none text-[var(--color-ink-700)]"
             style={{ fontFamily: "var(--font-ui)" }}
-            // eslint-disable-next-line react/no-danger
             dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
           />
 

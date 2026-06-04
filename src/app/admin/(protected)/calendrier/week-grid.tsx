@@ -226,7 +226,6 @@ export function WeekGrid({
 
           {/* En-têtes jours (cliquables → édition horaires) */}
           {days.map((dayIso, i) => {
-            const dayOfWeek = (i + 1) % 7; // 0 = Lun → JS Date day 1. On veut dayOfWeek Prisma : 0=Dim, 1=Lun. i=0 (lun) → dayOfWeek 1.
             const dow = i === 6 ? 0 : i + 1;
             const recurringBh = businessHours.find((b) => b.dayOfWeek === dow);
             const exception = dayExceptions.find((e) => e.dateIso === dayIso);

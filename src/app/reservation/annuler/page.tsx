@@ -27,7 +27,6 @@ type SearchParams = {
   token?: string;
 };
 
-const PHONE = "06 88 68 66 99";
 const PHONE_HREF = "tel:0688686699";
 const EMAIL_HREF = "mailto:contact@clochette-nails.fr";
 

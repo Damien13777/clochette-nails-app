@@ -204,7 +204,7 @@ export function SiteMediaSlot({
             className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[var(--color-violet-600)] text-white text-[10px] uppercase tracking-[0.12em]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            En attente d'enregistrement
+            En attente d’enregistrement
           </span>
         )}
       </div>

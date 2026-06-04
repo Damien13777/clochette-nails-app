@@ -118,6 +118,7 @@ export function GlobalSearch() {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
+        role="combobox"
         aria-autocomplete="list"
         aria-expanded={showDropdown ? "true" : "false"}
         aria-controls="admin-search-results"
@@ -209,6 +210,7 @@ export function ResultsBody({
           </p>
           <ul>
             {g.items.map((it) => {
+              // eslint-disable-next-line react-hooks/immutability -- index plat (nav clavier) recalculé à chaque render
               itemCursor += 1;
               const cursorAtThis = itemCursor;
               const isActive = cursorAtThis === activeIndex;

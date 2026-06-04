@@ -33,7 +33,7 @@ export function checkRateLimit(
   bucketName: string,
   key: string,
   max: number,
-  windowMs: number,
+  _windowMs: number,
 ): { allowed: boolean; retryAfterSec?: number; remaining: number } {
   const now = Date.now();
   const bucket = getBucket(bucketName);

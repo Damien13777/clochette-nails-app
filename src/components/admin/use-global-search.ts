@@ -53,6 +53,7 @@ export function useGlobalSearch() {
   // Fetch quand debouncedQuery change
   useEffect(() => {
     if (debouncedQuery.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset de l'état quand la requête repasse sous 2 caractères
       setGroups([]);
       setError(null);
       return;

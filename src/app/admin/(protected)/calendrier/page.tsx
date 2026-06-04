@@ -62,7 +62,6 @@ export default async function AdminCalendarPage({
       : mondayIsoForTodayParis();
   const weekEndIso = addDaysIso(weekStartIso, 6);
   const weekStartDate = isoToUtcDate(weekStartIso);
-  const weekEndDate = isoToUtcDate(weekEndIso);
   // Pour les bookings on filtre date inclus → +1 jour fin
   const dayAfterWeekEnd = isoToUtcDate(addDaysIso(weekEndIso, 1));
 
@@ -78,17 +77,14 @@ export default async function AdminCalendarPage({
   const monthIndex = anchorDate.getUTCMonth();
   const monthFirstDayDate = new Date(Date.UTC(monthYear, monthIndex, 1));
   const monthFirstMondayIso = getMondayIso(monthFirstDayDate);
-  const monthLastDayDate = new Date(Date.UTC(monthYear, monthIndex + 1, 0));
   // Grille mensuelle = 6 semaines max → on fetch sur 42 jours pour couvrir
   const monthGridStartIso = monthFirstMondayIso;
   const monthGridEndIso = addDaysIso(monthGridStartIso, 41);
   const monthGridStartDate = isoToUtcDate(monthGridStartIso);
-  const monthGridEndDate = isoToUtcDate(monthGridEndIso);
   const monthGridDayAfterEnd = isoToUtcDate(addDaysIso(monthGridEndIso, 1));
 
   // Plage de fetch : couvre soit la semaine, soit toute la grille mensuelle
   const fetchStartDate = view === "month" ? monthGridStartDate : weekStartDate;
-  const fetchEndDate = view === "month" ? monthGridEndDate : weekEndDate;
   const fetchDayAfterEnd =
     view === "month" ? monthGridDayAfterEnd : dayAfterWeekEnd;
 
