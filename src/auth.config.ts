@@ -1,17 +1,19 @@
 /**
- * NextAuth v5 — config edge-safe (lite)
+ * NextAuth v5 — config partagée (middleware + serveur)
  *
- * Cette config ne touche pas à Prisma ni bcrypt → compatible avec
- * le runtime edge utilisé par le middleware (`proxy.ts`).
+ * Le proxy Next 16 (`proxy.ts`) tourne en **runtime Node** (imposé) : on peut
+ * donc lire Prisma ici. `src/auth.ts` étend cette config avec le Credentials
+ * provider (bcrypt). Stratégie JWT conservée.
  *
- * Le fichier `src/auth.ts` étend cette config avec le Credentials
- * provider qui utilise Prisma (Node runtime).
- *
- * Convention : on garde JWT strategy pour que le middleware puisse
- * vérifier la session sans appel DB.
+ * Révocation immédiate : le callback `jwt` re-valide `isActive` en DB à chaque
+ * résolution de session pour un utilisateur authentifié (token présent) → un
+ * compte désactivé/supprimé perd le rôle ADMIN sur **tous** les chemins
+ * (middleware, pages, actions) sans attendre l'expiry du JWT. Les visiteurs
+ * anonymes (pas de token) ne déclenchent aucune requête DB.
  */
 
 import type { NextAuthConfig } from "next-auth";
+import { prisma } from "@/lib/prisma";
 
 export const authConfig = {
   pages: {
@@ -62,12 +64,28 @@ export const authConfig = {
 
     /**
      * Enrichit le JWT avec les infos utiles (id, role).
-     * Appelé lors du sign-in (avec user) et à chaque accès (sans).
+     *  - Au sign-in (`user` présent) : on fait confiance aux données fraîches.
+     *  - Aux accès suivants : on re-valide `isActive` + `role` en DB. Un compte
+     *    désactivé/supprimé est dégradé en "CLIENT" (perd l'accès admin), et un
+     *    changement de rôle est reflété immédiatement.
      */
     async jwt({ token, user }) {
       if (user?.id) {
         token.sub = user.id;
         token.role = user.role;
+        return token;
+      }
+      if (token.sub) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.sub },
+            select: { isActive: true, role: true },
+          });
+          token.role = dbUser?.isActive ? dbUser.role : "CLIENT";
+        } catch {
+          // Fail-open sur erreur DB : on garde le rôle courant pour ne pas
+          // verrouiller l'admin légitime sur un incident transitoire.
+        }
       }
       return token;
     },
