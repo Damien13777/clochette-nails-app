@@ -222,6 +222,7 @@ export function BlogForm({
   const isScheduled =
     currentStatus === "PUBLISHED" &&
     publishedDate !== null &&
+    // eslint-disable-next-line react-hooks/purity -- comparaison à l'heure courante pour le badge « programmé »
     publishedDate.getTime() > Date.now();
 
   return (

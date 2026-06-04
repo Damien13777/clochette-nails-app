@@ -169,7 +169,7 @@ function EbooksDisabled() {
           Les ebooks reviennent bientôt
         </h1>
         <p className="text-[var(--color-ink-500)]">
-          La boutique d'ebooks est temporairement indisponible.
+          La boutique d’ebooks est temporairement indisponible.
         </p>
       </div>
     </main>

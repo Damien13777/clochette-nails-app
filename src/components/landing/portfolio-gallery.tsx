@@ -43,6 +43,7 @@ export function PortfolioGallery({ photos, categories }: Props) {
 
   // Reset lightbox si on change de filtre pendant qu'elle est ouverte
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset volontaire de la lightbox au changement de filtre
     setLightboxIdx(null);
   }, [active]);
 

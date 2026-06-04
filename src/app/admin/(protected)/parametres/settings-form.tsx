@@ -63,6 +63,7 @@ export function SettingsForm({ initial }: { initial: SettingsFormInitial }) {
   // Re-sync local UI state quand initial change (après save → revalidatePath
   // refresh les props depuis la DB → on doit refléter ces nouvelles valeurs).
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-sync de l'état local quand les props serveur changent (revalidatePath)
     setDepositMode(initial.depositMode);
     setMaintenanceMode(initial.maintenanceMode);
   }, [initial.depositMode, initial.maintenanceMode]);
@@ -608,6 +609,7 @@ function ToggleField({
   const [checked, setChecked] = useState(defaultChecked);
   // Re-sync quand la prop change (après save → DB refetch → defaultChecked à jour)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-sync quand la prop defaultChecked change (refetch DB)
     setChecked(defaultChecked);
   }, [defaultChecked]);
   return (

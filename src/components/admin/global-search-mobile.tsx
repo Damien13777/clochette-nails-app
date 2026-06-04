@@ -27,6 +27,7 @@ export function GlobalSearchMobile() {
 
   // Mount-check pour SSR — createPortal a besoin de document.body
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- flag de mount pour createPortal (impossible au SSR)
     setMounted(true);
   }, []);
 

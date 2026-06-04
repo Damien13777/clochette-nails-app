@@ -124,6 +124,7 @@ function ReminderRow({
   loading: boolean;
 }) {
   const sent = sentAt !== null;
+  // eslint-disable-next-line react-hooks/purity -- comparaison à l'heure courante pour le statut d'envoi
   const scheduledPassed = scheduledFor.getTime() < Date.now();
   const statusLabel = sent
     ? `Envoyé le ${formatDateTime(new Date(sentAt))}`

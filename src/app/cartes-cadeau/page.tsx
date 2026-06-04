@@ -6,7 +6,6 @@
  */
 
 import type { Metadata } from "next";
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { GiftCardPurchaseForm } from "./purchase-form";
 import { SiteHeader } from "@/components/landing/site-header";
@@ -59,7 +58,6 @@ export default async function GiftCardsPublicPage() {
       <SiteHeader />
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
@@ -83,7 +81,6 @@ export default async function GiftCardsPublicPage() {
       />
       <script
         type="application/ld+json"
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             breadcrumbJsonLd([

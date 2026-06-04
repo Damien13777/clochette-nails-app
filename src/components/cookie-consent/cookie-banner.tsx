@@ -74,6 +74,7 @@ export function CookieBanner() {
     try {
       const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
       if (!raw || !isConsentValid(JSON.parse(raw))) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage indispo au SSR : le check ne peut se faire qu'au mount
         setVisible(true);
       }
     } catch {

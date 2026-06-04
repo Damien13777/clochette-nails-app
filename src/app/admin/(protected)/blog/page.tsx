@@ -224,6 +224,7 @@ export default async function BlogListPage({
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {p.status === "PUBLISHED" &&
                     p.publishedAt &&
+                    // eslint-disable-next-line react-hooks/purity -- comparaison à l'heure courante pour le badge « programmé »
                     p.publishedAt.getTime() > Date.now() ? (
                       <span
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] uppercase tracking-[0.1em] whitespace-nowrap bg-[var(--color-violet-50)] text-[var(--color-violet-700)]"

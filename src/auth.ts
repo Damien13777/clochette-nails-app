@@ -49,7 +49,6 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
   // PrismaAdapter pour persister les Account/Session si OAuth ajouté plus tard.
   // Pour Credentials + JWT strategy, l'adapter n'est pas strictement requis
   // mais bon à avoir si on enable Google OAuth (CLIENT role à J+6 mois).
-  // @ts-ignore — typing mismatch connu entre @auth/prisma-adapter et next-auth v5 beta
   adapter: PrismaAdapter(prisma),
 
   providers: [

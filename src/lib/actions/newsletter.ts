@@ -26,7 +26,6 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email/send";
-import { ADMIN_EMAIL } from "@/lib/email/client";
 import { buildNewsletterConfirmEmail } from "@/lib/email/templates/newsletter-confirm";
 import { buildNewsletterWelcomeEmail } from "@/lib/email/templates/newsletter-welcome";
 import { getClientIp } from "@/lib/client-ip";

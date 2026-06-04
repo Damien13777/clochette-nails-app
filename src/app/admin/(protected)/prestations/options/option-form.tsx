@@ -322,7 +322,7 @@ export function OptionForm({
           className="text-xs text-[var(--color-ink-500)]"
           style={{ fontFamily: "var(--font-ui)" }}
         >
-          Cette option sera proposée aux clientes choisissant l'une de ces
+          Cette option sera proposée aux clientes choisissant l’une de ces
           catégories.
         </p>
         <div className="flex flex-wrap gap-2">

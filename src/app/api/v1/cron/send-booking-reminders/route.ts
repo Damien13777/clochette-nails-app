@@ -112,7 +112,7 @@ export async function GET(request: Request) {
 
 // ─── Helpers ────────────────────────────────────────────────
 
-type BookingWithDetails = Awaited<ReturnType<typeof loadBooking>>;
+type BookingWithDetails = Awaited<ReturnType<typeof _loadBooking>>;
 
 function bookingSelect() {
   return {
@@ -132,7 +132,7 @@ function bookingSelect() {
 }
 
 // Pour le type seulement
-async function loadBooking() {
+async function _loadBooking() {
   return prisma.booking.findFirst({ select: bookingSelect() });
 }
 

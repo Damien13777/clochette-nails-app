@@ -212,7 +212,7 @@ function UploadDialog({
                 className="block text-xs uppercase tracking-[0.14em] text-[var(--color-ink-700)]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Catégorie (s'applique au batch) <span className="text-[var(--color-danger)]">*</span>
+                Catégorie (s’applique au batch) <span className="text-[var(--color-danger)]">*</span>
               </span>
               <select
                 value={category}

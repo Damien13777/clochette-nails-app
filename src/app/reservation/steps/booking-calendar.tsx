@@ -91,6 +91,7 @@ export function BookingCalendar({ serviceId, optionIds, bookableMonths, onPick }
   useEffect(() => {
     if (!selectedDate) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- effet de fetch des créneaux au changement de date
     setLoadingSlots(true);
     setSlots(null);
     setSlotsReason(null);

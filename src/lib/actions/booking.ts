@@ -19,7 +19,6 @@ import { randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { computeAvailableSlots } from "@/lib/availability";
 import { createBookingSchema, type CreateBookingInput } from "@/schemas/booking";
 import {
   BOOKING_SUBMIT,
