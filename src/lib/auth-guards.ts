@@ -5,10 +5,10 @@
  * était dupliquée à l'identique dans ~14 fichiers). Centraliser évite la
  * dérive (une copie qui ajoute un check, les autres non).
  *
- * NOTE — stratégie JWT : `isActive` est vérifié au LOGIN (cf. `src/auth.ts`)
- * mais pas re-checké ici à chaque action. Suffisant tant qu'il n'y a qu'un
- * compte admin ; à durcir (re-fetch / callback session) avant d'ouvrir
- * plusieurs comptes.
+ * NOTE — `isActive` est re-validé à chaque résolution de session via le callback
+ * `jwt` (cf. `src/auth.config.ts`) : un compte désactivé/supprimé est dégradé
+ * (perd le rôle ADMIN) → `requireAdmin` renvoie alors `null`. Révocation
+ * immédiate, sans attendre l'expiry du JWT.
  */
 
 import { auth } from "@/auth";
