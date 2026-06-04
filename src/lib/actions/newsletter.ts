@@ -29,6 +29,7 @@ import { sendEmail } from "@/lib/email/send";
 import { ADMIN_EMAIL } from "@/lib/email/client";
 import { buildNewsletterConfirmEmail } from "@/lib/email/templates/newsletter-confirm";
 import { buildNewsletterWelcomeEmail } from "@/lib/email/templates/newsletter-welcome";
+import { getClientIp } from "@/lib/client-ip";
 import {
   NEWSLETTER,
   checkRateLimit,
@@ -54,14 +55,6 @@ type UnsubscribeResult =
   | { ok: true; email: string }
   | { ok: false; error: string; code?: string };
 
-function clientIp(h: Headers): string {
-  return (
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "unknown"
-  );
-}
-
 function newToken(): string {
   return randomBytes(32).toString("hex");
 }
@@ -80,7 +73,7 @@ export async function subscribeNewsletter(
   honeypot?: string,
 ): Promise<SubscribeResult> {
   const h = await headers();
-  const ip = clientIp(h);
+  const ip = getClientIp(h);
 
   // Honeypot : si rempli, c'est un bot. On simule un succès silencieux avec
   // un petit délai aléatoire pour ne pas révéler la détection.

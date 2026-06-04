@@ -17,7 +17,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { ContentStatus } from "@prisma/client";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import {
   deleteEbookCoverFile,
@@ -38,12 +38,6 @@ type ActionResult =
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 const STATUS_VALUES: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
-
-async function requireAdmin(): Promise<{ id: string } | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return null;
-  return { id: session.user.id };
-}
 
 function slugify(input: string): string {
   return input

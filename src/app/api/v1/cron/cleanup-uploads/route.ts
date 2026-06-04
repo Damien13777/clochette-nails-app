@@ -29,6 +29,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { BOOKING_FILES_DIR, BOOKING_FILES_URL_PREFIX } from "@/lib/booking-files";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,17 +41,9 @@ const BATCH_LIMIT = 500; // garde-fou par phase
 
 export async function GET(request: Request) {
   // ── Auth ─────────────────────────────────────────────────
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    console.error("[cron cleanup-uploads] CRON_SECRET non configuré");
-    return NextResponse.json(
-      { error: "CRON_SECRET non configuré" },
-      { status: 503 },
-    );
-  }
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const cronAuth = verifyCronAuth(request);
+  if (!cronAuth.ok) {
+    return NextResponse.json({ error: cronAuth.error }, { status: cronAuth.status });
   }
 
   const now = new Date();

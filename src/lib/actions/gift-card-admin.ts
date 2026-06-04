@@ -14,7 +14,7 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { sendEmail } from "@/lib/email/send";
@@ -34,12 +34,6 @@ type ActionResult =
 type CreateResult =
   | { ok: true; message?: string; id: string; code: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
-
-async function requireAdmin(): Promise<{ id: string } | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return null;
-  return { id: session.user.id };
-}
 
 async function audit(
   adminId: string,

@@ -16,7 +16,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { PhotoMood, Season, ServiceCategory } from "@prisma/client";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/storage";
 import {
@@ -27,12 +27,6 @@ import {
 type ActionResult<T = void> =
   | ({ ok: true } & (T extends void ? object : { data: T }))
   | { ok: false; error: string };
-
-async function requireAdmin(): Promise<{ id: string } | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return null;
-  return { id: session.user.id };
-}
 
 // ─── SITE MEDIA (slots nommés) ──────────────────────────────
 

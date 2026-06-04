@@ -30,18 +30,16 @@ import {
   recordRateLimit,
 } from "@/lib/rate-limit";
 import { processBookingFileUpload } from "@/lib/booking-files";
+import { getClientIp } from "@/lib/client-ip";
 
 export const dynamic = "force-dynamic";
-// Augmente la limite Next.js (default 1 Mo body parser) à 6 Mo pour laisser
-// la marge au-dessus de notre limite 5 Mo applicative.
+// Cap de taille réel = 5 Mo, appliqué côté serveur dans processBookingFileUpload
+// (l'App Router streame le body : pas de body-parser global à régler ici).
 export const maxDuration = 30; // secondes max sharp + write
 
 export async function POST(req: Request) {
   const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "unknown";
+  const ip = getClientIp(h);
 
   // Rate limit
   const rl = checkRateLimit(UPLOAD.bucket, ip, UPLOAD.max, UPLOAD.windowMs);

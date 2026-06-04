@@ -10,18 +10,12 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
+import { requireAdminUserId } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult =
   | { ok: true; count?: number }
   | { ok: false; error: string };
-
-async function requireAdminUserId(): Promise<string | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return null;
-  return session.user.id;
-}
 
 export async function markNotificationRead(
   notificationId: string,

@@ -32,6 +32,7 @@ import {
 } from "@/lib/rate-limit";
 import { resolveClientToken } from "@/lib/booking-client-token";
 import { reverseGiftCardRedemption } from "@/lib/gift-card-redeem";
+import { getClientIp } from "@/lib/client-ip";
 
 type CancelResult =
   | {
@@ -52,19 +53,11 @@ const REASON_WITH_REFUND =
 const REASON_WITHOUT_REFUND =
   "Annulation par la cliente via lien sécurisé (CGV §11 : < 72h, acompte conservé)";
 
-function clientIp(h: Headers): string {
-  return (
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "unknown"
-  );
-}
-
 export async function cancelBookingByClient(
   token: string,
 ): Promise<CancelResult> {
   const h = await headers();
-  const ip = clientIp(h);
+  const ip = getClientIp(h);
 
   // Rate limit IP — défense en profondeur contre brute force sur les tokens
   const rl = checkRateLimit(AUTH_FAIL.bucket, ip, AUTH_FAIL.max, AUTH_FAIL.windowMs);
@@ -400,7 +393,7 @@ export async function getAvailableSlotsForClientReschedule(
   newDate: string, // YYYY-MM-DD
 ): Promise<GetSlotsResult> {
   const h = await headers();
-  const ip = clientIp(h);
+  const ip = getClientIp(h);
 
   const rl = checkRateLimit(AUTH_FAIL.bucket, ip, AUTH_FAIL.max, AUTH_FAIL.windowMs);
   if (!rl.allowed) {
@@ -481,7 +474,7 @@ export async function rescheduleBookingByClient(
   clientReason?: string,
 ): Promise<RescheduleResult> {
   const h = await headers();
-  const ip = clientIp(h);
+  const ip = getClientIp(h);
 
   const rl = checkRateLimit(AUTH_FAIL.bucket, ip, AUTH_FAIL.max, AUTH_FAIL.windowMs);
   if (!rl.allowed) {

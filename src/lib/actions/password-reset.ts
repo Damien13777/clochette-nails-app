@@ -28,6 +28,7 @@ import {
 } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email/send";
 import { buildPasswordResetEmail } from "@/lib/email/templates/password-reset";
+import { getClientIp } from "@/lib/client-ip";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 heure
 const MIN_PASSWORD_LENGTH = 8;
@@ -38,14 +39,6 @@ type ResetPasswordResult =
   | { ok: true }
   | { ok: false; error: string };
 
-function clientIp(h: Headers): string {
-  return (
-    h.get("x-forwarded-for")?.split(",")[0].trim() ??
-    h.get("x-real-ip") ??
-    "unknown"
-  );
-}
-
 /**
  * Étape 1 : déclenche un email de reset si le compte existe.
  * Retourne toujours { ok: true } pour ne pas révéler l'existence du compte
@@ -55,7 +48,7 @@ export async function requestPasswordReset(
   email: string,
 ): Promise<RequestResetResult> {
   const h = await headers();
-  const ip = clientIp(h);
+  const ip = getClientIp(h);
 
   // Rate limit (réutilise le bucket AUTH_FAIL : 5 / 5 min)
   const rl = checkRateLimit(AUTH_FAIL.bucket, ip, AUTH_FAIL.max, AUTH_FAIL.windowMs);
@@ -135,7 +128,7 @@ export async function resetPassword(
   newPassword: string,
 ): Promise<ResetPasswordResult> {
   const h = await headers();
-  const ip = clientIp(h);
+  const ip = getClientIp(h);
 
   const rl = checkRateLimit(AUTH_FAIL.bucket, ip, AUTH_FAIL.max, AUTH_FAIL.windowMs);
   if (!rl.allowed) {

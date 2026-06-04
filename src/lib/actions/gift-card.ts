@@ -15,6 +15,7 @@
 
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getClientIp } from "@/lib/client-ip";
 import {
   GIFT_CARD_VALIDATE,
   checkRateLimit,
@@ -43,10 +44,7 @@ export async function validateGiftCardCode(
 
   // Rate limit par IP
   const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0].trim() ??
-    h.get("x-real-ip") ??
-    "unknown";
+  const ip = getClientIp(h);
   const rl = checkRateLimit(
     GIFT_CARD_VALIDATE.bucket,
     ip,

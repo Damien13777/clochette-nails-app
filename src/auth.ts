@@ -16,6 +16,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { authConfig } from "@/auth.config";
+import { getClientIp } from "@/lib/client-ip";
 import { prisma } from "@/lib/prisma";
 import {
   AUTH_FAIL,
@@ -59,10 +60,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
       },
       async authorize(rawCredentials, request) {
         // 1. Récup IP pour rate-limit
-        const ip =
-          request?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-          request?.headers?.get("x-real-ip") ??
-          "unknown";
+        const ip = getClientIp(request?.headers);
 
         // 2. Rate limit AVANT toute requête DB
         const rl = checkRateLimit(
