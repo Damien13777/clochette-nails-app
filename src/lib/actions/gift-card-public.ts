@@ -34,6 +34,7 @@ import {
   recordRateLimit,
 } from "@/lib/rate-limit";
 import { verifyRecaptcha } from "@/lib/recaptcha";
+import { getClientIp } from "@/lib/client-ip";
 
 const purchaseSchema = z.object({
   amountCents: z
@@ -85,10 +86,7 @@ export async function createGiftCardPublic(
 
   // ── Rate limit IP ───────────────────────────────────────
   const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "unknown";
+  const ip = getClientIp(h);
   const rl = checkRateLimit(CONTACT.bucket, ip, 5, 60 * 60 * 1000);
   if (!rl.allowed) {
     return {

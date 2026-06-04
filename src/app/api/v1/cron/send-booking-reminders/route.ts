@@ -4,7 +4,7 @@
  *  - J-7 : 1 semaine avant le RDV (rappel doux + propose de déplacer)
  *  - J-1 : la veille du RDV (rappel ferme "à demain !")
  *
- * Schedule prévu (Vercel) : every 5 minutes (cf. vercel.json).
+ * Schedule : 2×/jour (9h + 18h UTC) via crontab VPS (curl + Bearer CRON_SECRET).
  * Auth : Authorization: Bearer <CRON_SECRET>
  *
  * Filtres systématiques :
@@ -33,6 +33,7 @@ import {
   buildBookingReminderJ1Email,
   buildBookingReminderJ7Email,
 } from "@/lib/email/templates/booking-reminder";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,17 +43,9 @@ const SEND_WINDOW_START_HOUR_PARIS = 8; // pas avant 8h
 const SEND_WINDOW_END_HOUR_PARIS = 21; // pas après 21h
 
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) {
-    console.error("[cron reminders] CRON_SECRET non configuré");
-    return NextResponse.json(
-      { error: "CRON_SECRET non configuré" },
-      { status: 503 },
-    );
-  }
-  const auth = request.headers.get("authorization");
-  if (auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const cronAuth = verifyCronAuth(request);
+  if (!cronAuth.ok) {
+    return NextResponse.json({ error: cronAuth.error }, { status: cronAuth.status });
   }
 
   // Fenêtre horaire Paris (skip nuit)

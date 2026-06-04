@@ -32,6 +32,7 @@ import {
   GiftCardRedemptionError,
 } from "@/lib/gift-card-redeem";
 import { verifyRecaptcha } from "@/lib/recaptcha";
+import { getClientIp } from "@/lib/client-ip";
 import {
   computeTokenExpiry,
   generateDownloadToken,
@@ -83,10 +84,7 @@ export async function purchaseEbookAction(
 
   // ── Rate limit IP ───────────────────────────────────────
   const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "unknown";
+  const ip = getClientIp(h);
   if (!checkRateLimit(CONTACT.bucket, ip, 5, 60 * 60 * 1000).allowed) {
     return {
       ok: false,

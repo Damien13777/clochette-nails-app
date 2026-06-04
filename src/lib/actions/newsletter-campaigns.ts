@@ -26,7 +26,7 @@ import type {
   NewsletterDeliveryStatus,
   Prisma,
 } from "@prisma/client";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email/send";
 import { sanitizeHtml } from "@/lib/sanitize-html";
@@ -40,12 +40,6 @@ import {
 type ActionResult =
   | { ok: true; message?: string; id?: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
-
-async function requireAdmin(): Promise<{ id: string; email: string } | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return null;
-  return { id: session.user.id, email: session.user.email ?? "" };
-}
 
 async function audit(
   adminId: string,

@@ -11,18 +11,12 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 
 type ActionResult =
   | { ok: true; message?: string }
   | { ok: false; error: string };
-
-async function requireAdmin(): Promise<{ id: string } | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return null;
-  return { id: session.user.id };
-}
 
 export async function unsubscribeSubscriberAdmin(
   subscriberId: string,

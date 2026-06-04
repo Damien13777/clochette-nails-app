@@ -5,7 +5,6 @@
  * leur propre contenu spécifique.
  */
 
-import Link from "next/link";
 import { PhotosTabs } from "./photos-tabs";
 
 export default function PhotosLayout({
@@ -46,18 +45,11 @@ export default function PhotosLayout({
         className="mt-12 text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)]"
         style={{ fontFamily: "var(--font-display)" }}
       >
-        Stockage dev :{" "}
+        Stockage :{" "}
         <code className="font-mono normal-case text-[var(--color-ink-700)]">
           /public/uploads/
-        </code>
-        · à brancher Vercel Blob / R2 en prod via{" "}
-        <Link
-          href="/admin/parametres"
-          className="text-[var(--color-violet-700)] hover:underline"
-        >
-          paramètres
-        </Link>
-        .
+        </code>{" "}
+        — local, servi en production (pas de stockage cloud : choix multi-instance).
       </p>
     </div>
   );

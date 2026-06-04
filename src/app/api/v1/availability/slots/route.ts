@@ -18,6 +18,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { computeAvailableSlots } from "@/lib/availability";
+import { getClientIp } from "@/lib/client-ip";
 import {
   AVAILABILITY,
   checkRateLimit,
@@ -30,17 +31,9 @@ const querySchema = z.object({
   optionIds: z.string().optional(),
 });
 
-function clientIp(headers: Headers): string {
-  return (
-    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    headers.get("x-real-ip") ??
-    "unknown"
-  );
-}
-
 export async function GET(request: Request) {
   // Rate limit IP : protège contre scraping + DDoS léger (60/min/IP)
-  const ip = clientIp(request.headers);
+  const ip = getClientIp(request.headers);
   const rl = checkRateLimit(
     AVAILABILITY.bucket,
     ip,

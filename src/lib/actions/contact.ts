@@ -19,6 +19,7 @@ import { sendEmail } from "@/lib/email/send";
 import { ADMIN_EMAIL } from "@/lib/email/client";
 import { buildContactNotifAdminEmail } from "@/lib/email/templates/contact-notif-admin";
 import { verifyRecaptcha } from "@/lib/recaptcha";
+import { getClientIp } from "@/lib/client-ip";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Nom trop court").max(100),
@@ -52,10 +53,7 @@ export async function submitContactAction(
 ): Promise<ContactState> {
   // Rate limit par IP
   const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "unknown";
+  const ip = getClientIp(h);
 
   // Validation
   const raw = {

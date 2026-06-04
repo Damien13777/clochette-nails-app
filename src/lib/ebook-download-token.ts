@@ -9,9 +9,10 @@
  *     downloadCount, streame le PDF.
  *
  * Limites :
- *  - downloadCount limit : pas de hard limit pour MVP (sinon on doit gérer
- *    "lien expiré" UX) mais on log les abus côté admin.
- *  - Pas de rotation : si la cliente perd l'email, elle redemande via support.
+ *  - downloadCount cap : MAX_DOWNLOADS_PER_TOKEN (5), enforced atomiquement
+ *    dans resolveDownloadToken (+ debounce 30 s pour les double-fetch). Au-delà
+ *    → reason "EXHAUSTED" ; la cliente redemande un lien via le support.
+ *  - Pas de rotation auto : si la cliente perd l'email, elle redemande via support.
  */
 
 import { randomBytes } from "node:crypto";

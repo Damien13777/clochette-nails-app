@@ -17,7 +17,7 @@
 
 import { revalidatePath } from "next/cache";
 import type { ContentStatus, ServiceCategory } from "@prisma/client";
-import { auth } from "@/auth";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/storage";
 
@@ -35,12 +35,6 @@ const CATEGORY_VALUES: ServiceCategory[] = [
 ];
 
 const STATUS_VALUES: ContentStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
-
-async function requireAdmin(): Promise<{ id: string } | null> {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return null;
-  return { id: session.user.id };
-}
 
 function slugify(input: string): string {
   return input

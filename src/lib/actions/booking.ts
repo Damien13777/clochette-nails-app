@@ -31,6 +31,7 @@ import {
   GiftCardRedemptionError,
 } from "@/lib/gift-card-redeem";
 import { verifyRecaptcha } from "@/lib/recaptcha";
+import { getClientIp } from "@/lib/client-ip";
 import { computeDepositCents } from "@/lib/deposit";
 import { sendEmail } from "@/lib/email/send";
 import { ADMIN_EMAIL } from "@/lib/email/client";
@@ -98,10 +99,7 @@ export async function createBookingAction(
 
   // ── 2. Rate limit ───────────────────────────────────────
   const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "unknown";
+  const ip = getClientIp(h);
 
   // reCAPTCHA v3 (skip si pas de clé serveur → dev ; fail-open si Google down)
   const captcha = await verifyRecaptcha(data.recaptchaToken, "booking", ip);
