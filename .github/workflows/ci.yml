@@ -1,0 +1,101 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CI — template de référence écosystème
+# Stack : Next 16 + Prisma 7 + pnpm + Vitest (+ Playwright en option, cf. bas)
+#
+# RÉUTILISATION sur un autre projet : copier ce fichier dans
+# .github/workflows/ et n'ajuster QUE :
+#   1. NODE_VERSION / PNPM_VERSION ci-dessous
+#   2. le nom de la base de test « clochette_test » (2 occurrences : POSTGRES_DB
+#      + DATABASE_URL). Tout le reste est générique.
+#
+# Aucun secret requis : le job de test utilise un Postgres jetable + un env
+# factice (les tests qui touchent Stripe stubbent leurs clés via vi.stubEnv).
+# Rien ici ne touche le VPS, la prod, ni les vraies bases.
+# ─────────────────────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "11"
+
+jobs:
+  quality:
+    name: Lint · Types · Tests
+    runs-on: ubuntu-latest
+
+    # Postgres éphémère pour les tests d'intégration (Vitest).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: clochette_test # ⇄ renommer par projet
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # ⇄ renommer la base par projet (doit matcher POSTGRES_DB ci-dessus)
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/clochette_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # Installe les deps + (postinstall) génère le client Prisma.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Crée le schéma sur le Postgres jetable (requis par les tests DB).
+      - name: Push Prisma schema to test DB
+        run: pnpm exec prisma db push --skip-generate
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Correctness tests (Vitest)
+        run: pnpm test
+
+# ─────────────────────────────────────────────────────────────────────────────
+# E2E (Playwright) — à activer plus tard en job séparé (plus lent : build +
+# navigateur). Squelette de référence :
+#
+#   e2e:
+#     name: E2E (Playwright)
+#     runs-on: ubuntu-latest
+#     services:
+#       postgres: { ...même bloc que ci-dessus... }
+#     env:
+#       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/clochette_test
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: pnpm/action-setup@v4
+#         with: { version: "${{ env.PNPM_VERSION }}" }
+#       - uses: actions/setup-node@v4
+#         with: { node-version: "${{ env.NODE_VERSION }}", cache: pnpm }
+#       - run: pnpm install --frozen-lockfile
+#       - run: pnpm exec prisma db push --skip-generate
+#       - run: pnpm exec playwright install --with-deps chromium
+#       - run: pnpm test:e2e
+# ─────────────────────────────────────────────────────────────────────────────
