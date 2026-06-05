@@ -20,7 +20,7 @@ on:
   pull_request:
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22" # pnpm 11.5+ exige Node ≥ 22.13 (node:sqlite)
   PNPM_VERSION: "11"
 
 jobs:
