@@ -83,9 +83,11 @@ model OutboundEvent {
 
 ### Helper d'émission
 
-Fonction `emitOutboundEvent(type, payload)` — actuellement **dupliquée** dans
-`lib/actions/booking.ts` et `app/api/webhooks/stripe/route.ts`. À DRY-er
-lors de la finalisation dans `lib/outbound-events.ts`.
+Fonction `emitOutboundEvent(type, payload)` — le helper centralisé
+`src/lib/outbound-events.ts` **existe** (créé avec le module facturation) et
+est utilisé par les events `invoice.*`. Les copies locales de
+`lib/actions/booking.ts` et `app/api/webhooks/stripe/route.ts` restent à
+migrer vers ce helper lors de la finalisation.
 
 Comportement :
 - Si `MANAGEMENT_API_URL` env var non set → log console (dev sans Management)
@@ -140,6 +142,13 @@ Légende : ✅ émis aujourd'hui · 🚧 à ajouter
 | `ebook.downloaded` | 🚧 | endpoint `/api/v1/ebooks/download/[token]` | Cliente télécharge (utile pour analytics — opt-in via setting ?) |
 | `ebook.refunded` | 🚧 | `refundEbookPurchase` | Refund + révocation accès |
 | `ebook.reissued` | 🚧 | `reissueEbookDownload` | Admin réémet un nouveau lien (+1 DL) |
+
+### Factures
+
+| Event | Status | Émis depuis | Quand |
+|---|---|---|---|
+| `invoice.issued` | ✅ | `lib/invoice/create-invoice.ts` (helper centralisé `lib/outbound-events.ts`) | Facture OU avoir émis(e) — toutes ventes (RDV honoré, carte cadeau, ebook). Payload : `{ invoiceId, number, docType: "INVOICE"\|"CREDIT_NOTE", sourceType: "BOOKING"\|"GIFT_CARD"\|"EBOOK", totalCents, customerEmail, issuedAt }` |
+| `invoice.cancelled` | 🚧 | réservé | Aucune annulation en v1 (les corrections passent par les avoirs) |
 
 ### Contacts
 
