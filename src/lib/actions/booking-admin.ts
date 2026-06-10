@@ -37,6 +37,8 @@ import { buildBookingNotifAdminEmail } from "@/lib/email/templates/booking-notif
 import { computeAvailableSlots } from "@/lib/availability";
 import { computeDepositCents } from "@/lib/deposit";
 import { reverseGiftCardRedemption } from "@/lib/gift-card-redeem";
+import { createInvoiceForBooking, InvoiceError } from "@/lib/invoice/create-invoice";
+import { sendInvoiceEmail } from "@/lib/invoice/invoice-email";
 
 type ActionResult =
   | { ok: true; message?: string }
@@ -68,6 +70,8 @@ export type MarkCompletedInput = {
     code: string;
     amountCents: number;
   };
+  /** Envoyer la facture PDF à la cliente par email (opt-in, décoché par défaut). */
+  sendInvoiceByEmail?: boolean;
 };
 
 const COMPLETION_METHODS = ["cash", "card_terminal", "transfer", "check"] as const;
@@ -186,8 +190,25 @@ export async function markBookingCompleted(
     giftCardAmountCents: giftCard?.amountCents ?? 0,
   });
 
+  let invoiceNote = "";
+  try {
+    const invoice = await createInvoiceForBooking(bookingId, { createdById: admin.id });
+    if (input.sendInvoiceByEmail) {
+      const sent = await sendInvoiceEmail(invoice.id);
+      invoiceNote = sent.ok
+        ? ` Facture ${invoice.number} envoyée à la cliente.`
+        : ` Facture ${invoice.number} générée, mais l'email a échoué (renvoi possible depuis la fiche).`;
+    } else {
+      invoiceNote = ` Facture ${invoice.number} générée.`;
+    }
+  } catch (err) {
+    const detail = err instanceof InvoiceError ? ` (${err.message})` : "";
+    console.error("[invoice] génération booking échouée:", err);
+    invoiceNote = ` ⚠️ Facture non générée${detail} — bouton « Générer la facture » disponible sur la fiche.`;
+  }
+
   revalidatePath("/admin", "layout");
-  return { ok: true, message: "Réservation marquée comme honorée." };
+  return { ok: true, message: `Réservation marquée comme honorée.${invoiceNote}` };
 }
 
 /** Édite le montant perçu après coup (cas erreur de saisie). */
@@ -224,6 +245,17 @@ export async function updateBookingRevenue(
   });
 
   revalidatePath("/admin", "layout");
+
+  const existingInvoice = await prisma.invoice.findFirst({
+    where: { bookingId, docType: "INVOICE", status: "ISSUED" },
+    select: { number: true },
+  });
+  if (existingInvoice) {
+    return {
+      ok: true,
+      message: `Montant mis à jour. ⚠️ La facture ${existingInvoice.number} a déjà été émise avec l'ancien montant — crée un avoir depuis Finances → Factures si nécessaire.`,
+    };
+  }
   return { ok: true, message: "Montant perçu mis à jour." };
 }
 

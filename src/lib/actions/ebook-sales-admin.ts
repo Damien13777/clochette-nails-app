@@ -30,6 +30,9 @@ import {
 import { buildEbookResentEmail } from "@/lib/email/templates/ebook-resent";
 import { buildEbookReissuedEmail } from "@/lib/email/templates/ebook-reissued";
 import { buildEbookRefundedEmail } from "@/lib/email/templates/ebook-refunded";
+import { createCreditNote, InvoiceError } from "@/lib/invoice/create-invoice";
+import { readInvoicePdf } from "@/lib/invoice/invoice-files";
+import { markInvoiceSent } from "@/lib/invoice/invoice-email";
 
 type ActionResult =
   | { ok: true; message?: string }
@@ -325,6 +328,36 @@ export async function refundEbookPurchase(
     reason: reason || null,
   });
 
+  // Avoir automatique si une facture avait été émise (joint au mail de remboursement)
+  let creditNoteAttachment: { filename: string; content: Buffer } | null = null;
+  let creditNoteId: string | null = null;
+  try {
+    const parentInvoice = await prisma.invoice.findFirst({
+      where: { ebookPurchaseId: purchase.id, docType: "INVOICE", status: "ISSUED" },
+      select: { id: true },
+    });
+    if (parentInvoice && totalRefunded > 0) {
+      const creditNote = await createCreditNote({
+        parentInvoiceId: parentInvoice.id,
+        amountCents: totalRefunded,
+        reason: "Remboursement ebook",
+        createdById: admin.id,
+      });
+      creditNoteId = creditNote.id;
+      creditNoteAttachment = {
+        filename: `${creditNote.number}.pdf`,
+        content: await readInvoicePdf(creditNote.pdfPath),
+      };
+      await audit(admin.id, purchase.id, "invoice.credit_note_created", {
+        number: creditNote.number,
+        amountCents: totalRefunded,
+      });
+    }
+  } catch (err) {
+    if (!(err instanceof InvoiceError)) console.error("[ebook refund] avoir échec:", err);
+    else console.warn("[ebook refund] avoir refusé:", err.message);
+  }
+
   // 4) Email cliente
   try {
     const mail = buildEbookRefundedEmail({
@@ -342,11 +375,14 @@ export async function refundEbookPurchase(
       html: mail.html,
       text: mail.text,
       tag: "ebook.refunded",
+      ...(creditNoteAttachment ? { attachments: [creditNoteAttachment] } : {}),
     });
     if (!r.ok) {
       console.error(
         `[ebook refund] email échec pour ${purchase.id}: ${r.error}`,
       );
+    } else if (creditNoteId && creditNoteAttachment) {
+      await markInvoiceSent(creditNoteId, purchase.clientEmail);
     }
   } catch (err) {
     console.error(
