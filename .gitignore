@@ -59,3 +59,8 @@ next-env.d.ts
 # Backfill filigrane (état local, non versionné)
 scripts/.watermark-backfill-manifest.json
 .backup-uploads-*/
+
+# Copies de conflit iCloud/Finder (« fichier 2.ext ») — ne jamais committer
+* 2.*
+* 3.*
+* 4.*
