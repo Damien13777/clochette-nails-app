@@ -26,6 +26,12 @@ import {
   giftCardPrefix,
   hashGiftCardCode,
 } from "@/lib/gift-card-code";
+import {
+  createCreditNote,
+  createInvoiceForGiftCard,
+  InvoiceError,
+} from "@/lib/invoice/create-invoice";
+import { sendInvoiceEmail } from "@/lib/invoice/invoice-email";
 
 type ActionResult =
   | { ok: true; message?: string }
@@ -77,6 +83,8 @@ export type CreateGiftCardAdminInput = {
   /** Acheteuse (uniquement ADMIN_SALE). Si fourni, un reçu est envoyé. */
   buyerName?: string;
   buyerEmail?: string;
+  /** ADMIN_SALE uniquement : envoyer la facture PDF à l'acheteuse (opt-in). */
+  sendInvoiceByEmail?: boolean;
 };
 
 export async function createGiftCardAdmin(
@@ -232,6 +240,18 @@ export async function createGiftCardAdmin(
     mode: input.mode,
     paymentMethod: salePaymentMethod,
   });
+
+  // Facture pour les ventes en salon (fail-soft ; jamais pour ADMIN_GIFT)
+  if (input.mode === "ADMIN_SALE") {
+    try {
+      const invoice = await createInvoiceForGiftCard(created.id, { createdById: admin.id });
+      if (input.sendInvoiceByEmail && finalBuyerEmail) {
+        await sendInvoiceEmail(invoice.id);
+      }
+    } catch (err) {
+      console.error("[gift-card-admin] facture vente salon échec:", err);
+    }
+  }
 
   // Envoi email immédiat (non bloquant : si fail, la carte reste créée)
   try {
@@ -441,6 +461,30 @@ export async function refundGiftCardStripe(
     refundId: refund.id,
     refundAmountCents: refund.amount,
   });
+
+  // Avoir automatique si une facture avait été émise pour cette vente
+  try {
+    const parentInvoice = await prisma.invoice.findFirst({
+      where: { giftCardId: id, docType: "INVOICE", status: "ISSUED" },
+      select: { id: true },
+    });
+    if (parentInvoice) {
+      const creditNote = await createCreditNote({
+        parentInvoiceId: parentInvoice.id,
+        amountCents: refund.amount,
+        reason: "Remboursement carte cadeau",
+        createdById: admin.id,
+      });
+      await audit(admin.id, id, "invoice.credit_note_created", {
+        number: creditNote.number,
+        amountCents: refund.amount,
+      });
+    }
+  } catch (err) {
+    if (!(err instanceof InvoiceError)) console.error("[gift-card-admin] avoir refund échec:", err);
+    else console.warn("[gift-card-admin] avoir refund refusé:", err.message);
+  }
+
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Carte remboursée via Stripe." };
 }

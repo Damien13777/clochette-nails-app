@@ -19,6 +19,7 @@ import {
   updatePlatformSettings,
 } from "@/lib/actions/settings-admin";
 import { EmailBannerField } from "./email-banner-field";
+import { InvoiceLogoField } from "./invoice-logo-field";
 
 type DepositMode = "PERCENT" | "FIXED";
 
@@ -45,6 +46,11 @@ export type SettingsFormInitial = {
   emailFooterNote: string;
   emailHeaderImageUrl: string | null;
   emailFooterImageUrl: string | null;
+  invoiceHeaderName: string;
+  invoiceLegalOwner: string;
+  invoiceVatMention: string;
+  invoiceLegalFooter: string;
+  invoiceLogoUrl: string | null;
 };
 
 export function SettingsForm({ initial }: { initial: SettingsFormInitial }) {
@@ -286,6 +292,43 @@ export function SettingsForm({ initial }: { initial: SettingsFormInitial }) {
           hint="Affichée juste avant le footer. Idéale pour une signature visuelle ou un CTA discret."
           currentUrl={initial.emailFooterImageUrl}
         />
+      </Section>
+
+      {/* Section — Facturation (factures PDF) */}
+      <Section title="Facturation (factures PDF)">
+        <Field
+          name="invoiceHeaderName"
+          label="Nom commercial en tête de facture"
+          defaultValue={initial.invoiceHeaderName}
+          placeholder="CN manucure by Clochette Nails"
+          hint="Vide = nom du salon (Identité ci-dessus)."
+          error={fieldErrors.invoiceHeaderName}
+        />
+        <Field
+          name="invoiceLegalOwner"
+          label="Exploitant·e / raison sociale"
+          defaultValue={initial.invoiceLegalOwner}
+          placeholder="EI Gomes Chloé"
+          hint="Forme juridique libre : « EI Prénom Nom », « SARL Xyz — capital 5 000 € »…"
+          error={fieldErrors.invoiceLegalOwner}
+        />
+        <Field
+          name="invoiceVatMention"
+          label="Mention TVA"
+          required
+          defaultValue={initial.invoiceVatMention}
+          hint="Franchise en base : « TVA non applicable, art. 293 B du CGI » (devient « art. L. 223 et s. du CIBS » au 1ᵉʳ sept. 2026)."
+          error={fieldErrors.invoiceVatMention}
+        />
+        <FieldTextarea
+          name="invoiceLegalFooter"
+          label="Mentions légales bas de facture"
+          defaultValue={initial.invoiceLegalFooter}
+          placeholder={"Immatriculation RM/RNE…\nAssurance RC pro : assureur, couverture géographique…\nMédiateur de la consommation…"}
+          rows={3}
+          error={fieldErrors.invoiceLegalFooter}
+        />
+        <InvoiceLogoField currentUrl={initial.invoiceLogoUrl} />
       </Section>
 
       {/* Section 4 — Modules + maintenance */}

@@ -161,6 +161,22 @@ enum GiftCardRedemptionType {
   EBOOK // Achat ebook
 }
 
+enum InvoiceDocType {
+  INVOICE // Facture
+  CREDIT_NOTE // Avoir
+}
+
+enum InvoiceSourceType {
+  BOOKING
+  GIFT_CARD
+  EBOOK
+}
+
+enum InvoiceStatus {
+  ISSUED
+  CANCELLED // jamais supprimée (séquence fiscale) — marquée annulée
+}
+
 // ════════════════════════════════════════════════════════════
 // AUTH (NextAuth v5) & USERS
 // ════════════════════════════════════════════════════════════
@@ -509,6 +525,7 @@ model Booking {
   deletedAt          DateTime? // Soft delete (audit forensic)
 
   giftCardRedemptions GiftCardRedemption[]
+  invoices            Invoice[]
 
   @@index([date, startTime]) // CRITIQUE : overlap detection
   @@index([status, createdAt])
@@ -604,6 +621,7 @@ model EbookPurchase {
   updatedAt   DateTime @updatedAt
 
   giftCardRedemption GiftCardRedemption? // 1 max par ebook
+  invoices           Invoice[]
 
   @@index([paymentStatus, purchasedAt])
   @@index([clientEmail])
@@ -736,6 +754,25 @@ model NewsletterDelivery {
 }
 
 // ════════════════════════════════════════════════════════════
+// TESTIMONIALS — avis clientes affichés sur la landing
+// ════════════════════════════════════════════════════════════
+
+model Testimonial {
+  id          String   @id @default(cuid())
+  quote       String   @db.Text
+  rating      Int      @default(5) // 1..5, validé côté action
+  authorName  String // "Marie L." — l'initiale d'avatar est dérivée
+  authorLabel String? // "Cliente fidèle · 2024"
+  sortOrder   Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([published, sortOrder])
+  @@map("testimonials")
+}
+
+// ════════════════════════════════════════════════════════════
 // PLATEFORME & SETTINGS
 // ════════════════════════════════════════════════════════════
 
@@ -795,6 +832,24 @@ model PlatformSettings {
   // Fiscalité
   vatEnabled Boolean @default(false) // Auto-entrepreneur par défaut
   vatRate    Float   @default(20)
+
+  // Avis clientes (landing)
+  /// Ligne agrégat externe affichée sous le titre de la section avis,
+  /// ex : "4,9 / 5 · 87 avis Google". Vide/null = masquée.
+  testimonialsGoogleLine String?
+
+  // Facturation (factures PDF)
+  /// Nom commercial en tête de facture. null → fallback businessName.
+  invoiceHeaderName String?
+  /// Exploitant(e) avec mention EI, ou raison sociale + forme juridique.
+  /// Texte libre — aucune forme juridique imposée (produit duplicable).
+  invoiceLegalOwner String?
+  /// Mention franchise TVA — éditable (passage CIBS sept. 2026 sans redéploiement).
+  invoiceVatMention String  @default("TVA non applicable, art. 293 B du CGI")
+  /// Mentions bas de facture : immatriculation RM/RNE, assurance RC pro, médiateur…
+  invoiceLegalFooter String? @db.Text
+  /// Logo PNG en tête de facture (/uploads/invoice-logo/… ou /brand/…). null = sans logo.
+  invoiceLogoUrl String?
 
   // SMS (différé V2 — adapter pattern)
   smsEnabled Boolean @default(false)
@@ -965,6 +1020,7 @@ model GiftCard {
   updatedAt DateTime @updatedAt
 
   redemptions GiftCardRedemption[]
+  invoices    Invoice[]
 
   @@index([buyerEmail])
   @@index([recipientEmail])
@@ -1000,6 +1056,61 @@ model GiftCardRedemption {
   @@index([giftCardId, redeemedAt])
   @@index([bookingId])
   @@map("gift_card_redemptions")
+}
+
+// ════════════════════════════════════════════════════════════
+// INVOICES — factures et avoirs (toutes ventes)
+// ════════════════════════════════════════════════════════════
+
+model Invoice {
+  id         String            @id @default(cuid())
+  number     String            @unique // "FAC-2026-0001" / "AV-2026-0001"
+  docType    InvoiceDocType    @default(INVOICE)
+  sourceType InvoiceSourceType
+  status     InvoiceStatus     @default(ISSUED)
+
+  // Références source — nullables + SetNull : la facture survit à tout
+  bookingId       String?
+  booking         Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  giftCardId      String?
+  giftCard        GiftCard?      @relation(fields: [giftCardId], references: [id], onDelete: SetNull)
+  ebookPurchaseId String?
+  ebookPurchase   EbookPurchase? @relation(fields: [ebookPurchaseId], references: [id], onDelete: SetNull)
+
+  // Avoir → facture d'origine
+  parentInvoiceId String?
+  parentInvoice   Invoice?  @relation("CreditNotes", fields: [parentInvoiceId], references: [id], onDelete: Restrict)
+  creditNotes     Invoice[] @relation("CreditNotes")
+
+  // Snapshot immuable (la facture doit rester identique 10 ans)
+  sellerSnapshot Json // cf. SellerSnapshot dans lib/invoice/types.ts
+  customerName   String
+  customerEmail  String
+  lines          Json // InvoiceLine[]
+  payments       Json // InvoicePayment[]
+  totalCents     Int // TTC, toujours positif (docType distingue facture/avoir)
+  serviceDate    DateTime? @db.Date // date de la prestation (bookings), null sinon
+
+  issuedAt    DateTime  @default(now())
+  pdfPath     String // relatif au rootDir invoices : "2026/FAC-2026-0001.pdf"
+  sentAt      DateTime?
+  sentTo      String?
+  createdById String? // admin User.id si action manuelle, null si webhook
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([sourceType, issuedAt])
+  @@index([customerEmail])
+  @@index([issuedAt])
+  @@map("invoices")
+}
+
+model InvoiceCounter {
+  series     String @id // "FAC-2026", "AV-2026"
+  lastNumber Int    @default(0)
+
+  @@map("invoice_counters")
 }
 
 // ════════════════════════════════════════════════════════════

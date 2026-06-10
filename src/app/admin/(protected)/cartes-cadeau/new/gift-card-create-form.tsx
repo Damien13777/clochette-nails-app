@@ -38,6 +38,7 @@ export function GiftCardCreateForm() {
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [buyerSameAsRecipient, setBuyerSameAsRecipient] = useState(true);
+  const [sendInvoice, setSendInvoice] = useState(false);
   const [amountEuros, setAmountEuros] = useState<number>(50);
   const [validityMonths, setValidityMonths] = useState<number>(12);
   const [giftMessage, setGiftMessage] = useState("");
@@ -78,6 +79,7 @@ export function GiftCardCreateForm() {
         paymentMethod: mode === "ADMIN_SALE" ? paymentMethod : undefined,
         buyerName: effectiveBuyerName,
         buyerEmail: effectiveBuyerEmail,
+        sendInvoiceByEmail: mode === "ADMIN_SALE" ? sendInvoice : false,
       });
       if (result.ok) {
         setCreated({
@@ -366,6 +368,25 @@ export function GiftCardCreateForm() {
               Le reçu sera envoyé à <strong>{recipientEmail || "l'email du bénéficiaire"}</strong>.
             </p>
           )}
+
+          <label className="flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={sendInvoice}
+              onChange={(e) => setSendInvoice(e.target.checked)}
+              disabled={isPending}
+              className="mt-0.5 w-4 h-4 accent-[var(--color-violet-600)]"
+            />
+            <span
+              className="text-sm text-[var(--color-ink-700)]"
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              Envoyer la facture par email à l&apos;acheteuse
+              <span className="block text-xs text-[var(--color-ink-500)]">
+                La facture est générée et archivée dans tous les cas (Finances → Factures).
+              </span>
+            </span>
+          </label>
         </div>
       )}
 

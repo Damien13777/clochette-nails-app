@@ -1,42 +1,34 @@
 /**
- * TestimonialsSection — Server Component.
+ * TestimonialsSection — Server Component (async).
  *
- * Mobile : snap-x horizontal scroll (CSS only).
- * Desktop : grid 3 cols.
- * Data hardcodée pour V1 — passera en DB (table Testimonial) plus tard.
+ * Avis lus en DB (table Testimonial, gérée sur /admin/parametres/avis).
+ * Section masquée si aucun avis publié. Ligne Google depuis PlatformSettings.
+ * Mobile : snap-x horizontal scroll (CSS only). Desktop : grid 3 cols.
  */
 
-const TESTIMONIALS = [
-  {
-    id: "t1",
-    quote:
-      "Une parenthèse hors du temps. Chloé prend soin de chaque détail, du diagnostic à la finition. Le rendu tient impeccablement 4 semaines.",
-    rating: 5,
-    name: "Marie L.",
-    status: "Cliente fidèle · 2024",
-    initial: "M",
-  },
-  {
-    id: "t2",
-    quote:
-      "Salon propre, ambiance calme, et un sens du détail qui change tout. J'ai trouvé MA prothésiste.",
-    rating: 5,
-    name: "Sophie D.",
-    status: "Première visite · 2024",
-    initial: "S",
-  },
-  {
-    id: "t3",
-    quote:
-      "Manucure russe excellente, conseils précieux pour entretenir mes ongles entre les rendez-vous. Je recommande sans réserve.",
-    rating: 5,
-    name: "Julie M.",
-    status: "Cliente fidèle · 2024",
-    initial: "J",
-  },
-];
+import { prisma } from "@/lib/prisma";
 
-export function TestimonialsSection() {
+export async function TestimonialsSection() {
+  const [testimonials, settings] = await Promise.all([
+    prisma.testimonial.findMany({
+      where: { published: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        quote: true,
+        rating: true,
+        authorName: true,
+        authorLabel: true,
+      },
+    }),
+    prisma.platformSettings.findFirst({
+      select: { testimonialsGoogleLine: true },
+    }),
+  ]);
+
+  if (testimonials.length === 0) return null;
+  const googleLine = settings?.testimonialsGoogleLine ?? null;
+
   return (
     <section
       id="avis"
@@ -55,30 +47,30 @@ export function TestimonialsSection() {
         >
           Elles parlent du salon
         </h2>
-        <div className="mt-3 flex items-center justify-center gap-2 text-sm text-[var(--color-ink-500)]">
-          <div className="flex gap-0.5" aria-hidden="true">
-            {[...Array(5)].map((_, i) => (
-              <svg
-                key={i}
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="var(--color-gold-500)"
-                stroke="var(--color-gold-600)"
-                strokeWidth="0.5"
-              >
-                <path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z" />
-              </svg>
-            ))}
+        {googleLine && (
+          <div className="mt-3 flex items-center justify-center gap-2 text-sm text-[var(--color-ink-500)]">
+            <div className="flex gap-0.5" aria-hidden="true">
+              {[...Array(5)].map((_, i) => (
+                <svg
+                  key={i}
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="var(--color-gold-500)"
+                  stroke="var(--color-gold-600)"
+                  strokeWidth="0.5"
+                >
+                  <path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z" />
+                </svg>
+              ))}
+            </div>
+            <span style={{ fontFamily: "var(--font-ui)" }}>{googleLine}</span>
           </div>
-          <span style={{ fontFamily: "var(--font-ui)" }}>
-            4,9 / 5 · 87 avis Google
-          </span>
-        </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-5 overflow-x-auto snap-x snap-mandatory md:overflow-visible -mx-5 px-5 md:mx-0 md:px-0 pb-2">
-        {TESTIMONIALS.map((t) => (
+        {testimonials.map((t) => (
           <article
             key={t.id}
             className="snap-center min-w-[85%] md:min-w-0 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 flex flex-col"
@@ -104,7 +96,8 @@ export function TestimonialsSection() {
               {t.quote}
             </p>
 
-            <div className="flex gap-0.5 mt-4" role="img" aria-label={`${t.rating} sur 5`}>
+            {/* mt-auto : socle étoiles+auteur ancré en bas, position uniforme entre cards */}
+            <div className="flex gap-0.5 mt-auto pt-4" role="img" aria-label={`${t.rating} sur 5`}>
               {[...Array(t.rating)].map((_, i) => (
                 <svg
                   key={i}
@@ -118,23 +111,25 @@ export function TestimonialsSection() {
               ))}
             </div>
 
-            <div className="mt-auto pt-5 flex items-center gap-3">
+            <div className="pt-5 flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)]"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                {t.initial}
+                {t.authorName.charAt(0).toUpperCase()}
               </div>
               <div>
                 <div className="text-sm" style={{ fontFamily: "var(--font-ui)" }}>
-                  {t.name}
+                  {t.authorName}
                 </div>
-                <div
-                  className="text-xs text-[var(--color-ink-500)]"
-                  style={{ fontFamily: "var(--font-ui)" }}
-                >
-                  {t.status}
-                </div>
+                {t.authorLabel && (
+                  <div
+                    className="text-xs text-[var(--color-ink-500)]"
+                    style={{ fontFamily: "var(--font-ui)" }}
+                  >
+                    {t.authorLabel}
+                  </div>
+                )}
               </div>
             </div>
           </article>

@@ -14,17 +14,23 @@ import { prisma } from "@/lib/prisma";
 import { buildSrcSet } from "@/lib/image-srcset";
 
 export async function Hero() {
-  const slots = await prisma.siteMedia.findMany({
-    where: { slot: { in: ["hero_desktop", "hero_mobile"] } },
-    select: {
-      slot: true,
-      url: true,
-      alt: true,
-      width: true,
-      height: true,
-      variants: true,
-    },
-  });
+  const [slots, settings] = await Promise.all([
+    prisma.siteMedia.findMany({
+      where: { slot: { in: ["hero_desktop", "hero_mobile"] } },
+      select: {
+        slot: true,
+        url: true,
+        alt: true,
+        width: true,
+        height: true,
+        variants: true,
+      },
+    }),
+    prisma.platformSettings.findFirst({
+      select: { testimonialsGoogleLine: true },
+    }),
+  ]);
+  const googleLine = settings?.testimonialsGoogleLine ?? null;
   const heroDesktop = slots.find((s) => s.slot === "hero_desktop") ?? null;
   const heroMobile = slots.find((s) => s.slot === "hero_mobile") ?? null;
   const heroDesktopSrcSet = heroDesktop ? buildSrcSet(heroDesktop.variants) : undefined;
@@ -163,24 +169,26 @@ export async function Hero() {
               </svg>
               <span>Mar–Sam · sur rendez-vous</span>
             </div>
-            <div className="flex items-center gap-2" aria-label="4,9 sur 5 étoiles, 87 avis Google">
-              <div className="flex gap-0.5" aria-hidden="true">
-                {[...Array(5)].map((_, i) => (
-                  <svg
-                    key={i}
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="var(--color-gold-500)"
-                    stroke="var(--color-gold-600)"
-                    strokeWidth="0.5"
-                  >
-                    <path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z" />
-                  </svg>
-                ))}
+            {googleLine && (
+              <div className="flex items-center gap-2" aria-label={googleLine}>
+                <div className="flex gap-0.5" aria-hidden="true">
+                  {[...Array(5)].map((_, i) => (
+                    <svg
+                      key={i}
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="var(--color-gold-500)"
+                      stroke="var(--color-gold-600)"
+                      strokeWidth="0.5"
+                    >
+                      <path d="M12 2 L14.5 9 L22 9.3 L16 14 L18 21.5 L12 17.5 L6 21.5 L8 14 L2 9.3 L9.5 9 Z" />
+                    </svg>
+                  ))}
+                </div>
+                <span>{googleLine}</span>
               </div>
-              <span>4,9 · 87 avis Google</span>
-            </div>
+            )}
           </div>
         </div>
 

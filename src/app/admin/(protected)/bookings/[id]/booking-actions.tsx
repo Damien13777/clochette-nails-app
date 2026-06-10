@@ -666,6 +666,7 @@ function MarkCompletedDialog({
   const [gcAmount, setGcAmount] = useState<string>("0");
   const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
   const [lookupPending, startLookup] = useTransition();
+  const [sendInvoice, setSendInvoice] = useState(false);
 
   const parsedCash = Number.parseFloat(completionAmount.replace(",", "."));
   const cashValid =
@@ -727,6 +728,7 @@ function MarkCompletedDialog({
         useGiftCard && lookup.status === "ok" && gcCents > 0
           ? { code: gcCode.trim().toUpperCase(), amountCents: gcCents }
           : undefined,
+      sendInvoiceByEmail: sendInvoice,
     };
     onConfirm(payload);
   }
@@ -985,6 +987,45 @@ function MarkCompletedDialog({
               )}
             </span>
           </div>
+
+          {/* Facture : générée dans tous les cas, la case ne pilote que l'envoi */}
+          <label className="inline-flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={sendInvoice}
+              onChange={(e) => setSendInvoice(e.target.checked)}
+              disabled={disabled}
+              className="sr-only peer"
+            />
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 shrink-0 w-5 h-5 rounded border-2 grid place-items-center transition-colors ${
+                sendInvoice
+                  ? "border-[var(--color-violet-600)] bg-[var(--color-violet-600)] text-white"
+                  : "border-[var(--color-line)] bg-[var(--color-paper)]"
+              }`}
+            >
+              {sendInvoice && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              )}
+            </span>
+            <span>
+              <span
+                className="block text-xs uppercase tracking-[0.14em] text-[var(--color-ink-700)]"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Envoyer la facture par email à la cliente
+              </span>
+              <span
+                className="block mt-0.5 text-[11px] text-[var(--color-ink-500)]"
+                style={{ fontFamily: "var(--font-ui)" }}
+              >
+                La facture est générée et archivée dans tous les cas (Finances → Factures).
+              </span>
+            </span>
+          </label>
 
           <div className="flex justify-end gap-2 pt-2">
             <button

@@ -34,6 +34,12 @@ import { buildBookingNotifAdminEmail } from "@/lib/email/templates/booking-notif
 import { buildGiftCardAdminIssuedEmail } from "@/lib/email/templates/gift-card-admin-issued";
 import { buildGiftCardPurchaseReceiptEmail } from "@/lib/email/templates/gift-card-purchase-receipt";
 import { buildEbookPurchasedEmail } from "@/lib/email/templates/ebook-purchased";
+import {
+  createInvoiceForEbookPurchase,
+  createInvoiceForGiftCard,
+} from "@/lib/invoice/create-invoice";
+import { readInvoicePdf } from "@/lib/invoice/invoice-files";
+import { markInvoiceSent } from "@/lib/invoice/invoice-email";
 
 export const runtime = "nodejs"; // Stripe SDK n'est pas edge-compatible
 export const dynamic = "force-dynamic";
@@ -251,6 +257,20 @@ async function confirmEbookPurchaseFromSession(
     console.error("[stripe webhook] notif admin ebook échec:", err);
   }
 
+  // Facture (fail-soft : un échec ne bloque jamais la confirmation d'achat)
+  let ebookInvoiceAttachment: { filename: string; content: Buffer } | null = null;
+  let ebookInvoiceId: string | null = null;
+  try {
+    const invoice = await createInvoiceForEbookPurchase(purchase.id);
+    ebookInvoiceId = invoice.id;
+    ebookInvoiceAttachment = {
+      filename: `${invoice.number}.pdf`,
+      content: await readInvoicePdf(invoice.pdfPath),
+    };
+  } catch (err) {
+    console.error("[stripe webhook] facture ebook échec:", err);
+  }
+
   // Email cliente avec lien PDF
   try {
     const origin =
@@ -272,6 +292,7 @@ async function confirmEbookPurchaseFromSession(
       html: mail.html,
       text: mail.text,
       tag: "ebook.purchased",
+      ...(ebookInvoiceAttachment ? { attachments: [ebookInvoiceAttachment] } : {}),
     });
     if (!result.ok) {
       console.error(
@@ -281,6 +302,9 @@ async function confirmEbookPurchaseFromSession(
       console.log(
         `[stripe webhook] email ebook envoyé à ${purchase.clientEmail} (id=${result.id})`,
       );
+      if (ebookInvoiceId && ebookInvoiceAttachment) {
+        await markInvoiceSent(ebookInvoiceId, purchase.clientEmail);
+      }
     }
   } catch (err) {
     console.error(`[stripe webhook] email ebook exception pour ${purchase.id}:`, err);
@@ -387,6 +411,20 @@ async function activateGiftCardFromSession(
     console.error("[stripe webhook] email bénéficiaire gift card échec:", err);
   }
 
+  // Facture (fail-soft : un échec ne bloque jamais l'activation ni les emails)
+  let gcInvoiceAttachment: { filename: string; content: Buffer } | null = null;
+  let gcInvoiceId: string | null = null;
+  try {
+    const invoice = await createInvoiceForGiftCard(card.id);
+    gcInvoiceId = invoice.id;
+    gcInvoiceAttachment = {
+      filename: `${invoice.number}.pdf`,
+      content: await readInvoicePdf(invoice.pdfPath),
+    };
+  } catch (err) {
+    console.error("[stripe webhook] facture gift card échec:", err);
+  }
+
   // Reçu acheteuse (si différent du bénéficiaire OU même email = même envoi mais 2 mails)
   try {
     const receipt = buildGiftCardPurchaseReceiptEmail({
@@ -403,13 +441,17 @@ async function activateGiftCardFromSession(
           ? session.payment_intent
           : null,
     });
-    await sendEmail({
+    const receiptResult = await sendEmail({
       to: card.buyerEmail,
       subject: receipt.subject,
       html: receipt.html,
       text: receipt.text,
       tag: "gift-card.public-receipt",
+      ...(gcInvoiceAttachment ? { attachments: [gcInvoiceAttachment] } : {}),
     });
+    if (receiptResult.ok && gcInvoiceId && gcInvoiceAttachment) {
+      await markInvoiceSent(gcInvoiceId, card.buyerEmail);
+    }
   } catch (err) {
     console.error("[stripe webhook] reçu acheteuse gift card échec:", err);
   }
