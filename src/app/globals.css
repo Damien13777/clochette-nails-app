@@ -129,6 +129,26 @@
   }
 }
 
+/* ── Inputs date/heure natifs : anti-débordement iOS/WebKit ──────────────
+   Sur les appareils tactiles (iPad/iPhone), les contrôles natifs
+   <input type="date|time|…"> ont une largeur intrinsèque minimale qui ignore
+   `width:100%` → ils débordent les conteneurs étroits (modales, mobile).
+   On neutralise l'apparence native UNIQUEMENT sur pointeur grossier (tactile),
+   ce qui les fait respecter leur conteneur sans toucher le picker natif desktop
+   (où tout fonctionne déjà). Le tap ouvre toujours le sélecteur natif iOS. */
+@media (pointer: coarse) {
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  input[type="week"] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 /* ── Règles d'application Manrope ────────────────────────── */
 
 @layer components {
