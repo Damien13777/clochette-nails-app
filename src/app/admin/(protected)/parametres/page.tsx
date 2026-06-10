@@ -11,6 +11,7 @@
  */
 
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -110,6 +111,32 @@ export default async function AdminSettingsPage() {
           emailFooterImageUrl: settings.emailFooterImageUrl,
         }}
       />
+
+      <Link
+        href="/admin/parametres/avis"
+        className="mt-6 flex items-center justify-between bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 hover:border-[var(--color-violet-600)] transition-colors group"
+      >
+        <div>
+          <h2
+            className="text-xs uppercase tracking-[0.18em] text-[var(--color-ink-700)]"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Avis clientes
+          </h2>
+          <p
+            className="mt-2 text-sm text-[var(--color-ink-500)]"
+            style={{ fontFamily: "var(--font-ui)" }}
+          >
+            Gérer les avis affichés sur la page d&apos;accueil (ajout, ordre, publication).
+          </p>
+        </div>
+        <span
+          aria-hidden="true"
+          className="text-[var(--color-ink-500)] group-hover:text-[var(--color-violet-700)] transition-colors"
+        >
+          →
+        </span>
+      </Link>
     </div>
   );
 }
