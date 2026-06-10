@@ -8,6 +8,7 @@ import { notFound, redirect } from "next/navigation";
 import type { GiftCardStatus } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { InvoiceBlock } from "@/components/admin/invoice-block";
 import { GiftCardActions } from "./gift-card-actions";
 import { RecalculateStripeFeeButton } from "@/components/admin/recalculate-stripe-fee";
 import { BackButton } from "@/components/admin/back-button";
@@ -212,6 +213,12 @@ export default async function GiftCardDetailPage({
               Utilisé : {formatCents(usedCents)} ({usedPercent}%)
             </p>
           </section>
+
+          {/* Facture de la vente (auto en ligne / vente salon, jamais si offerte) */}
+          <InvoiceBlock
+            source={{ sourceType: "GIFT_CARD", giftCardId: card.id }}
+            canGenerate={card.creationMode !== "ADMIN_GIFT" && card.paymentStatus === "PAID"}
+          />
 
           {/* Bloc bénéficiaire / acheteur */}
           <section className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 space-y-3">

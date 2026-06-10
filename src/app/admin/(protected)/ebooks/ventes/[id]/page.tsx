@@ -14,6 +14,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { MAX_DOWNLOADS_PER_TOKEN } from "@/lib/ebook-download-token";
 import { EbooksTabs } from "../../_tabs";
+import { InvoiceBlock } from "@/components/admin/invoice-block";
 import { SalesActions } from "./sales-actions";
 import { RecalculateStripeFeeButton } from "@/components/admin/recalculate-stripe-fee";
 import { BackButton } from "@/components/admin/back-button";
@@ -365,6 +366,12 @@ export default async function EbookSaleDetailPage({
               </p>
             )}
           </Section>
+
+          {/* Facture de la vente (auto au webhook, fallback ici) */}
+          <InvoiceBlock
+            source={{ sourceType: "EBOOK", ebookPurchaseId: purchase.id }}
+            canGenerate={purchase.paymentStatus === "PAID"}
+          />
 
           <Section title="Téléchargements">
             <div className="space-y-3">

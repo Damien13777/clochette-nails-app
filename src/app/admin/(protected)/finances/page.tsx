@@ -10,6 +10,7 @@
  */
 
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import {
@@ -155,12 +156,21 @@ export default async function FinancesPage({
         >
           Tableau de bord
         </p>
-        <h1
-          className="text-3xl md:text-4xl"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
-          Finances
-        </h1>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <h1
+            className="text-3xl md:text-4xl"
+            style={{ fontFamily: "var(--font-serif)" }}
+          >
+            Finances
+          </h1>
+          <Link
+            href="/admin/finances/factures"
+            className="px-5 h-10 inline-flex items-center rounded-full border border-[var(--color-line)] text-xs uppercase tracking-[0.06em] hover:border-[var(--color-violet-600)] hover:text-[var(--color-violet-700)] transition-colors"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Factures →
+          </Link>
+        </div>
         <p
           className="text-sm text-[var(--color-ink-500)]"
           style={{ fontFamily: "var(--font-ui)" }}

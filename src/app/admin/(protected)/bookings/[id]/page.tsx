@@ -22,6 +22,7 @@ import {
   formatDuration,
 } from "@/lib/booking-display";
 import { BookingActions } from "./booking-actions";
+import { InvoiceBlock } from "@/components/admin/invoice-block";
 import { BookingNotes } from "./booking-notes";
 import { BookingReminders } from "./booking-reminders";
 import { PaymentBlock } from "./payment-block";
@@ -363,6 +364,12 @@ export default async function BookingDetailPage({
               }
             />
           </Section>
+
+          {/* Facture de la prestation (générée au markCompleted, fallback ici) */}
+          <InvoiceBlock
+            source={{ sourceType: "BOOKING", bookingId: booking.id }}
+            canGenerate={booking.status === "COMPLETED"}
+          />
 
           {/* Message client */}
           {booking.clientMessage && (
