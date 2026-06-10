@@ -204,14 +204,19 @@ async function main() {
     },
   ];
 
-  for (const svc of services) {
-    await prisma.service.upsert({
-      where: { slug: svc.slug },
-      update: {},
-      create: { ...svc, status: ContentStatus.PUBLISHED },
-    });
+  // Bootstrap UNIQUEMENT si le catalogue est vide : le vrai catalogue est
+  // géré en admin, un re-seed ne doit JAMAIS ressusciter ces entrées de démo
+  // (incident 10/06 : 4 prestations + 3 options obsolètes republiées).
+  if ((await prisma.service.count()) === 0) {
+    for (const svc of services) {
+      await prisma.service.create({
+        data: { ...svc, status: ContentStatus.PUBLISHED },
+      });
+    }
+    console.log(`  ✓ Services : ${services.length} prestations vedettes créées`);
+  } else {
+    console.log("  ✓ Services : catalogue existant, seed démo ignoré");
   }
-  console.log(`  ✓ Services : ${services.length} prestations vedettes créées`);
 
   // ── 6. ServiceOptions (3 options) ────────────────────────
   const options = [
@@ -244,14 +249,16 @@ async function main() {
     },
   ];
 
-  for (const opt of options) {
-    await prisma.serviceOption.upsert({
-      where: { slug: opt.slug },
-      update: {},
-      create: { ...opt, status: ContentStatus.PUBLISHED },
-    });
+  if ((await prisma.serviceOption.count()) === 0) {
+    for (const opt of options) {
+      await prisma.serviceOption.create({
+        data: { ...opt, status: ContentStatus.PUBLISHED },
+      });
+    }
+    console.log(`  ✓ ServiceOptions : ${options.length} options créées`);
+  } else {
+    console.log("  ✓ ServiceOptions : catalogue existant, seed démo ignoré");
   }
-  console.log(`  ✓ ServiceOptions : ${options.length} options créées`);
 
   console.log("\n✅ Seed terminé.\n");
   console.log("─────────────────────────────────────────────────────");
