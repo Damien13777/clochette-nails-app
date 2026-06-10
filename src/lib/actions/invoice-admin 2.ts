@@ -63,16 +63,12 @@ export async function createCreditNoteAction(
   if (!Number.isFinite(amountEuros) || amountEuros <= 0) {
     return { ok: false, error: "Montant invalide." };
   }
-  const trimmedReason = reason.trim();
-  if (trimmedReason.length > 200) {
-    return { ok: false, error: "Motif trop long (200 caractères max)." };
-  }
 
   try {
     const creditNote = await createCreditNote({
       parentInvoiceId,
       amountCents: Math.round(amountEuros * 100),
-      reason: trimmedReason || null,
+      reason: reason.trim() || null,
       createdById: admin.id,
     });
     await audit(admin.id, "invoice.credit_note_created", {

@@ -22,25 +22,30 @@ Lighthouse (100/100/100 mesuré), architecture (validée + 25 Vitest + 14 E2E + 
 ## Synthèse
 
 **Verdict : aucun P0. Le code est sain et déployable.** 1 P1 (garde-fou de
-configuration, pas un bug), 1 P2 (course théorique à corriger avant le volume),
-9 P3 (durcissements et hygiène). Les fondamentaux vérifiés sont solides :
-aucun secret commité, auth admin sur 100 % des nouvelles surfaces, idempotence
-webhook complète, numérotation fiscale atomique testée sous concurrence,
-uploads re-encodés, PDFs hors webroot.
+configuration, pas un bug), 1 P2 (course théorique), 9 P3 (durcissements et
+hygiène). Les fondamentaux vérifiés sont solides : aucun secret commité, auth
+admin sur 100 % des nouvelles surfaces, idempotence webhook complète,
+numérotation fiscale atomique testée sous concurrence, uploads re-encodés,
+PDFs hors webroot.
 
-| # | Sév. | Sujet | Action |
+**Mise à jour post-audit (même jour)** : findings #1-#7, #10, #11 **corrigés**
+(commit sur cette branche, 27/27 tests verts dont 2 nouveaux tests de course,
+`pnpm build` prod validé — home toujours statique ○). Restent #8/#9
+(optionnels, assumés).
+
+| # | Sév. | Sujet | Statut |
 |---|------|-------|--------|
-| 1 | 🟠 P1 | Resend absent en prod → emails « mock » silencieusement réussis | Garde-fou + checklist |
-| 2 | 🟡 P2 | Course double-facture possible (check-then-act sans contrainte DB) | Index unique partiel |
-| 3 | 🔵 P3 | Motif d'avoir non plafonné en longueur | Cap 200 chars |
-| 4 | 🔵 P3 | JSON-LD : `JSON.stringify` sans échappement `<` | `<` defense-in-depth |
-| 5 | 🔵 P3 | `.env.example` : commentaire cron « X-Cron-Secret » ≠ code (Bearer) | Corriger le commentaire |
-| 6 | 🔵 P3 | Header-comment périmé `password-reset.ts` (« TODO Resend » — c'est implémenté) | Nettoyer |
-| 7 | 🔵 P3 | `INVOICES_DIR` absente de `.env.example` | Documenter (optionnelle) |
-| 8 | 🔵 P3 | 27 fallbacks hardcodés `clochette-nails.fr` si `NEXT_PUBLIC_SITE_URL` absent | Exiger l'env en prod (duplicabilité) |
-| 9 | 🔵 P3 | 6 vulnérabilités deps **modérées, toutes hors runtime prod** | Overrides optionnels |
-| 10 | 🔵 P3 | Path traversal download : impossible aujourd'hui, pas de ceinture-bretelles | Valider `relPath` sous rootDir |
-| 11 | 🔵 P3 | `[outbound]` logue le payload (email cliente) si `MANAGEMENT_API_URL` absent | Configurer l'URL en prod ou tronquer |
+| 1 | 🟠 P1 | Resend absent en prod → emails « mock » silencieusement réussis | ✅ corrigé — `sendEmail` refuse en prod sans clé |
+| 2 | 🟡 P2 | Course double-facture / sur-avoir (check-then-act sans contrainte DB) | ✅ corrigé — advisory lock + re-checks en tx, testé |
+| 3 | 🔵 P3 | Motif d'avoir non plafonné en longueur | ✅ corrigé — cap 200 chars |
+| 4 | 🔵 P3 | JSON-LD : `JSON.stringify` sans échappement `<` | ✅ corrigé — `safeJsonLd()` sur les 10 blocs (6 fichiers) |
+| 5 | 🔵 P3 | `.env.example` : commentaire cron « X-Cron-Secret » ≠ code (Bearer) | ✅ corrigé |
+| 6 | 🔵 P3 | Header-comment périmé `password-reset.ts` | ✅ corrigé |
+| 7 | 🔵 P3 | `INVOICES_DIR` absente de `.env.example` | ✅ documentée |
+| 8 | 🔵 P3 | 27 fallbacks hardcodés `clochette-nails.fr` si `NEXT_PUBLIC_SITE_URL` absent | Assumé — env exigée en checklist ; à nettoyer à la 1ʳᵉ duplication |
+| 9 | 🔵 P3 | 6 vulnérabilités deps **modérées, toutes hors runtime prod** | Assumé — overrides optionnels ou prochain bump Prisma |
+| 10 | 🔵 P3 | Path traversal download : pas de ceinture-bretelles | ✅ corrigé — `relPath` validé sous rootDir |
+| 11 | 🔵 P3 | `[outbound]` logue le payload (PII) si `MANAGEMENT_API_URL` absent | ✅ corrigé — payload omis en prod |
 
 ---
 
@@ -72,24 +77,29 @@ uploads re-encodés, PDFs hors webroot.
   vecteur HTML/JS. Montants validés entiers/bornés côté serveur.
 - **Audit log** : émission manuelle, renvoi, avoir → tracés avec adminId.
 
-### 🟡 P2 — Course « double facture » (finding #2)
+### 🟡 P2 — Course « double facture » (finding #2) — ✅ CORRIGÉ
 
-`createInvoiceForBooking/GiftCard/Ebook` font *check-then-act* : lecture des
-factures existantes puis création. Deux appels simultanés (ex. bouton
-« Générer » cliqué pendant qu'un `markBookingCompleted` aboutit) peuvent créer
-**deux factures ISSUED pour la même vente** — fenêtre de quelques dizaines de
-ms, mais l'impact est comptable (deux numéros pour une vente, l'un à annuler
-par avoir). **Reco** : index unique partiel Postgres par source, ex. :
+`createInvoiceForBooking/GiftCard/Ebook` faisaient *check-then-act* : deux
+appels simultanés pouvaient créer deux factures ISSUED pour la même vente
+(idem deux avoirs concurrents dépassant le plafond).
+
+**Correctif appliqué** : `pg_advisory_xact_lock` (verrou transactionnel
+Postgres, clé = source de la vente ou facture parente) pris en tête de la
+transaction `createInvoice`, suivi d'une **re-vérification autoritaire sous
+verrou** (facture existante / plafond d'avoir recalculé). Le 2ᵉ appel
+concurrent attend le commit du 1ᵉʳ puis échoue proprement en `InvoiceError`.
+Choisi plutôt que l'index unique partiel car compatible avec le workflow
+`db push` du dev (un index hors schéma serait effacé à chaque push). Couvert
+par 2 tests de concurrence (`Promise.allSettled` ×2 → exactement 1 succès).
+
+**Bonus migrations prod** (ceinture-bretelles, optionnel) : poser en plus les
+index uniques partiels au moment des migrations formelles :
 
 ```sql
 CREATE UNIQUE INDEX invoices_one_per_booking
   ON invoices ("bookingId") WHERE "docType" = 'INVOICE' AND status = 'ISSUED';
 -- idem giftCardId / ebookPurchaseId
 ```
-
-(En Prisma 7 : migration SQL brute ou bloc `@@unique` impossible car partiel —
-à poser au moment des migrations formelles prod.) La 2ᵉ insertion échouera en
-P2002, déjà gérée par le retry/catch des callers fail-soft.
 
 ### 🔵 P3 — Durcissements (findings #3, #10)
 
@@ -179,6 +189,6 @@ clé. + Vérification explicite le jour J (email de test).
 
 | Quand | Quoi |
 |---|---|
-| **Avant déploiement (code)** | #1 garde-fou Resend prod · #2 index uniques partiels (ou au moment des migrations prod) · #3/#4/#10 durcissements 2 lignes · #5/#6/#7 hygiène doc |
-| **Jour J (config)** | Checklist section B (env, Nginx, crons, backups, Stripe, build, email test) |
-| **Optionnel** | #9 overrides deps · #8 retirer les fallbacks URL hardcodés lors de la prochaine duplication du produit |
+| ~~Avant déploiement (code)~~ | ✅ **Tout corrigé le 10/06** : #1 garde Resend · #2 advisory lock + tests · #3/#4/#10/#11 durcissements · #5/#6/#7 hygiène. `pnpm build` prod validé (home statique ○ conservée ; 1 warning NFT bénin lié aux `path.join` des uploads — sans impact PM2/`next start`) |
+| **Jour J (config)** | Checklist section B (env, Nginx, crons, backups, Stripe, email test réel) |
+| **Optionnel** | #9 overrides deps (ou prochain bump Prisma) · #8 retirer les fallbacks URL hardcodés lors de la prochaine duplication du produit · index uniques partiels aux migrations prod (bonus du #2) |

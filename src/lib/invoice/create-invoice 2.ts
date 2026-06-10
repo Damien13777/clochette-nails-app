@@ -88,61 +88,6 @@ function parisYear(): string {
   }).format(new Date());
 }
 
-function invoiceLockKey(input: CreateInvoiceInput): string | null {
-  if (input.docType === "CREDIT_NOTE") {
-    return input.parentInvoiceId ? `invoice:credit:${input.parentInvoiceId}` : null;
-  }
-  if (input.bookingId) return `invoice:booking:${input.bookingId}`;
-  if (input.giftCardId) return `invoice:gift-card:${input.giftCardId}`;
-  if (input.ebookPurchaseId) return `invoice:ebook:${input.ebookPurchaseId}`;
-  return null;
-}
-
-/**
- * Anti-course : verrou advisory transactionnel (libéré au commit/rollback)
- * puis re-vérification AUTORITAIRE sous verrou. Les checks des builders hors
- * transaction ne servent qu'à produire des messages d'erreur précoces.
- */
-async function lockAndRecheckSource(
-  tx: Prisma.TransactionClient,
-  input: CreateInvoiceInput,
-): Promise<void> {
-  const lockKey = invoiceLockKey(input);
-  if (!lockKey) return;
-
-  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))::text`;
-
-  if (input.docType === "INVOICE") {
-    const duplicate = await tx.invoice.findFirst({
-      where: {
-        docType: "INVOICE",
-        status: "ISSUED",
-        ...(input.bookingId
-          ? { bookingId: input.bookingId }
-          : input.giftCardId
-            ? { giftCardId: input.giftCardId }
-            : { ebookPurchaseId: input.ebookPurchaseId }),
-      },
-      select: { number: true },
-    });
-    if (duplicate) throw new InvoiceError(`Facture déjà émise (${duplicate.number}).`);
-    return;
-  }
-
-  const parent = await tx.invoice.findUniqueOrThrow({
-    where: { id: input.parentInvoiceId! },
-    select: {
-      totalCents: true,
-      creditNotes: { where: { status: "ISSUED" }, select: { totalCents: true } },
-    },
-  });
-  const cap =
-    parent.totalCents - parent.creditNotes.reduce((s, c) => s + c.totalCents, 0);
-  if (input.totalCents > cap) {
-    throw new InvoiceError(`Montant d'avoir invalide (maximum ${(cap / 100).toFixed(2)} €).`);
-  }
-}
-
 export async function createInvoice(input: CreateInvoiceInput): Promise<CreatedInvoice> {
   if (!Number.isInteger(input.totalCents) || input.totalCents <= 0) {
     throw new InvoiceError("Montant total invalide.");
@@ -156,8 +101,6 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<CreatedI
     try {
       const created = await prisma.$transaction(
         async (tx) => {
-          await lockAndRecheckSource(tx, input);
-
           const counter = await tx.invoiceCounter.upsert({
             where: { series },
             create: { series, lastNumber: 1 },

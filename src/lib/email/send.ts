@@ -110,6 +110,17 @@ async function applyGlobals(msg: EmailMessage): Promise<EmailMessage> {
 export async function sendEmail(rawMsg: EmailMessage): Promise<SendResult> {
   const msg = await applyGlobals(rawMsg);
 
+  // Garde-fou prod : sans clé Resend on REFUSE (jamais de faux succès qui
+  // marquerait des factures "envoyées" ou perdrait des confirmations RDV).
+  if (!resend && process.env.NODE_ENV === "production") {
+    console.error(
+      `[email] RESEND_API_KEY manquante en production — envoi refusé (to: ${
+        Array.isArray(msg.to) ? msg.to.join(", ") : msg.to
+      }, subject: ${msg.subject})`,
+    );
+    return { ok: false, error: "RESEND_API_KEY manquante en production." };
+  }
+
   // Mode dev sans clé Resend : log + simulate success
   if (!resend) {
     console.log(

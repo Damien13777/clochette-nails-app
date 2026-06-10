@@ -13,11 +13,7 @@ export async function emitOutboundEvent(
   try {
     const targetUrl = process.env.MANAGEMENT_API_URL;
     if (!targetUrl) {
-      if (process.env.NODE_ENV === "production") {
-        console.log(`[outbound] ${type} (payload omis — PII hors logs prod)`);
-      } else {
-        console.log(`[outbound] ${type}`, payload);
-      }
+      console.log(`[outbound] ${type}`, payload);
       return;
     }
     await prisma.outboundEvent.create({

@@ -5,7 +5,7 @@
  *
  * Flow :
  *  1. requestPasswordReset(email) → si user existe, génère un token, store en DB,
- *     envoie email (TODO Resend). Réponse générique sans révéler l'existence du compte.
+ *     envoie l'email via Resend. Réponse générique sans révéler l'existence du compte.
  *  2. resetPassword(token, newPassword) → valide token, update hashedPassword,
  *     supprime token. Redirect vers /admin/connexion.
  *

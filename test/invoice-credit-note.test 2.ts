@@ -62,21 +62,6 @@ describe("createCreditNote", () => {
     await createCreditNote({ parentInvoiceId: parent.id, amountCents: 1000 });
   });
 
-  it("course : 2 avoirs 100% concurrents → un seul passe (plafond sous verrou)", async () => {
-    const parent = await makeIssuedInvoice();
-    const results = await Promise.allSettled([
-      createCreditNote({ parentInvoiceId: parent.id, amountCents: 5000 }),
-      createCreditNote({ parentInvoiceId: parent.id, amountCents: 5000 }),
-    ]);
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-    expect(results.filter((r) => r.status === "rejected")).toHaveLength(1);
-    const credited = await db.invoice.aggregate({
-      where: { parentInvoiceId: parent.id, status: "ISSUED" },
-      _sum: { totalCents: true },
-    });
-    expect(credited._sum.totalCents).toBe(5000);
-  });
-
   it("refuse un avoir sur un avoir", async () => {
     const parent = await makeIssuedInvoice();
     const cn = await createCreditNote({ parentInvoiceId: parent.id, amountCents: 1000 });

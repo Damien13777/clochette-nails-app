@@ -1,3 +1,4 @@
+import { safeJsonLd } from "@/lib/jsonld";
 import type { Metadata, Viewport } from "next";
 import { SITE_URL, BEAUTYSALON_ID } from "@/lib/seo-jsonld";
 import { Suspense } from "react";
@@ -99,7 +100,7 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               "@context": "https://schema.org",
               "@type": "WebSite",
               "@id": `${SITE_URL}/#website`,
