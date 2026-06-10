@@ -77,7 +77,7 @@ model Invoice {
 
   // Snapshot immuable (la facture doit rester identique 10 ans,
   // même si les settings / prix catalogue changent ensuite)
-  sellerSnapshot Json   // { headerName, legalOwner, address, siret, contactEmail, contactPhone, vatMention, legalFooter }
+  sellerSnapshot Json   // { headerName, legalOwner, address, siret, contactEmail, contactPhone, vatMention, legalFooter, logoUrl, vatEnabled, vatRate }
   customerName   String
   customerEmail  String
   lines          Json   // [{ label, quantity, unitCents, totalCents }]
@@ -131,15 +131,28 @@ invoiceVatMention String @default("TVA non applicable, art. 293 B du CGI")
 /// Mentions bas de facture : immatriculation RM/RNE, assurance RC pro
 /// (assureur + couverture géographique), médiateur… Texte libre multi-lignes.
 invoiceLegalFooter String? @db.Text
+/// Logo affiché en tête de facture. Uploadé depuis la section Facturation,
+/// normalisé en PNG via Sharp (react-pdf ne supporte ni SVG ni WebP),
+/// stocké dans /public/uploads/invoice-logo/{uuid}.png. null → pas de logo.
+invoiceLogoUrl String?
 ```
 
 Champs réutilisés : `businessName`, `businessSiret`, `businessAddress`,
 `contactEmail`, `contactPhone`, `vatEnabled`/`vatRate`.
 
-La section Facturation du formulaire Paramètres édite ces 4 champs (le SIRET
+La section Facturation du formulaire Paramètres édite ces 5 champs (le SIRET
 et l'adresse sont déjà dans la section Identité). Seed Clochette :
 `invoiceHeaderName = "CN manucure by Clochette Nails"`,
-`invoiceLegalOwner = "EI Gomes Chloé"`.
+`invoiceLegalOwner = "EI Gomes Chloé"`, `invoiceLogoUrl` pointant vers le
+lockup horizontal CN manucure rasterisé en PNG (généré une fois via Sharp
+depuis `public/brand/lockup-horizontal-couleur.svg`, commité dans
+`public/brand/`).
+
+**Duplicabilité — aucune forme juridique hardcodée** : `invoiceLegalOwner`
+est un texte libre (« EI Gomes Chloé » ici, « SARL Beauté Plus — capital
+5 000 € » pour une autre cliente) et `invoiceLegalFooter` absorbe RCS/RM,
+capital social, assurance, médiateur. Le template n'impose rien : il affiche
+ce que les settings contiennent.
 
 ### 1.3 Conformité légale (micro-entreprise, franchise TVA, B2C)
 
@@ -156,8 +169,11 @@ B2C ≥ 25 € — arrêté du 3 octobre 1983) :
   « TVA non applicable, art. L. 223 et s. du CIBS » au 1ᵉʳ sept. 2026
   (tolérance fin 2027) → simple édition de settings, zéro redéploiement
 - `invoiceLegalFooter` : immatriculation, assurance RC pro, médiateur
-- Si `vatEnabled = true` un jour : le template affiche colonnes HT / TVA
-  (`vatRate`) / TTC au lieu de la mention franchise
+- **TVA gérable** : si `vatEnabled = true`, le template affiche colonnes
+  HT / TVA / TTC au lieu de la mention franchise. Les montants stockés
+  (`lines`, `totalCents`) restent TTC ; le HT et la TVA sont dérivés au rendu
+  depuis le `vatRate` **snapshoté dans `sellerSnapshot`** — une facture émise
+  reste juste même si le taux ou le statut TVA changent ensuite
 
 Notes : e-invoicing/e-reporting 2026-2027 ne concerne pas le B2C aujourd'hui
 (e-reporting micro : sept. 2027 — hors scope, réévalué au moment venu).
@@ -169,7 +185,7 @@ seulement statut `CANCELLED` + avoir.
 | Fichier | Rôle |
 |---|---|
 | `create-invoice.ts` | `createInvoice(input)` : transaction numéro+row, rendu PDF, écriture fichier, event outbound. + builders par source : `createInvoiceForBooking(bookingId)`, `createInvoiceForGiftCard(giftCardId)`, `createInvoiceForEbookPurchase(purchaseId)`, `createCreditNote({ parentInvoiceId, amountCents, reason? })` |
-| `invoice-pdf.tsx` | Template `@react-pdf/renderer` → `renderInvoicePdf(data): Promise<Buffer>`. Polices du design system embarquées (TTF), fallback Helvetica |
+| `invoice-pdf.tsx` | Template `@react-pdf/renderer` → `renderInvoicePdf(data): Promise<Buffer>`. En-tête : logo (PNG depuis `invoiceLogoUrl`, omis si null) + `invoiceHeaderName` en grand + `invoiceLegalOwner` et coordonnées en petit. Polices du design system embarquées (TTF), fallback Helvetica |
 | `invoice-files.ts` | Résolution rootDir (`INVOICES_DIR` env pour les tests, défaut `private/uploads/invoices/`), écriture/lecture, mkdir récursif |
 | `invoice-email.ts` | `sendInvoiceEmail(invoiceId)` : template email dédié « Votre facture » + PDF en pièce jointe, marque `sentAt`/`sentTo` |
 
