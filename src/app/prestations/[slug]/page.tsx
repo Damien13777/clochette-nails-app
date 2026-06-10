@@ -11,6 +11,7 @@
  * SEO : title/desc/canonical/og:image. PostPurchaseInfo affiché en bas si présent.
  */
 
+import { safeJsonLd } from "@/lib/jsonld";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -238,12 +239,12 @@ export default async function ServiceDetailPage({
       <SiteHeader />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
+          __html: safeJsonLd(
             breadcrumbJsonLd([
               { name: "Accueil", path: "/" },
               { name: "Prestations", path: "/prestations" },

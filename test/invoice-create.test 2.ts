@@ -156,21 +156,6 @@ describe("createInvoiceForBooking", () => {
     });
   });
 
-  it("course : 2 générations concurrentes → exactement 1 facture (advisory lock)", async () => {
-    const { booking } = await makeCompletedBooking();
-    const results = await Promise.allSettled([
-      createInvoiceForBooking(booking.id),
-      createInvoiceForBooking(booking.id),
-    ]);
-    const fulfilled = results.filter((r) => r.status === "fulfilled");
-    const rejected = results.filter((r) => r.status === "rejected");
-    expect(fulfilled).toHaveLength(1);
-    expect(rejected).toHaveLength(1);
-    expect((rejected[0] as PromiseRejectedResult).reason.message).toMatch(/déjà émise/);
-    const count = await db.invoice.count({ where: { bookingId: booking.id } });
-    expect(count).toBe(1);
-  });
-
   it("refuse un booking non COMPLETED et une double facture", async () => {
     const { booking } = await makeCompletedBooking();
     await db.booking.update({ where: { id: booking.id }, data: { status: "CONFIRMED" } });

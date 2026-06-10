@@ -5,6 +5,7 @@
  * description longue rendue via TipTap → DOMPurify.
  */
 
+import { safeJsonLd } from "@/lib/jsonld";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -134,12 +135,12 @@ export default async function EbookDetailPage({
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
+          __html: safeJsonLd(
             breadcrumbJsonLd([
               { name: "Accueil", path: "/" },
               { name: "Ebooks", path: "/ebooks" },

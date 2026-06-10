@@ -22,6 +22,7 @@
  *    "Quelles sont les coordonnées ?")
  */
 
+import { safeJsonLd } from "@/lib/jsonld";
 import { loadEmailGlobals } from "@/lib/email/globals";
 import { prisma } from "@/lib/prisma";
 
@@ -255,7 +256,7 @@ export async function LocalBusinessJsonLd() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
     />
   );
 }

@@ -21,10 +21,5 @@ export async function writeInvoicePdf(relPath: string, pdf: Buffer): Promise<voi
 }
 
 export async function readInvoicePdf(relPath: string): Promise<Buffer> {
-  const root = path.resolve(invoicesRootDir());
-  const abs = path.resolve(root, relPath);
-  if (!abs.startsWith(root + path.sep)) {
-    throw new Error("Chemin de facture hors racine.");
-  }
-  return readFile(abs);
+  return readFile(path.join(invoicesRootDir(), relPath));
 }

@@ -5,6 +5,7 @@
  * platformSettings. Si désactivé : page maintenance.
  */
 
+import { safeJsonLd } from "@/lib/jsonld";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { GiftCardPurchaseForm } from "./purchase-form";
@@ -59,7 +60,7 @@ export default async function GiftCardsPublicPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
+          __html: safeJsonLd({
             "@context": "https://schema.org",
             "@type": "Product",
             name: "Carte cadeau Clochette Nails",
@@ -82,7 +83,7 @@ export default async function GiftCardsPublicPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(
+          __html: safeJsonLd(
             breadcrumbJsonLd([
               { name: "Accueil", path: "/" },
               { name: "Cartes cadeau", path: "/cartes-cadeau" },
