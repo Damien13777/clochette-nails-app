@@ -35,6 +35,8 @@ export type EmailMessage = {
   replyTo?: string;
   /** Tag analytics Resend (groupement dans le dashboard) */
   tag?: string;
+  /** Pièces jointes (PDF factures…). Ignorées en mode mock (loggées). */
+  attachments?: { filename: string; content: Buffer }[];
 };
 
 /**
@@ -116,6 +118,7 @@ export async function sendEmail(rawMsg: EmailMessage): Promise<SendResult> {
         `  From    : ${FROM_EMAIL}\n` +
         `  Subject : ${msg.subject}\n` +
         `  Tag     : ${msg.tag ?? "(none)"}\n` +
+        `  Attach  : ${msg.attachments?.map((a) => a.filename).join(", ") ?? "(none)"}\n` +
         `  --- TEXT ---\n${msg.text.split("\n").map((l) => `  ${l}`).join("\n")}\n`,
     );
     return { ok: true, id: "mock-" + Date.now() };
@@ -134,6 +137,14 @@ export async function sendEmail(rawMsg: EmailMessage): Promise<SendResult> {
       // même si on ajoute un tag avec point/espace plus tard.
       ...(msg.tag
         ? { tags: [{ name: "category", value: sanitizeTag(msg.tag) }] }
+        : {}),
+      ...(msg.attachments && msg.attachments.length > 0
+        ? {
+            attachments: msg.attachments.map((a) => ({
+              filename: a.filename,
+              content: a.content,
+            })),
+          }
         : {}),
     });
 
