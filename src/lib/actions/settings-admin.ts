@@ -80,6 +80,34 @@ const settingsSchema = z
       .transform((v) => (v === "" ? null : v))
       .nullable(),
 
+    // Facturation
+    invoiceHeaderName: z
+      .string()
+      .trim()
+      .max(120, "Nom trop long (120 caractères max)")
+      .or(z.literal(""))
+      .transform((v) => (v === "" ? null : v))
+      .nullable(),
+    invoiceLegalOwner: z
+      .string()
+      .trim()
+      .max(200, "Texte trop long (200 caractères max)")
+      .or(z.literal(""))
+      .transform((v) => (v === "" ? null : v))
+      .nullable(),
+    invoiceVatMention: z
+      .string()
+      .trim()
+      .min(2, "Mention TVA requise")
+      .max(300, "Mention trop longue"),
+    invoiceLegalFooter: z
+      .string()
+      .trim()
+      .max(2000, "Texte trop long (2000 caractères max)")
+      .or(z.literal(""))
+      .transform((v) => (v === "" ? null : v))
+      .nullable(),
+
     // Modules + maintenance
     bookingsEnabled: z.coerce.boolean(),
     ebooksEnabled: z.coerce.boolean(),
@@ -137,6 +165,11 @@ export async function updatePlatformSettings(
     bookingGranularityMinutes: formData.get("bookingGranularityMinutes"),
     bookingCancellationPolicy: formData.get("bookingCancellationPolicy") ?? "",
 
+    invoiceHeaderName: formData.get("invoiceHeaderName") ?? "",
+    invoiceLegalOwner: formData.get("invoiceLegalOwner") ?? "",
+    invoiceVatMention: formData.get("invoiceVatMention"),
+    invoiceLegalFooter: formData.get("invoiceLegalFooter") ?? "",
+
     bookingsEnabled: formData.get("bookingsEnabled") === "on",
     ebooksEnabled: formData.get("ebooksEnabled") === "on",
     blogEnabled: formData.get("blogEnabled") === "on",
@@ -184,6 +217,10 @@ export async function updatePlatformSettings(
       bookingMinAdvanceHours: data.bookingMinAdvanceHours,
       bookingGranularityMinutes: data.bookingGranularityMinutes,
       bookingCancellationPolicy: data.bookingCancellationPolicy,
+      invoiceHeaderName: data.invoiceHeaderName,
+      invoiceLegalOwner: data.invoiceLegalOwner,
+      invoiceVatMention: data.invoiceVatMention,
+      invoiceLegalFooter: data.invoiceLegalFooter,
       bookingsEnabled: data.bookingsEnabled,
       ebooksEnabled: data.ebooksEnabled,
       blogEnabled: data.blogEnabled,

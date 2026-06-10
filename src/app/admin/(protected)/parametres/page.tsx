@@ -53,6 +53,11 @@ export default async function AdminSettingsPage() {
       emailFooterNote: true,
       emailHeaderImageUrl: true,
       emailFooterImageUrl: true,
+      invoiceHeaderName: true,
+      invoiceLegalOwner: true,
+      invoiceVatMention: true,
+      invoiceLegalFooter: true,
+      invoiceLogoUrl: true,
       updatedAt: true,
     },
   });
@@ -109,6 +114,11 @@ export default async function AdminSettingsPage() {
           emailFooterNote: settings.emailFooterNote ?? "",
           emailHeaderImageUrl: settings.emailHeaderImageUrl,
           emailFooterImageUrl: settings.emailFooterImageUrl,
+          invoiceHeaderName: settings.invoiceHeaderName ?? "",
+          invoiceLegalOwner: settings.invoiceLegalOwner ?? "",
+          invoiceVatMention: settings.invoiceVatMention,
+          invoiceLegalFooter: settings.invoiceLegalFooter ?? "",
+          invoiceLogoUrl: settings.invoiceLogoUrl,
         }}
       />
 
