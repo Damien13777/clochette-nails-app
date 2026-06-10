@@ -96,7 +96,8 @@ export async function TestimonialsSection() {
               {t.quote}
             </p>
 
-            <div className="flex gap-0.5 mt-4" role="img" aria-label={`${t.rating} sur 5`}>
+            {/* mt-auto : socle étoiles+auteur ancré en bas, position uniforme entre cards */}
+            <div className="flex gap-0.5 mt-auto pt-4" role="img" aria-label={`${t.rating} sur 5`}>
               {[...Array(t.rating)].map((_, i) => (
                 <svg
                   key={i}
@@ -110,7 +111,7 @@ export async function TestimonialsSection() {
               ))}
             </div>
 
-            <div className="mt-auto pt-5 flex items-center gap-3">
+            <div className="pt-5 flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)]"
                 style={{ fontFamily: "var(--font-display)" }}
