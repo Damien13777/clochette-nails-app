@@ -61,6 +61,62 @@ async function main() {
     }));
   console.log(`  ✓ PlatformSettings : depositMode=${settings.depositMode}, depositPercent=${settings.depositPercent}%`);
 
+  // ── 2b. Avis clientes : reprise des 3 avis hardcodés v1 (idempotent) ─
+  const settingsRow = await prisma.platformSettings.findFirstOrThrow({
+    select: { id: true, testimonialsGoogleLine: true },
+  });
+  if (settingsRow.testimonialsGoogleLine === null) {
+    await prisma.platformSettings.update({
+      where: { id: settingsRow.id },
+      data: { testimonialsGoogleLine: "4,9 / 5 · 87 avis Google" },
+    });
+  }
+  if ((await prisma.testimonial.count()) === 0) {
+    await prisma.testimonial.createMany({
+      data: [
+        {
+          quote:
+            "Une parenthèse hors du temps. Chloé prend soin de chaque détail, du diagnostic à la finition. Le rendu tient impeccablement 4 semaines.",
+          rating: 5,
+          authorName: "Marie L.",
+          authorLabel: "Cliente fidèle · 2024",
+          sortOrder: 0,
+        },
+        {
+          quote:
+            "Salon propre, ambiance calme, et un sens du détail qui change tout. J'ai trouvé MA prothésiste.",
+          rating: 5,
+          authorName: "Sophie D.",
+          authorLabel: "Première visite · 2024",
+          sortOrder: 1,
+        },
+        {
+          quote:
+            "Manucure russe excellente, conseils précieux pour entretenir mes ongles entre les rendez-vous. Je recommande sans réserve.",
+          rating: 5,
+          authorName: "Julie M.",
+          authorLabel: "Cliente fidèle · 2024",
+          sortOrder: 2,
+        },
+      ],
+    });
+  }
+  console.log("  ✓ Testimonials : 3 avis + ligne Google");
+
+  // ── 2c. Facturation : valeurs Clochette (éditables dans Paramètres) ─
+  const invoiceDefaults = await prisma.platformSettings.findFirstOrThrow({
+    select: { id: true, invoiceHeaderName: true, invoiceLegalOwner: true, invoiceLogoUrl: true },
+  });
+  await prisma.platformSettings.update({
+    where: { id: invoiceDefaults.id },
+    data: {
+      invoiceHeaderName: invoiceDefaults.invoiceHeaderName ?? "CN manucure by Clochette Nails",
+      invoiceLegalOwner: invoiceDefaults.invoiceLegalOwner ?? "EI Gomes Chloé",
+      invoiceLogoUrl: invoiceDefaults.invoiceLogoUrl ?? "/brand/lockup-horizontal-couleur.png",
+    },
+  });
+  console.log("  ✓ Facturation : en-tête, exploitante EI, logo");
+
   // ── 3. BusinessHours (Mar-Sam 9h-19h, pause 12h30-13h30) ─
   // dayOfWeek : 0=Dimanche, 1=Lundi, ..., 6=Samedi
   const hoursConfig = [

@@ -52,6 +52,12 @@ const nextConfig: NextConfig = {
   },
 
   /**
+   * @react-pdf/renderer (génération factures) reste un package Node externe :
+   * son bundling Turbopack casse la résolution des polices internes.
+   */
+  serverExternalPackages: ["@react-pdf/renderer"],
+
+  /**
    * Headers de sécurité appliqués à toutes les routes.
    * Cf. https://owasp.org/www-project-secure-headers/
    */
