@@ -173,7 +173,11 @@ export async function Hero() {
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 6v6l4 2" />
               </svg>
-              <span>Mar–Sam · sur rendez-vous</span>
+              <span>
+              Lun–Sam sauf mer.
+              <br />
+              sur rendez-vous
+            </span>
             </div>
             {googleLine && (
               <div className="flex items-center gap-2" aria-label={googleLine}>
