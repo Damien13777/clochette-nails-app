@@ -8,6 +8,7 @@
  * ISR cible : 1h (à activer Phase 1.5 quand contenu DB stable).
  */
 
+import type { Metadata } from "next";
 import { SiteHeader } from "@/components/landing/site-header";
 import { Hero } from "@/components/landing/hero";
 import { EngagementSection } from "@/components/landing/engagement-section";
@@ -19,6 +20,19 @@ import { FinalCTA } from "@/components/landing/final-cta";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LocalBusinessJsonLd } from "@/components/landing/local-business-jsonld";
 import { Reveal } from "@/components/reveal";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "Clochette Nails · Prothésiste ongulaire à Moncoutant-sur-Sèvre",
+    description:
+      "Studio de prothésie ongulaire à Moncoutant-sur-Sèvre. Manucure russe, pose semi-permanente et nail-art en cabine privée. Sur rendez-vous.",
+    url: "/",
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Clochette Nails",
+  },
+};
 
 export default async function HomePage() {
   return (

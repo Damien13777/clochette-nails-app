@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/ebooks`, lastModified: now, priority: 0.7, changeFrequency: "weekly" },
     { url: `${SITE_URL}/cgv`, lastModified: now, priority: 0.3, changeFrequency: "yearly" },
     { url: `${SITE_URL}/confidentialite`, lastModified: now, priority: 0.3, changeFrequency: "yearly" },
+    { url: `${SITE_URL}/mentions-legales`, lastModified: now, priority: 0.3, changeFrequency: "yearly" },
   ];
 
   // Prestations PUBLISHED
