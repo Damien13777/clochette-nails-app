@@ -13,21 +13,25 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SITE_URL, BEAUTYSALON_ID, breadcrumbJsonLd } from "@/lib/seo-jsonld";
 
-export const metadata: Metadata = {
-  title: "Cartes cadeau · Clochette Nails",
-  description:
-    "Offrez une pause beauté. Carte cadeau Clochette Nails utilisable sur toutes les prestations du salon — valable 12 mois.",
-  alternates: { canonical: "/cartes-cadeau" },
-  openGraph: {
-    title: "Offrez une carte cadeau Clochette Nails",
-    description:
-      "Une pause beauté à offrir : carte cadeau utilisable sur toutes les prestations du salon, valable 12 mois.",
-    url: "/cartes-cadeau",
-    type: "website",
-    locale: "fr_FR",
-    siteName: "Clochette Nails",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await prisma.platformSettings.findFirst({
+    select: { giftCardExpiryDays: true },
+  });
+  const validityMonths = Math.round((settings?.giftCardExpiryDays ?? 180) / 30);
+  return {
+    title: "Cartes cadeau · Clochette Nails",
+    description: `Offrez une pause beauté. Carte cadeau Clochette Nails utilisable sur toutes les prestations du salon — valable ${validityMonths} mois.`,
+    alternates: { canonical: "/cartes-cadeau" },
+    openGraph: {
+      title: "Offrez une carte cadeau Clochette Nails",
+      description: `Une pause beauté à offrir : carte cadeau utilisable sur toutes les prestations du salon, valable ${validityMonths} mois.`,
+      url: "/cartes-cadeau",
+      type: "website",
+      locale: "fr_FR",
+      siteName: "Clochette Nails",
+    },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
