@@ -70,6 +70,7 @@ type Props = {
   services: ServiceLite[];
   options: OptionLite[];
   bookableMonths: { year: number; month: number }[];
+  closedDays: import("@/lib/closed-days").ClosedDayData;
   stripeConfigured: boolean;
   depositSettings: import("@/lib/deposit").DepositSettings | null;
 };
@@ -78,6 +79,7 @@ export function ReservationFlow({
   services,
   options,
   bookableMonths,
+  closedDays,
   stripeConfigured,
   depositSettings,
 }: Props) {
@@ -332,6 +334,7 @@ export function ReservationFlow({
                 serviceId={selectedService.id}
                 optionIds={optionIds}
                 bookableMonths={bookableMonths}
+                closedDays={closedDays}
                 onPick={handleSlotPicked}
               />
             )}

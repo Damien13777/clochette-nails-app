@@ -11,6 +11,8 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { ReservationFlow } from "./reservation-flow";
 import { isStripeConfigured } from "@/lib/stripe";
+import { computeClosedWeekdays, scheduleIsClosed } from "@/lib/closed-days";
+import { startOfTodayParisAsUtc } from "@/lib/paris-day";
 
 export const metadata: Metadata = {
   title: "Réserver un rendez-vous",
@@ -23,7 +25,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"; // données live, pas d'ISR
 
 export default async function ReservationPage() {
-  const [services, options, bookableMonths, settings] = await Promise.all([
+  const [services, options, bookableMonths, settings, businessHours, dayExceptions] = await Promise.all([
     prisma.service.findMany({
       where: { status: "PUBLISHED" },
       orderBy: [{ category: "asc" }, { displayOrder: "asc" }],
@@ -63,7 +65,32 @@ export default async function ReservationPage() {
         bookingsEnabled: true,
       },
     }),
+    prisma.businessHours.findMany({
+      select: {
+        dayOfWeek: true,
+        isOpen: true,
+        openingTime: true,
+        closingTime: true,
+      },
+    }),
+    prisma.dayException.findMany({
+      where: { date: { gte: startOfTodayParisAsUtc() } },
+      select: {
+        date: true,
+        isOpen: true,
+        openingTime: true,
+        closingTime: true,
+      },
+    }),
   ]);
+
+  const closedDays = {
+    closedWeekdays: computeClosedWeekdays(businessHours),
+    exceptions: dayExceptions.map((e) => ({
+      date: e.date.toISOString().slice(0, 10),
+      closed: scheduleIsClosed(e),
+    })),
+  };
 
   if (settings && !settings.bookingsEnabled) {
     return (
@@ -87,6 +114,7 @@ export default async function ReservationPage() {
         services={services}
         options={options}
         bookableMonths={bookableMonths}
+        closedDays={closedDays}
         stripeConfigured={isStripeConfigured()}
         depositSettings={
           settings
