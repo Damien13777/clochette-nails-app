@@ -3,21 +3,24 @@
 /**
  * Step 3 — Calendrier + slots horaires.
  *
- * Phase 1 simple : sélecteur mois (prev/next) + grid 7×N de jours.
- * - Jours hors mois ouverts (BookableMonth absent) → grisés
- * - Jours dans le passé → grisés
- * - Tap sur un jour → fetch /api/v1/availability/slots → afficher chips horaires
- *
- * Phase 1.5 : pattern hatching pour Unavailability visible direct sur la grid
- * (pour V1 on découvre l'indispo seulement au click).
+ * Sélecteur mois (prev/next) + grid 7×N de jours.
+ * - Mois non ouvert (BookableMonth absent) → message dédié
+ * - Jours dans le passé → grisés/désactivés
+ * - Jours structurellement fermés (BusinessHours hebdo + DayException,
+ *   calculés serveur dans page.tsx via closed-days.ts) → grisés/désactivés,
+ *   la cliente ne découvre plus la fermeture par essai-erreur
+ * - Tap sur un jour ouvert → fetch /api/v1/availability/slots → chips horaires
+ *   (un jour ouvert mais complet affiche « aucun créneau », message distinct)
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { isDayClosed, type ClosedDayData } from "@/lib/closed-days";
 
 type Props = {
   serviceId: string;
   optionIds: string[];
   bookableMonths: { year: number; month: number }[];
+  closedDays: ClosedDayData;
   onPick: (date: string, startTime: string) => void;
 };
 
@@ -38,7 +41,7 @@ const MONTH_NAMES = [
 
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"]; // Lun-Dim
 
-export function BookingCalendar({ serviceId, optionIds, bookableMonths, onPick }: Props) {
+export function BookingCalendar({ serviceId, optionIds, bookableMonths, closedDays, onPick }: Props) {
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -219,8 +222,9 @@ export function BookingCalendar({ serviceId, optionIds, bookableMonths, onPick }
               }
               const isPast = cell.date < today;
               const dateStr = formatDateKey(cell.date);
+              const isClosed = isDayClosed(dateStr, cell.date.getDay(), closedDays);
               const isSelected = selectedDate === dateStr;
-              const disabled = isPast;
+              const disabled = isPast || isClosed;
 
               return (
                 <button
@@ -229,6 +233,7 @@ export function BookingCalendar({ serviceId, optionIds, bookableMonths, onPick }
                   role="gridcell"
                   aria-selected={isSelected}
                   disabled={disabled}
+                  title={!isPast && isClosed ? "Salon fermé" : undefined}
                   onClick={() => setSelectedDate(dateStr)}
                   className={`aspect-square text-sm rounded-[var(--radius-sm)] transition-all ${
                     isSelected
