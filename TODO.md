@@ -1,6 +1,6 @@
 # TODO — Clochette Nails v2
 
-> **Source de vérité unique du backlog.** Dernière mise à jour : 2026-06-03.
+> **Source de vérité unique du backlog.** Dernière mise à jour : 2026-06-11.
 > Convention : un item démarré → branche dédiée (`feat/*`, `fix/*`) ; un item livré → coché ici.
 > Le contexte/raison de report des items Phase 2 est détaillé dans [`PHASE_2.md`](PHASE_2.md).
 > L'intégration ERP (events sortants) est détaillée dans [`MANAGEMENT_API.md`](MANAGEMENT_API.md).
@@ -62,11 +62,45 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 
 ---
 
-## 🚀 Déploiement
+## 🚀 Déploiement — semaine du 15/06, bascule JEUDI 18/06 (planning confirmé 2026-06-11)
 
-- [ ] **Setup VPS Hostinger** — Nginx vhost, PM2, DB Postgres, env vars, **4 crons** crontab, X-Accel-Redirect (PDFs ebooks). ⚠️ Inclure `private/uploads/` (PDFs ebooks **+ factures** — conservation légale 10 ans) dans la stratégie de backup fichiers, en plus de `pg_dump`.
-- [ ] **Plan de migration v1 → v2 (runbook complet pas-à-pas)** — à rédiger AVEC Damien au moment de la bascule, pour que chaque étape soit limpide : ① état des lieux (v1 sur Hostinger mutualisé, domaine `clochette-nails.fr` **sans www** = host canonique conservé, cf. `docs/AUDIT-SEO.md`) ② DNS → VPS ③ env prod `NEXT_PUBLIC_SITE_URL="https://clochette-nails.fr"` + `NEXT_PUBLIC_GA_TRACKING_ID` (créer la propriété GA4 avant la bascule — vide = GA ne charge simplement pas, sans erreur) ④ Nginx : vhost apex + redirect 301 `www.` → apex + http→https ⑤ bascule + vérif des 5 redirections 301 v1 (`curl -I /pages/cgv.html` → 301/308) ⑥ Search Console : propriété domaine + soumission sitemap + inspection des 4 anciennes URLs ⑦ fenêtre de retour arrière (remettre le DNS) tant que la prod n'est pas validée.
-- [ ] **Bascule : migration données + médias — la DB locale EST la future prod** (confirmé 2026-06-11 : contenu définitif + vrais RDV/avis/prestations déjà dans `clochette_dev`) — méthode = **`pg_dump` COMPLET** de la DB locale → restore sur le Postgres VPS (zéro oubli par construction, on ne migre PAS table par table), précédé d'une **passe d'hygiène AVEC Damien** pour purger les résidus de recette : bookings/contacts/abonnées newsletter/cartes cadeau/factures de test, `InvoiceCounter` cohérent avec les factures restantes, `StripeEvent` (events mode test), `OutboundEvent` de test (⚠️ GARDER les events réels destinés à l'ERP). Fichiers : rsync `public/uploads/` **ET `private/uploads/`** (factures PDF — conservation 10 ans) ; `booking-files/` seulement si des RDV réels ont des photos clientes. **NE PAS** relancer le backfill filigrane (déjà appliqué en local).
+> La v1 PHP reste en prod jusqu'à la bascule (coupée jeudi seulement). La DB
+> locale `clochette_dev` **EST la future prod** (contenu définitif + vrais
+> RDV/avis/prestations déjà dedans). Checklist technique complémentaire (env,
+> Nginx XFF/client_max_body_size/X-Accel, events webhook Stripe, email de test
+> réel) : `docs/AUDIT-PRE-DEPLOIEMENT.md` § jour J.
+
+**Phase 0 — d'ici lundi (sans VPS, seul le local est possible) :**
+- [ ] (Damien) Passe appareils réels iPad/iPhone : funnel résa, modales admin, factures (cf. `docs/AUDIT-UI-UX.md` § checklist)
+- [ ] (Damien) Paramètres → en-tête facture « CN manucure by Clochette Nails » → « CN Manucure »
+- [ ] (Chloé) Infos CGV : assurance RC pro + médiateur → compléter les 2 `<LegalTodo>` (item Pré-déploiement)
+- [ ] (Damien, 5 min, faisable dès maintenant) Créer la propriété GA4 → noter le `G-XXXX` pour l'env prod
+
+**Phase A — setup VPS + staging (dès réception, ~lun-mar 15-16/06) — tout sauf le DNS :**
+- [ ] Hardening : SSH par clés (password off), ufw, fail2ban, unattended-upgrades
+- [ ] Postgres + tuning calibré (mémoire `project_postgres_tuning`) + DB + `DATABASE_URL` suffixée `?connection_limit=10&pool_timeout=30`
+- [ ] Node 22+ / pnpm / PM2 (`ecosystem.config.js`) / Nginx : vhost staging (IP ou sous-domaine test), X-Accel-Redirect (PDFs ebooks), `client_max_body_size`, XFF dernier maillon
+- [ ] **Déployer la v2 en staging avec l'env complète** → répétition générale, on dévermine tout AVANT jeudi
+- [ ] **`deploy.sh`** écrit ET testé contre le staging (pull → install → build → `pm2 reload`)
+- [ ] **4 crons** crontab + **heartbeats healthchecks.io** (plan free 20 checks ; suffixe `&& curl -fsS -m 10 --retry 3 https://hc-ping.com/<uuid>` sur chaque ligne → alerte email si un cron meurt en silence)
+- [ ] **Backups** : `pg_dump` quotidien rétention 7 j + sync offsite + fichiers `public/uploads/` ET `private/uploads/` (factures — conservation légale 10 ans) + **test de restauration immédiat** (un backup non testé n'est pas un backup)
+- [ ] **Sentry** : créer le compte avec l'email studioG4 + câbler le SDK (plugin déjà installé, `error.tsx` à wirer)
+- [ ] Comptes/clés prod : Stripe **live** + webhook signé, **vérif domaine Resend** (cf. item Pré-déploiement + mémoire checklist), reCAPTCHA v3 prod, GA4
+
+**Phase B — veille de bascule (mer 17/06) :**
+- [ ] **Passe d'hygiène données AVEC Damien** : purger les résidus de recette (bookings/contacts/abonnées newsletter/cartes cadeau/factures de test), `InvoiceCounter` cohérent avec les factures restantes, `StripeEvent` (events mode test), `OutboundEvent` de test (⚠️ GARDER les events réels destinés à l'ERP)
+- [ ] Contrôle copies iCloud (item Pré-déploiement) + working tree propre
+- [ ] **Dry-run de la migration sur le staging** : `pg_dump` COMPLET de `clochette_dev` (PAS de migration table par table) + rsync `public/uploads/` ET `private/uploads/` (`booking-files/` seulement si des RDV réels ont des photos) → restore → vérif échantillon d'URLs publiques + liste des RDV à venir. **NE PAS** relancer le backfill filigrane (déjà appliqué en local)
+
+**Phase C — bascule (jeu 18/06) :**
+① état des lieux (v1 mutualisé, `clochette-nails.fr` **sans www** = host canonique conservé, cf. `docs/AUDIT-SEO.md`) ② **gel des modifs locales** (Chloé n'utilise plus l'admin local) → re-dump + re-rsync frais du matin (delta depuis le dry-run) → restore prod ③ env prod finale (`NEXT_PUBLIC_SITE_URL="https://clochette-nails.fr"`, `NEXT_PUBLIC_GA_TRACKING_ID`, …) ④ Nginx : vhost apex + 301 `www.`→apex + http→https ⑤ **DNS → VPS** (= coupure v1) ⑥ vérifs : 5 redirections 301 v1 (`curl -I /pages/cgv.html`), funnel complet avec un vrai paiement test, email réel reçu, webhook Stripe live ⑦ Search Console : propriété domaine + soumission sitemap + inspection des 4 anciennes URLs ⑧ **uptime monitoring** (UptimeRobot/Better Stack, free) ⑨ fenêtre de retour arrière (re-pointer le DNS vers v1) tant que la prod n'est pas validée
+
+**Phase D — post-bascule (semaine suivante, sans urgence) :**
+- [ ] PageSpeed Insights / Lighthouse sur la vraie prod (référence locale : 100/100/100)
+- [ ] **Guide utilisatrice admin pour Chloé** — livrable duplicable produit (chaque future cliente le recevra rebrandé)
+- [ ] **Registre des traitements RGPD** (art. 30) — one-pager : données traitées, finalités, rétentions (déjà codées), sous-traitants Stripe/Resend/Google/Hostinger
+- [ ] Migration des repos vers `~/dev` (hors iCloud) une fois la prod stable
+- [ ] (optionnel) Index uniques partiels factures via migration formelle (audit § P2 bonus) + overrides deps (audit § 9)
 
 ---
 
@@ -80,8 +114,8 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 - [ ] **Inspirations / album tendances** (résa)
 - [ ] **Filtres avancés** réservation
 - [ ] **Saison & suggestions** prestations (taxonomie tags)
-- [ ] **Témoignages en DB** (actuellement hardcodés dans `testimonials-section.tsx`)
-- [ ] **Monitoring / Sentry** (`error.tsx` « à wirer »)
+- [x] **Témoignages en DB** — ✅ livré (CRUD `/admin/parametres/avis`, cf. section Qualité & design)
+- [x] **Monitoring / Sentry** — déplacé en Déploiement Phase A (compte studioG4 + câblage SDK)
 
 ---
 
