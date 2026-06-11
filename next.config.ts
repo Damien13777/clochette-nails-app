@@ -58,6 +58,22 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@react-pdf/renderer"],
 
   /**
+   * Redirections 301 des URLs du site v1 (PHP) indexées par Google.
+   * Source : sitemap.xml v1 (5 URLs : / + 4 pages légales sous /pages/*.html).
+   * `permanent: true` → 308/301, transfert du jus SEO vers les routes v2.
+   * cookies.html → /confidentialite (le contenu cookies y est intégré).
+   */
+  async redirects() {
+    return [
+      { source: "/index.html", destination: "/", permanent: true },
+      { source: "/pages/mentions-legales.html", destination: "/mentions-legales", permanent: true },
+      { source: "/pages/politique-confidentialite.html", destination: "/confidentialite", permanent: true },
+      { source: "/pages/cookies.html", destination: "/confidentialite", permanent: true },
+      { source: "/pages/cgv.html", destination: "/cgv", permanent: true },
+    ];
+  },
+
+  /**
    * Headers de sécurité appliqués à toutes les routes.
    * Cf. https://owasp.org/www-project-secure-headers/
    */

@@ -111,7 +111,7 @@ async function main() {
     where: { id: invoiceDefaults.id },
     data: {
       invoiceHeaderName: invoiceDefaults.invoiceHeaderName ?? "CN manucure by Clochette Nails",
-      invoiceLegalOwner: invoiceDefaults.invoiceLegalOwner ?? "EI Gomes Chloé",
+      invoiceLegalOwner: invoiceDefaults.invoiceLegalOwner ?? "EI Girard Chloé",
       invoiceLogoUrl: invoiceDefaults.invoiceLogoUrl ?? "/brand/lockup-horizontal-couleur.png",
     },
   });

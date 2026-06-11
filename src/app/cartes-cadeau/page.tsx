@@ -18,6 +18,15 @@ export const metadata: Metadata = {
   description:
     "Offrez une pause beauté. Carte cadeau Clochette Nails utilisable sur toutes les prestations du salon — valable 12 mois.",
   alternates: { canonical: "/cartes-cadeau" },
+  openGraph: {
+    title: "Offrez une carte cadeau Clochette Nails",
+    description:
+      "Une pause beauté à offrir : carte cadeau utilisable sur toutes les prestations du salon, valable 12 mois.",
+    url: "/cartes-cadeau",
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Clochette Nails",
+  },
 };
 
 export const dynamic = "force-dynamic";
