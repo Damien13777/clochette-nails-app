@@ -76,9 +76,15 @@ export async function Hero() {
 
           {/* Body */}
           <p className="mt-6 text-sm md:text-base text-[var(--color-ink-700)] max-w-[48ch] leading-relaxed">
-            Prenez soin de vous, je m&apos;occupe du reste. Manucure russe,
-            pose semi-permanente et nail-art en cabine privée à Moncoutant —
-            sur rendez-vous.
+            Des poses durables, un rendu naturel, des ongles respectés :
+            voilà ce qui guide chacun de mes gestes.
+          </p>
+          <p className="mt-4 text-sm md:text-base text-[var(--color-ink-700)] max-w-[48ch] leading-relaxed">
+            Moi, c&apos;est Chloé, prothésiste ongulaire depuis 2025,
+            spécialisée dans la manucure russe et le nail-art au pinceau.
+            Je multiplie les formations et perfectionne mes techniques en
+            permanence, parce que la précision est un savoir-faire qui
+            s&apos;entretient.
           </p>
 
           {/* CTAs */}
