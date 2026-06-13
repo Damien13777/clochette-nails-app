@@ -12,8 +12,8 @@
 **Branche:** `feat/invoices-and-testimonials` (déjà créée)
 
 **Conventions impératives :**
-- Cwd shell retombe sur le repo v1 PHP → TOUJOURS `git -C /Users/damiengcls/Documents/clochette-nails-v2` et chemins absolus.
-- `pnpm` se lance depuis `/Users/damiengcls/Documents/clochette-nails-v2`.
+- Cwd shell retombe sur le repo v1 PHP → TOUJOURS `git -C /Users/damiengcls/dev/clochette-nails-v2` et chemins absolus.
+- `pnpm` se lance depuis `/Users/damiengcls/dev/clochette-nails-v2`.
 - Pattern actions : `ActionResult = { ok: true; … } | { ok: false; error: string }`, `requireAdmin()` de `@/lib/auth-guards`, audit via `prisma.auditLog.create`.
 - Pas de commentaires inline ; un header-comment par fichier.
 - `prisma db push` est lancé PAR DAMIEN (garde anti-IA Prisma 7) — le plan marque ces étapes **[HUMAIN]**.
@@ -93,7 +93,7 @@ Dans `model PlatformSettings`, après le bloc `// Fiscalité` (`vatEnabled` / `v
 
 Demander à Damien d'exécuter :
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm db:push
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm db:push
 ```
 Attendu : `Your database is now in sync with your Prisma schema.` (le client est régénéré automatiquement).
 
@@ -146,14 +146,14 @@ Dans `prisma/seed.ts`, dans `main()` après le bloc PlatformSettings existant (`
 
 - [ ] **Step 1.5 : Exécuter le seed et vérifier**
 
-Run : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm db:seed`
+Run : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm db:seed`
 Attendu : sortie du seed sans erreur. Vérifier : `pnpm exec tsx -e "import { PrismaClient } from '@prisma/client'; import { PrismaPg } from '@prisma/adapter-pg'; const p = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) }); p.testimonial.count().then(c => { console.log('testimonials:', c); return p.$disconnect(); });"` → `testimonials: 3` (lancer avec `dotenv -e .env.local --` si DATABASE_URL absent du shell).
 
 - [ ] **Step 1.6 : Commit**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add prisma/
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(avis): modèle Testimonial + testimonialsGoogleLine + seed reprise des 3 avis"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add prisma/
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(avis): modèle Testimonial + testimonialsGoogleLine + seed reprise des 3 avis"
 ```
 
 ---
@@ -330,14 +330,14 @@ export async function updateTestimonialsGoogleLine(value: string): Promise<Actio
 
 - [ ] **Step 2.2 : Vérifier types + lint**
 
-Run : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm exec tsc --noEmit && pnpm lint`
+Run : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm exec tsc --noEmit && pnpm lint`
 Attendu : 0 erreur.
 
 - [ ] **Step 2.3 : Commit**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/actions/testimonials-admin.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(avis): server actions CRUD + reorder + ligne Google"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/actions/testimonials-admin.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(avis): server actions CRUD + reorder + ligne Google"
 ```
 
 ---
@@ -798,12 +798,12 @@ Dans `src/app/admin/(protected)/parametres/page.tsx` : ajouter `import Link from
 
 - [ ] **Step 3.4 : Gates + commit**
 
-Run : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm exec tsc --noEmit && pnpm lint`
+Run : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm exec tsc --noEmit && pnpm lint`
 Attendu : 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add "src/app/admin/(protected)/parametres/"
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(avis): page admin /admin/parametres/avis + carte lien Paramètres"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add "src/app/admin/(protected)/parametres/"
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(avis): page admin /admin/parametres/avis + carte lien Paramètres"
 ```
 
 ---
@@ -904,8 +904,8 @@ Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur. Puis demander à Damie
 - [ ] **Step 4.3 : Commit**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/components/landing/testimonials-section.tsx
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(avis): landing testimonials en lecture DB (section masquée si vide)"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/components/landing/testimonials-section.tsx
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(avis): landing testimonials en lecture DB (section masquée si vide)"
 ```
 
 ---
@@ -1021,14 +1021,14 @@ Dans `model PlatformSettings`, après le bloc `// Fiscalité`, ajouter :
 
 - [ ] **Step 5.3 [HUMAIN] : db push**
 
-Demander à Damien : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm db:push`
+Demander à Damien : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm db:push`
 Attendu : sync OK, client régénéré.
 
 - [ ] **Step 5.4 : Commit**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add prisma/schema.prisma
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): schéma Invoice + InvoiceCounter + champs facturation settings"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add prisma/schema.prisma
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): schéma Invoice + InvoiceCounter + champs facturation settings"
 ```
 
 ---
@@ -1042,7 +1042,7 @@ git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures):
 
 - [ ] **Step 6.1 : Installer @react-pdf/renderer**
 
-Run : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm add @react-pdf/renderer`
+Run : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm add @react-pdf/renderer`
 Attendu : ajout en `dependencies`, postinstall prisma generate OK. Si l'install bloque (sandbox réseau) → relancer avec `dangerouslyDisableSandbox: true`.
 
 - [ ] **Step 6.2 : Exclure react-pdf du bundling serveur**
@@ -1079,7 +1079,7 @@ sharp(src, { density: 300 })
   .then((info) => console.log(`OK → ${dest} (${info.width}×${info.height})`));
 ```
 
-Run : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm exec tsx scripts/rasterize-invoice-logo.ts`
+Run : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm exec tsx scripts/rasterize-invoice-logo.ts`
 Attendu : `OK → …/public/brand/lockup-horizontal-couleur.png (1200×H)`.
 
 - [ ] **Step 6.4 : Seed des champs facturation**
@@ -1106,8 +1106,8 @@ Run : `pnpm db:seed` → sans erreur.
 - [ ] **Step 6.5 : Commit**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add scripts/ public/brand/lockup-horizontal-couleur.png prisma/seed.ts package.json pnpm-lock.yaml next.config.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): @react-pdf/renderer + logo PNG rasterisé + seed facturation"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add scripts/ public/brand/lockup-horizontal-couleur.png prisma/seed.ts package.json pnpm-lock.yaml next.config.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): @react-pdf/renderer + logo PNG rasterisé + seed facturation"
 ```
 
 ---
@@ -1188,8 +1188,8 @@ export async function emitOutboundEvent(
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/email/send.ts src/lib/outbound-events.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(infra): pièces jointes sendEmail + helper outbound-events centralisé"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/email/send.ts src/lib/outbound-events.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(infra): pièces jointes sendEmail + helper outbound-events centralisé"
 ```
 
 ---
@@ -1286,8 +1286,8 @@ export async function readInvoicePdf(relPath: string): Promise<Buffer> {
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/invoice/
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): types + stockage fichiers invoice"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/invoice/
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): types + stockage fichiers invoice"
 ```
 
 ---
@@ -1495,8 +1495,8 @@ export async function renderInvoicePdf(data: InvoicePdfData): Promise<Buffer> {
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur (le rendu réel est testé en Task 10 via `%PDF`).
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/invoice/invoice-pdf.tsx
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): template PDF react-pdf (facture + avoir, franchise et TVA)"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/invoice/invoice-pdf.tsx
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): template PDF react-pdf (facture + avoir, franchise et TVA)"
 ```
 
 ---
@@ -1598,7 +1598,7 @@ describe("numérotation des factures", () => {
 
 - [ ] **Step 10.2 : Vérifier l'échec**
 
-Run : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm test -- invoice-numbering`
+Run : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm test -- invoice-numbering`
 Attendu : FAIL (module `@/lib/invoice/create-invoice` introuvable).
 
 - [ ] **Step 10.3 : Implémenter le cœur createInvoice**
@@ -1786,8 +1786,8 @@ Attendu : 3 tests PASS. (Si blocage sandbox → `dangerouslyDisableSandbox: true
 - [ ] **Step 10.5 : Commit**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add test/invoice-numbering.test.ts src/lib/invoice/create-invoice.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): createInvoice transactionnel + numérotation séquentielle testée sous concurrence"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add test/invoice-numbering.test.ts src/lib/invoice/create-invoice.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): createInvoice transactionnel + numérotation séquentielle testée sous concurrence"
 ```
 
 ---
@@ -2271,8 +2271,8 @@ Run : `pnpm test -- invoice-create` → PASS (6 tests).
 - [ ] **Step 11.5 : Commit**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add test/invoice-create.test.ts src/lib/invoice/create-invoice.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): builders booking / carte cadeau / ebook avec tests"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add test/invoice-create.test.ts src/lib/invoice/create-invoice.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): builders booking / carte cadeau / ebook avec tests"
 ```
 
 ---
@@ -2417,8 +2417,8 @@ export async function createCreditNote(input: {
 Run : `pnpm test` → TOUS les tests verts (14 existants + 12 nouveaux).
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add test/invoice-credit-note.test.ts src/lib/invoice/create-invoice.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): avoirs (createCreditNote) avec plafond testé"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add test/invoice-credit-note.test.ts src/lib/invoice/create-invoice.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): avoirs (createCreditNote) avec plafond testé"
 ```
 
 ---
@@ -2558,8 +2558,8 @@ export async function markInvoiceSent(invoiceId: string, sentTo: string): Promis
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/invoice/invoice-email.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): email Votre facture avec PDF en pièce jointe"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/invoice/invoice-email.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): email Votre facture avec PDF en pièce jointe"
 ```
 
 ---
@@ -2681,8 +2681,8 @@ Dans `booking-actions.tsx`, fonction `MarkCompletedDialog` :
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur. Vérif manuelle (dev Damien) : marquer un RDV honoré → message contient « Facture FAC-… générée » ; avec la case cochée → mail mock en console avec `Attach : FAC-….pdf`.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/actions/booking-admin.ts "src/app/admin/(protected)/bookings/[id]/booking-actions.tsx"
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): génération au markCompleted + case envoi email + warning édition CA"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/actions/booking-admin.ts "src/app/admin/(protected)/bookings/[id]/booking-actions.tsx"
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): génération au markCompleted + case envoi email + warning édition CA"
 ```
 
 ---
@@ -2774,8 +2774,8 @@ Run : `pnpm exec tsc --noEmit && pnpm lint && pnpm test -- stripe-webhook`
 Attendu : 0 erreur, tests webhook existants toujours verts (la signature/idempotence n'est pas touchée). Note : le test route webhook tourne sans `PlatformSettings` ni montants réels → la génération facture y échoue silencieusement (fail-soft), c'est attendu.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/app/api/webhooks/stripe/route.ts
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): génération auto + PDF joint aux mails webhook (GC en ligne, ebooks)"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/app/api/webhooks/stripe/route.ts
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): génération auto + PDF joint aux mails webhook (GC en ligne, ebooks)"
 ```
 
 ---
@@ -2941,8 +2941,8 @@ et après l'envoi, si `r.ok && creditNoteId && creditNoteAttachment` :
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/actions/gift-card-admin.ts src/lib/actions/ebook-sales-admin.ts "src/app/admin/(protected)/cartes-cadeau/new/gift-card-create-form.tsx"
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): vente GC salon + avoirs auto sur remboursements GC/ebook"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/actions/gift-card-admin.ts src/lib/actions/ebook-sales-admin.ts "src/app/admin/(protected)/cartes-cadeau/new/gift-card-create-form.tsx"
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): vente GC salon + avoirs auto sur remboursements GC/ebook"
 ```
 
 ---
@@ -3123,8 +3123,8 @@ export async function GET(
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/actions/invoice-admin.ts "src/app/api/v1/admin/invoices/"
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): actions admin (renvoi, avoir, génération fallback) + route download"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/actions/invoice-admin.ts "src/app/api/v1/admin/invoices/"
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): actions admin (renvoi, avoir, génération fallback) + route download"
 ```
 
 ---
@@ -3594,8 +3594,8 @@ Dans `src/app/admin/(protected)/finances/page.tsx`, ajouter `import Link from "n
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add "src/app/admin/(protected)/finances/"
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): liste /admin/finances/factures (filtres, renvoi, avoir) + bouton Finances"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add "src/app/admin/(protected)/finances/"
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): liste /admin/finances/factures (filtres, renvoi, avoir) + bouton Finances"
 ```
 
 ---
@@ -3828,8 +3828,8 @@ Pour chacune, ajouter l'import `import { InvoiceBlock } from "@/components/admin
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/components/admin/invoice-block.tsx src/components/admin/invoice-block-actions.tsx "src/app/admin/(protected)/bookings/[id]/page.tsx" "src/app/admin/(protected)/cartes-cadeau/[id]/page.tsx" "src/app/admin/(protected)/ebooks/ventes/[id]/page.tsx"
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): bloc Facturation sur fiches booking / carte cadeau / vente ebook"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/components/admin/invoice-block.tsx src/components/admin/invoice-block-actions.tsx "src/app/admin/(protected)/bookings/[id]/page.tsx" "src/app/admin/(protected)/cartes-cadeau/[id]/page.tsx" "src/app/admin/(protected)/ebooks/ventes/[id]/page.tsx"
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): bloc Facturation sur fiches booking / carte cadeau / vente ebook"
 ```
 
 ---
@@ -4084,8 +4084,8 @@ Dans `settings-form.tsx` :
 Run : `pnpm exec tsc --noEmit && pnpm lint` → 0 erreur. Vérif (dev Damien) : la section Facturation s'affiche pré-remplie (seed), modifier la mention TVA et sauvegarder fonctionne, upload d'un logo remplace l'aperçu.
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add src/lib/actions/invoice-logo.ts src/lib/invoice-logo-files.ts src/lib/actions/settings-admin.ts "src/app/admin/(protected)/parametres/"
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "feat(factures): section Facturation des paramètres + upload logo PNG"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add src/lib/actions/invoice-logo.ts src/lib/invoice-logo-files.ts src/lib/actions/settings-admin.ts "src/app/admin/(protected)/parametres/"
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "feat(factures): section Facturation des paramètres + upload logo PNG"
 ```
 
 ---
@@ -4119,7 +4119,7 @@ Et dans les notes de déploiement : `private/uploads/invoices/ à inclure dans l
 
 - [ ] **Step 21.3 : Gates finaux**
 
-Run : `cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm lint && pnpm exec tsc --noEmit && pnpm test`
+Run : `cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm lint && pnpm exec tsc --noEmit && pnpm test`
 Attendu : lint 0, types 0, **26 tests verts** (14 existants + 12 factures).
 
 - [ ] **Step 21.4 : Recette manuelle avec Damien (dev server)**
@@ -4135,8 +4135,8 @@ Parcours à valider ensemble :
 - [ ] **Step 21.5 : Commit final**
 
 ```bash
-git -C /Users/damiengcls/Documents/clochette-nails-v2 add MANAGEMENT_API.md TODO.md
-git -C /Users/damiengcls/Documents/clochette-nails-v2 commit -m "docs: events invoice.* + TODO factures/avis livrés + note backup invoices"
+git -C /Users/damiengcls/dev/clochette-nails-v2 add MANAGEMENT_API.md TODO.md
+git -C /Users/damiengcls/dev/clochette-nails-v2 commit -m "docs: events invoice.* + TODO factures/avis livrés + note backup invoices"
 ```
 
 Le merge sur main (`--no-ff`) et la suppression de branche se font après validation explicite de Damien, comme d'habitude.
