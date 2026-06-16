@@ -14,6 +14,16 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+// URL réseau social : https://… valide, ou vide → null.
+const socialUrl = z
+  .string()
+  .trim()
+  .url("URL invalide (format https://…)")
+  .max(300, "URL trop longue")
+  .or(z.literal(""))
+  .transform((v) => (v === "" ? null : v))
+  .nullable();
+
 const settingsSchema = z
   .object({
     // Identité
@@ -40,6 +50,12 @@ const settingsSchema = z
       .or(z.literal(""))
       .transform((v) => (v === "" ? null : v))
       .nullable(),
+
+    // Réseaux sociaux (URL complète https://… ou vide = masqué)
+    instagramUrl: socialUrl,
+    facebookUrl: socialUrl,
+    tiktokUrl: socialUrl,
+    pinterestUrl: socialUrl,
 
     // Réservations
     depositMode: z.enum(["PERCENT", "FIXED"]),
@@ -158,6 +174,11 @@ export async function updatePlatformSettings(
     contactEmail: formData.get("contactEmail"),
     contactPhone: formData.get("contactPhone") ?? "",
 
+    instagramUrl: formData.get("instagramUrl") ?? "",
+    facebookUrl: formData.get("facebookUrl") ?? "",
+    tiktokUrl: formData.get("tiktokUrl") ?? "",
+    pinterestUrl: formData.get("pinterestUrl") ?? "",
+
     depositMode: formData.get("depositMode"),
     depositPercent: formData.get("depositPercent"),
     depositFixedCents: formData.get("depositFixedCents"),
@@ -211,6 +232,10 @@ export async function updatePlatformSettings(
       businessAddress: data.businessAddress,
       contactEmail: data.contactEmail,
       contactPhone: data.contactPhone,
+      instagramUrl: data.instagramUrl,
+      facebookUrl: data.facebookUrl,
+      tiktokUrl: data.tiktokUrl,
+      pinterestUrl: data.pinterestUrl,
       depositMode: data.depositMode,
       depositPercent: data.depositPercent,
       depositFixedCents: data.depositFixedCents,
