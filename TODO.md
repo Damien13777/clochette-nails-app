@@ -85,7 +85,7 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 - [ ] **4 crons** crontab + **heartbeats healthchecks.io** (plan free 20 checks ; suffixe `&& curl -fsS -m 10 --retry 3 https://hc-ping.com/<uuid>` sur chaque ligne → alerte email si un cron meurt en silence)
 - [ ] **Backups** : `pg_dump` quotidien rétention 7 j + sync offsite + fichiers `public/uploads/` ET `private/uploads/` (factures — conservation légale 10 ans) + **test de restauration immédiat** (un backup non testé n'est pas un backup)
 - [ ] **Sentry** : créer le compte avec l'email studioG4 + câbler le SDK (plugin déjà installé, `error.tsx` à wirer)
-- [ ] Comptes/clés prod : Stripe **live** + webhook signé, **vérif domaine Resend** (cf. item Pré-déploiement + mémoire checklist), reCAPTCHA v3 prod, GA4
+- [ ] Comptes/clés prod : **Stripe live** (compte EI Girard Chloé en cours de création — runbook complet pas-à-pas : `docs/STRIPE-GO-LIVE.md` ; 2 env vars requises `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`, webhook LIVE = 3 events), **vérif domaine Resend** (cf. item Pré-déploiement + mémoire checklist), reCAPTCHA v3 prod, GA4
 
 **Phase B — veille de bascule (mer 17/06) :**
 - [ ] **Passe d'hygiène données AVEC Damien** : purger les résidus de recette (bookings/contacts/abonnées newsletter/cartes cadeau/factures de test), `InvoiceCounter` cohérent avec les factures restantes, `StripeEvent` (events mode test), `OutboundEvent` de test (⚠️ GARDER les events réels destinés à l'ERP)
