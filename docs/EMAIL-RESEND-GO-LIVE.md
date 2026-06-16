@@ -110,11 +110,16 @@ seule) pour ne pas perturber les emails actuels de la v1. On durcira
 
 ## ⚠️ Points de vigilance (hors périmètre « compte Resend » strict)
 
-- **Boîte de réception `contact@clochette-nails.fr`** : Resend **ENVOIE**
-  uniquement. Pour **RECEVOIR** (les notifs admin via `ADMIN_NOTIF_EMAIL` + les
-  **réponses des clientes** au `from`), il faut une **vraie boîte mail** à
-  `contact@clochette-nails.fr` (chez l'hébergeur). Sans elle, les notifs et
-  réponses tombent dans le vide. → À créer séparément si pas déjà fait.
+- **Boîte de réception `contact@clochette-nails.fr`** : ✅ la boîte **existe**
+  (Hostinger). Décision 2026-06-16 : on garde **`@clochette-nails.fr` partout**
+  (From + affichage + notifs) → **aucun changement de code**. Chloé lit/répond
+  depuis **`clochette.nails79@gmail.com`** via une **redirection**
+  `contact@clochette-nails.fr → Gmail` + Gmail « Envoyer en tant que »
+  contact@clochette-nails.fr (pour répondre avec l'adresse pro). Resend ne fait
+  qu'**envoyer** ; la réception passe par le MX Hostinger (intact — la vérif
+  Resend n'ajoute que des DKIM/SPF, ne touche pas le MX).
+- ⚠️ **Ne PAS mettre `gmail.com` en From** : non vérifiable dans Resend + DMARC
+  `p=reject` de Gmail = rejet/spam. Le From reste `@clochette-nails.fr`.
 - **Plan Resend & volume** : le plan gratuit = **100 emails/jour, 3 000/mois**.
   Largement suffisant pour le **transactionnel** du salon. Mais une **newsletter**
   à plusieurs centaines d'abonnées dépasse les 100/jour → prévoir le plan **Pro**
