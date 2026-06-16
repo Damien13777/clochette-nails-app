@@ -95,6 +95,7 @@ export function emailLayout({
                 ·
                 <a href="{{contactPhoneHref}}" style="color:${BRAND.violet700};text-decoration:none;">{{contactPhone}}</a>
               </p>
+              {{socialLinksRow}}
               <p style="margin:0;color:${BRAND.ink300};font-size:11px;">
                 <a href="${siteUrl}/confidentialite" style="color:${BRAND.ink300};text-decoration:underline;">Politique de confidentialité</a>
                 ·

@@ -16,7 +16,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/landing/site-header";
-import { SiteFooter } from "@/components/landing/site-footer";
+import { FooterContent } from "@/components/landing/footer-content";
 
 export default function ErrorPage({
   error,
@@ -108,7 +108,7 @@ export default function ErrorPage({
           </nav>
         </div>
       </main>
-      <SiteFooter />
+      <FooterContent />
     </>
   );
 }
