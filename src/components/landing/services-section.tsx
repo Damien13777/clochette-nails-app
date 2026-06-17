@@ -55,7 +55,7 @@ export async function ServicesSection() {
             className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Nos savoir-faire
+            Mon savoir-faire
           </p>
           <h2
             className="mt-4 text-[clamp(1.5rem,2.8vw,2rem)]"

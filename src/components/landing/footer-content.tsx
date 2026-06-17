@@ -45,8 +45,8 @@ export function FooterContent({
               className="h-16 w-auto mb-4"
             />
             <p className="text-sm text-[var(--color-ink-500)] max-w-[36ch] leading-relaxed">
-              Studio de prothésie ongulaire à Moncoutant-sur-Sèvre, par Chloé.
-              Sur rendez-vous, du mardi au samedi.
+              Salon de prothésie ongulaire à Moncoutant-sur-Sèvre. Je vous
+              accueille sur rendez-vous, du lundi au samedi sauf le mercredi.
             </p>
           </div>
 

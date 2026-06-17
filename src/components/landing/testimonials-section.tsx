@@ -39,13 +39,13 @@ export async function TestimonialsSection() {
           className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Avis clientes
+          Témoignages
         </p>
         <h2
           className="mt-4 text-[clamp(1.5rem,2.8vw,2rem)]"
           style={{ fontFamily: "var(--font-serif)" }}
         >
-          Elles parlent du salon
+          Vos avis, mes plus belles récompenses
         </h2>
         {googleLine && (
           <div className="mt-3 flex items-center justify-center gap-2 text-sm text-[var(--color-ink-500)]">

@@ -7,22 +7,22 @@ const VALUES = [
   {
     icon: "sparkles",
     title: "Écoute",
-    body: "Diagnostic en début de séance — état de l'ongle, attentes, mode de vie.",
+    body: "Chaque séance commence par un vrai diagnostic : état de l'ongle, attentes, mode de vie. Look naturel pour le quotidien ou manucure sophistiquée pour une occasion, je crée une prestation sur-mesure qui vous ressemble.",
   },
   {
     icon: "shield-check",
     title: "Hygiène stricte",
-    body: "Désinfection des instruments, outils stériles à usage unique. Votre santé prime.",
+    body: "À chaque étape, les protocoles d'hygiène sont scrupuleusement respectés : désinfection des instruments, outils stériles à usage unique. Parce qu'une bonne pose respecte aussi votre santé.",
   },
   {
-    icon: "heart-handshake",
-    title: "Produits doux",
-    body: "Sélection rigoureuse de produits respectueux de l'ongle naturel.",
+    icon: "brush",
+    title: "Nail-art au pinceau",
+    body: "Du motif délicat à la french revisitée, chaque décor est peint à la main, trait par trait. Un nail-art fin, unique et personnel, à la hauteur de vos envies — du plus discret au plus audacieux.",
   },
   {
     icon: "gem",
     title: "Manucure russe",
-    body: "Technique précise pour un résultat élégant et durable, sans agresser la cuticule.",
+    body: "Un travail des cuticules d'une grande précision, sans les agresser, pour une pose au plus près de la repousse. Le résultat : un rendu net et harmonieux, qui tient durablement au quotidien.",
   },
 ] as const;
 
@@ -36,10 +36,10 @@ const ICONS: Record<string, React.ReactNode> = {
       <path d="M9 12l2 2 4-4" />
     </>
   ),
-  "heart-handshake": (
+  brush: (
     <>
-      <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0L12 5.35l-.77-.77a5.4 5.4 0 0 0-7.65 7.65l1.04 1.04L12 20.36l7.38-7.38 1.04-1.04a5.4 5.4 0 0 0 0-7.36z" />
-      <path d="M12 5.35L8.5 8.85m3.5-3.5l3.5 3.5" />
+      <path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" />
+      <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" />
     </>
   ),
   gem: (
@@ -55,28 +55,36 @@ export function EngagementSection() {
   return (
     <section>
       <div className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28">
-        <div className="text-center max-w-[36rem] mx-auto mb-14">
+        <div className="text-center mb-14">
+          <div className="max-w-[36rem] mx-auto">
+            <p
+              className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Mon engagement
+            </p>
+            <h2
+              className="mt-4 text-[clamp(1.5rem,2.8vw,2rem)]"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              Une attention sur mesure, à chaque rendez-vous.
+            </h2>
+          </div>
           <p
-            className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
-            style={{ fontFamily: "var(--font-display)" }}
+            className="mt-4 text-sm md:text-base md:whitespace-nowrap text-[var(--color-ink-500)] leading-relaxed"
+            style={{ fontFamily: "var(--font-ui)" }}
           >
-            Mon engagement
+            Dans un cadre propre, apaisant et chaleureux, pour une parenthèse rien qu&apos;à vous.
           </p>
-          <h2
-            className="mt-4 text-[clamp(1.5rem,2.8vw,2rem)]"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            Une attention sur mesure, à chaque rendez-vous.
-          </h2>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
           {VALUES.map((v) => (
             <article
               key={v.title}
-              className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-violet-100)]"
+              className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 text-center transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-violet-100)]"
             >
-              <div className="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5">
+              <div className="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5 mx-auto">
                 <svg
                   width="18"
                   height="18"

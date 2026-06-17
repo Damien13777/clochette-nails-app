@@ -35,7 +35,7 @@
 - [ ] **Step 1 : Installer Vitest (commande UTILISATEUR)**
 
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm add -D vitest
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm add -D vitest
 ```
 Attendu : `vitest` ajouté à `devDependencies`, install OK.
 
@@ -77,7 +77,7 @@ Dans `"scripts"`, après la ligne `"test:e2e:ui": "playwright test --ui",` ajout
 - [ ] **Step 4 : Vérifier que le runner démarre (commande UTILISATEUR)**
 
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm test
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm test
 ```
 Attendu : Vitest démarre et affiche `No test files found, exiting with code 0` (ou code 1 selon version avec « No test files found » — l'important est que Vitest se lance sans erreur de config/alias). On ajoute les tests aux tasks suivantes.
 
@@ -139,7 +139,7 @@ describe("paris-day — mondayIsoForTodayParis", () => {
 - [ ] **Step 2 : Lancer (commande UTILISATEUR)**
 
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm test test/paris-day.test.ts
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm test test/paris-day.test.ts
 ```
 Attendu : **PASS** (les helpers sont déjà corrects). Si ÉCHEC → vrai bug de timezone à corriger dans `src/lib/paris-day.ts`.
 
@@ -275,7 +275,7 @@ describe("applyGiftCardRedemption — gardes", () => {
 - [ ] **Step 2 : Lancer (commande UTILISATEUR)**
 
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm test test/gift-card-redeem.test.ts
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm test test/gift-card-redeem.test.ts
 ```
 Attendu : **PASS** (4 tests). Si le test de concurrence échoue (2 fulfilled ou solde ≠ 2000) → l'optimistic lock laisse passer un sur-débit = vrai bug à corriger dans `src/lib/gift-card-redeem.ts`.
 
@@ -400,7 +400,7 @@ describe("resolveDownloadToken — gardes", () => {
 - [ ] **Step 2 : Lancer (commande UTILISATEUR)**
 
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm test test/ebook-download.test.ts
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm test test/ebook-download.test.ts
 ```
 Attendu : **PASS** (4 tests). Si le debounce compte 2 au lieu de 1, ou si le cap laisse passer un 6ᵉ → vrai bug dans `src/lib/ebook-download-token.ts`.
 
@@ -557,7 +557,7 @@ describe("Webhook Stripe — idempotence sur rejeu", () => {
 - [ ] **Step 2 : Lancer (commande UTILISATEUR)**
 
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm test test/stripe-webhook.test.ts
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm test test/stripe-webhook.test.ts
 ```
 Attendu : **PASS** (2 tests). Si le 2e POST repasse la booking ou crée un 2ᵉ `StripeEvent` → la dédup d'idempotence est cassée = vrai bug dans la route webhook.
 
@@ -580,7 +580,7 @@ git commit -m "test(webhook): rejeu Stripe idempotent (route signée offline)"
 - [ ] **Step 1 : Lancer toute la suite (commande UTILISATEUR)**
 
 ```bash
-cd /Users/damiengcls/Documents/clochette-nails-v2 && pnpm test
+cd /Users/damiengcls/dev/clochette-nails-v2 && pnpm test
 ```
 Attendu : **tous les fichiers PASS** (paris-day, gift-card, ebook, webhook). Run déterministe (série + `truncateAll`).
 

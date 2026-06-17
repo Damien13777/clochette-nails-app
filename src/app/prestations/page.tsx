@@ -37,12 +37,12 @@ const CATEGORY_META: Record<
   },
   RALLONGEMENT: {
     label: "Rallongements",
-    intro: "Extensions sur mesure, formes amande, ballerine ou stiletto.",
+    intro: "Extensions sur mesure, de la forme carrée à la forme arrondie.",
     order: 2,
   },
   PACK_SPECIAL: {
     label: "Packs sur mesure",
-    intro: "Combinaisons exclusives pour vos occasions : mariage, événements, séries.",
+    intro: "Des packs pensés pour un objectif : corriger, réparer ou sublimer, étape par étape.",
     order: 3,
   },
   SOIN_MAINS: {
@@ -52,12 +52,12 @@ const CATEGORY_META: Record<
   },
   SOIN_PIEDS: {
     label: "Soin des pieds",
-    intro: "Beauté et confort des pieds, du pédicure au soin complet.",
+    intro: "Beauté et confort des pieds, de la pédicure au soin complet.",
     order: 5,
   },
   DEPOSE: {
     label: "Dépose",
-    intro: "Retrait soigneux d'une pose existante (gel, semi, capsules).",
+    intro: "Retrait soigneux d'une pose existante sans abîmer votre plaque.",
     order: 6,
   },
 };
@@ -129,15 +129,16 @@ export default async function PrestationsPage() {
               fontWeight: 400,
             }}
           >
-            Toutes les possibilités du studio
+            Toutes les possibilités du salon
           </p>
           <p
             className="mt-6 text-sm md:text-base text-[var(--color-ink-700)] max-w-[60ch] leading-relaxed"
             style={{ fontFamily: "var(--font-ui)" }}
           >
-            Chaque prestation est réalisée avec précision en cabine privée à
-            Moncoutant-sur-Sèvre. Sélectionnez celle qui vous correspond, ajoutez
-            vos options et choisissez votre créneau en ligne.
+            Chaque prestation est réalisée avec précision par Chloé à
+            Moncoutant-sur-Sèvre. Sélectionnez la prestation qui vous correspond
+            grâce à sa description, ajoutez vos options et choisissez votre
+            créneau en ligne.
           </p>
         </section>
 

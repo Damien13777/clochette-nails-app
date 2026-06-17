@@ -114,6 +114,7 @@ Tunnel réservation + acompte Stripe + webhooks (idempotence `StripeEvent`) · c
 - [ ] **Inspirations / album tendances** (résa)
 - [ ] **Filtres avancés** réservation
 - [ ] **Saison & suggestions** prestations (taxonomie tags)
+- [ ] **Ligne horaires du hero dérivée de `BusinessHours`** — remplacer le « Lun–Sam sauf mer. · sur rendez-vous » hardcodé par un formateur serveur (plage continue moins 1-2 trous → « sauf X », sinon ranges « Lun–Mar, Jeu–Sam ») ; la hero interroge déjà Prisma ; testable unitairement ; duplicable (chaque cliente du produit aura sa ligne juste sans toucher au code)
 - [x] **Témoignages en DB** — ✅ livré (CRUD `/admin/parametres/avis`, cf. section Qualité & design)
 - [x] **Monitoring / Sentry** — déplacé en Déploiement Phase A (compte studioG4 + câblage SDK)
 
