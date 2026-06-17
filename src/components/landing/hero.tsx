@@ -53,7 +53,7 @@ export async function Hero() {
               className="inline-block w-9 h-px bg-[var(--color-violet-300)]"
               aria-hidden="true"
             />
-            Studio · Moncoutant-sur-Sèvre
+            Salon · Moncoutant-sur-Sèvre
           </p>
 
           {/* H1 Cinzel caps + sous-titre Inria italic */}
