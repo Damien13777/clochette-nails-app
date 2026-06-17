@@ -45,7 +45,7 @@ export function ContactSection() {
           icon="mail"
           label="Email"
           value="contact@clochette-nails.fr"
-          sub="Réponse sous 24h"
+          sub="Réponse sous 48h"
           href="mailto:contact@clochette-nails.fr"
         />
       </div>

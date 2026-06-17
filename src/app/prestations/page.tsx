@@ -37,7 +37,7 @@ const CATEGORY_META: Record<
   },
   RALLONGEMENT: {
     label: "Rallongements",
-    intro: "Extensions sur mesure, formes amande, ballerine ou stiletto.",
+    intro: "Extensions sur mesure, de la forme carrée à la forme arrondie.",
     order: 2,
   },
   PACK_SPECIAL: {
@@ -129,15 +129,16 @@ export default async function PrestationsPage() {
               fontWeight: 400,
             }}
           >
-            Toutes les possibilités du studio
+            Toutes les possibilités du salon
           </p>
           <p
             className="mt-6 text-sm md:text-base text-[var(--color-ink-700)] max-w-[60ch] leading-relaxed"
             style={{ fontFamily: "var(--font-ui)" }}
           >
-            Chaque prestation est réalisée avec précision en cabine privée à
-            Moncoutant-sur-Sèvre. Sélectionnez celle qui vous correspond, ajoutez
-            vos options et choisissez votre créneau en ligne.
+            Chaque prestation est réalisée avec précision par Chloé à
+            Moncoutant-sur-Sèvre. Sélectionnez la prestation qui vous correspond
+            grâce à sa description, ajoutez vos options et choisissez votre
+            créneau en ligne.
           </p>
         </section>
 

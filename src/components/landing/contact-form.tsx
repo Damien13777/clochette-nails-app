@@ -40,7 +40,7 @@ export function ContactForm() {
           className="text-sm text-[var(--color-ink-500)] mt-2"
           style={{ fontFamily: "var(--font-ui)" }}
         >
-          Je reviens vers vous sous 24 h.
+          Je reviens vers vous sous 48 h.
         </p>
       </div>
     );
