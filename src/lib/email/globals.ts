@@ -39,6 +39,8 @@ export type EmailGlobals = {
   /** Idem mais en bas. */
   footerImageUrl: string | null;
   footerImageWidth: number | null;
+  /** Liens réseaux sociaux renseignés (ordre d'affichage), vide si aucun. */
+  socials: { label: string; url: string }[];
 };
 
 const DEFAULTS: EmailGlobals = {
@@ -52,7 +54,26 @@ const DEFAULTS: EmailGlobals = {
   headerImageWidth: null,
   footerImageUrl: null,
   footerImageWidth: null,
+  socials: [],
 };
+
+/** Construit la liste ordonnée des réseaux renseignés (label + url). */
+function buildSocials(s: {
+  instagramUrl: string | null;
+  facebookUrl: string | null;
+  tiktokUrl: string | null;
+  pinterestUrl: string | null;
+}): { label: string; url: string }[] {
+  const all: { label: string; url: string | null }[] = [
+    { label: "Instagram", url: s.instagramUrl },
+    { label: "Facebook", url: s.facebookUrl },
+    { label: "TikTok", url: s.tiktokUrl },
+    { label: "Pinterest", url: s.pinterestUrl },
+  ];
+  return all
+    .filter((x) => Boolean(x.url?.trim()))
+    .map((x) => ({ label: x.label, url: (x.url as string).trim() }));
+}
 
 /** Convertit un numéro affiché en href tel: (strip non-digits). */
 function phoneToHref(phone: string | null | undefined): string {
@@ -74,6 +95,10 @@ export const loadEmailGlobals = cache(async (): Promise<EmailGlobals> => {
         emailHeaderImageWidth: true,
         emailFooterImageUrl: true,
         emailFooterImageWidth: true,
+        instagramUrl: true,
+        facebookUrl: true,
+        tiktokUrl: true,
+        pinterestUrl: true,
       },
     });
     if (!settings) return DEFAULTS;
@@ -92,6 +117,7 @@ export const loadEmailGlobals = cache(async (): Promise<EmailGlobals> => {
       headerImageWidth: settings.emailHeaderImageWidth,
       footerImageUrl: toAbs(settings.emailFooterImageUrl),
       footerImageWidth: settings.emailFooterImageWidth,
+      socials: buildSocials(settings),
     };
   } catch (err) {
     console.error("[loadEmailGlobals] DB error, falling back:", err);

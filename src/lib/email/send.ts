@@ -72,12 +72,29 @@ async function applyGlobals(msg: EmailMessage): Promise<EmailMessage> {
     )}" style="display:block;"><img src="${escapeHtml(url)}" alt="" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;" /></a></td></tr>`;
   };
 
+  // Réseaux sociaux : ligne de liens texte (Gmail & co strippent les SVG
+  // inline → on reste en texte). Vide si aucun réseau renseigné.
+  const socialLinksRow =
+    g.socials.length > 0
+      ? `<p style="margin:0 0 12px 0;">${g.socials
+          .map(
+            (sn) =>
+              `<a href="${escapeHtml(
+                sn.url,
+              )}" style="color:#553c9a;text-decoration:none;">${escapeHtml(
+                sn.label,
+              )}</a>`,
+          )
+          .join(' <span style="color:#bbbbbb;">·</span> ')}</p>`
+      : "";
+
   const replace = (s: string) =>
     s
       .replaceAll("{{signature}}", g.signature)
       .replaceAll("{{contactEmail}}", g.contactEmail)
       .replaceAll("{{contactPhone}}", g.contactPhone)
       .replaceAll("{{contactPhoneHref}}", g.contactPhoneHref)
+      .replaceAll("{{socialLinksRow}}", socialLinksRow)
       .replaceAll("{{salonAddressSuffix}}", escapeHtml(addressSuffix))
       .replaceAll(
         "{{headerImageRow}}",

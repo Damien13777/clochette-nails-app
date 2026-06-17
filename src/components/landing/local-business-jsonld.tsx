@@ -235,7 +235,9 @@ export async function LocalBusinessJsonLd() {
       name: FOUNDER_NAME,
       jobTitle: "Prothésiste ongulaire",
     },
-    sameAs: ["https://www.instagram.com/clochette_nails_79/"],
+    ...(globals.socials.length > 0
+      ? { sameAs: globals.socials.map((s) => s.url) }
+      : {}),
     potentialAction: {
       "@type": "ReserveAction",
       target: {

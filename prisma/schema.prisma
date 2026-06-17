@@ -786,6 +786,14 @@ model PlatformSettings {
   contactEmail    String  @default("contact@clochette-nails.fr")
   contactPhone    String?
 
+  // Réseaux sociaux (éditables via /admin/parametres). null/vide = lien masqué.
+  // Affichés : footer du site (icônes), footer des emails (liens texte),
+  // JSON-LD sameAs. Produit duplicable : chaque instance met ses propres URLs.
+  instagramUrl String?
+  facebookUrl  String?
+  tiktokUrl    String?
+  pinterestUrl String?
+
   // Personnalisation des emails (cf. lib/email/globals.ts) :
   /// Signature en fin d'email (ex: "Chloé — Clochette Nails")
   emailSignature       String  @default("Chloé — Clochette Nails")

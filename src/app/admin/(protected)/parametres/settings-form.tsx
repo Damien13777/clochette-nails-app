@@ -29,6 +29,10 @@ export type SettingsFormInitial = {
   businessAddress: string;
   contactEmail: string;
   contactPhone: string;
+  instagramUrl: string;
+  facebookUrl: string;
+  tiktokUrl: string;
+  pinterestUrl: string;
   depositMode: DepositMode;
   depositPercent: number;
   depositFixedCents: number;
@@ -142,6 +146,42 @@ export function SettingsForm({ initial }: { initial: SettingsFormInitial }) {
           placeholder="06 88 68 66 99"
           error={fieldErrors.contactPhone}
           inputMode="tel"
+        />
+      </Section>
+
+      {/* Section — Réseaux sociaux (URL complète ou vide = lien masqué) */}
+      <Section title="Réseaux sociaux">
+        <Field
+          label="Instagram"
+          name="instagramUrl"
+          type="url"
+          defaultValue={initial.instagramUrl}
+          placeholder="https://www.instagram.com/votre_compte/"
+          error={fieldErrors.instagramUrl}
+        />
+        <Field
+          label="Facebook"
+          name="facebookUrl"
+          type="url"
+          defaultValue={initial.facebookUrl}
+          placeholder="https://www.facebook.com/votre-page"
+          error={fieldErrors.facebookUrl}
+        />
+        <Field
+          label="TikTok"
+          name="tiktokUrl"
+          type="url"
+          defaultValue={initial.tiktokUrl}
+          placeholder="https://www.tiktok.com/@votre_compte"
+          error={fieldErrors.tiktokUrl}
+        />
+        <Field
+          label="Pinterest"
+          name="pinterestUrl"
+          type="url"
+          defaultValue={initial.pinterestUrl}
+          placeholder="https://www.pinterest.fr/votre_compte/"
+          error={fieldErrors.pinterestUrl}
         />
       </Section>
 
