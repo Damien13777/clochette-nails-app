@@ -63,8 +63,9 @@ export default async function AdminTestimonialsPage() {
           className="mt-2 text-sm text-[var(--color-ink-500)]"
           style={{ fontFamily: "var(--font-ui)" }}
         >
-          Les avis publiés apparaissent dans la section « Elles parlent du salon »
-          de la page d&apos;accueil, dans l&apos;ordre ci-dessous.
+          Les avis publiés apparaissent dans la section « Vos avis, mes plus
+          belles récompenses » de la page d&apos;accueil, dans l&apos;ordre
+          ci-dessous.
         </p>
       </header>
 

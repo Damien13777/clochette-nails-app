@@ -38,7 +38,7 @@ export function ContactSection() {
           icon="phone"
           label="Téléphone"
           value="06 88 68 66 99"
-          sub="Du mardi au samedi"
+          sub="Lun–Sam sauf mer."
           href="tel:0688686699"
         />
         <ContactCard

@@ -55,25 +55,26 @@ export function EngagementSection() {
   return (
     <section>
       <div className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 py-20 md:py-28">
-        <div className="text-center max-w-[36rem] mx-auto mb-14">
+        <div className="text-center mb-14">
+          <div className="max-w-[36rem] mx-auto">
+            <p
+              className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Mon engagement
+            </p>
+            <h2
+              className="mt-4 text-[clamp(1.5rem,2.8vw,2rem)]"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              Une attention sur mesure, à chaque rendez-vous.
+            </h2>
+          </div>
           <p
-            className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Mon engagement
-          </p>
-          <h2
-            className="mt-4 text-[clamp(1.5rem,2.8vw,2rem)]"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            Une attention sur mesure, à chaque rendez-vous.
-          </h2>
-          <p
-            className="mt-4 text-sm md:text-base text-[var(--color-ink-500)] leading-relaxed"
+            className="mt-4 text-sm md:text-base md:whitespace-nowrap text-[var(--color-ink-500)] leading-relaxed"
             style={{ fontFamily: "var(--font-ui)" }}
           >
-            Dans un cadre propre, apaisant et chaleureux, pour une parenthèse
-            rien qu&apos;à vous.
+            Dans un cadre propre, apaisant et chaleureux, pour une parenthèse rien qu&apos;à vous.
           </p>
         </div>
 
@@ -81,9 +82,9 @@ export function EngagementSection() {
           {VALUES.map((v) => (
             <article
               key={v.title}
-              className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-violet-100)]"
+              className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 text-center transition-all hover:-translate-y-1 hover:shadow-[var(--shadow-md)] hover:border-[var(--color-violet-100)]"
             >
-              <div className="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5">
+              <div className="w-11 h-11 rounded-full bg-[var(--color-violet-100)] grid place-items-center text-[var(--color-violet-700)] mb-5 mx-auto">
                 <svg
                   width="18"
                   height="18"
