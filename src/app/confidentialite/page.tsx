@@ -184,7 +184,7 @@ export default function ConfidentialitePage() {
           <li><strong>Données de réservation</strong> : 3 ans à compter du dernier rendez-vous, à des fins de gestion de la relation client.</li>
           <li><strong>Factures et documents comptables</strong> : 10 ans (obligation légale article L123-22 Code de commerce).</li>
           <li><strong>Achats d&apos;ebooks et tokens de téléchargement</strong> : 3 ans à compter de la dernière utilisation, puis archivage anonymisé pour comptabilité.</li>
-          <li><strong>Cartes cadeau</strong> : durée de validité (12 mois) + 3 ans pour conservation de l&apos;historique d&apos;utilisation et obligations comptables.</li>
+          <li><strong>Cartes cadeau</strong> : durée de validité (6 mois) + 3 ans pour conservation de l&apos;historique d&apos;utilisation et obligations comptables.</li>
           <li><strong>Logs techniques (IP, user-agent)</strong> : 13 mois maximum (recommandation CNIL).</li>
           <li><strong>Demandes de contact</strong> : 3 ans à compter du dernier échange.</li>
           <li><strong>Newsletter</strong> : jusqu&apos;à votre désinscription. Le lien de désinscription figure dans chaque email et fonctionne en un clic, sans connexion. Tout signalement spam (« mark as spam » dans votre boîte mail) entraîne également une désinscription automatique immédiate.</li>

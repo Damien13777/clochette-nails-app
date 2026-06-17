@@ -42,7 +42,7 @@ const CATEGORY_META: Record<
   },
   PACK_SPECIAL: {
     label: "Packs sur mesure",
-    intro: "Combinaisons exclusives pour vos occasions : mariage, événements, séries.",
+    intro: "Des packs pensés pour un objectif : corriger, réparer ou sublimer, étape par étape.",
     order: 3,
   },
   SOIN_MAINS: {
@@ -52,12 +52,12 @@ const CATEGORY_META: Record<
   },
   SOIN_PIEDS: {
     label: "Soin des pieds",
-    intro: "Beauté et confort des pieds, du pédicure au soin complet.",
+    intro: "Beauté et confort des pieds, de la pédicure au soin complet.",
     order: 5,
   },
   DEPOSE: {
     label: "Dépose",
-    intro: "Retrait soigneux d'une pose existante (gel, semi, capsules).",
+    intro: "Retrait soigneux d'une pose existante sans abîmer votre plaque.",
     order: 6,
   },
 };

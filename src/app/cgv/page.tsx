@@ -210,7 +210,7 @@ export default function CGVPage() {
         </p>
         <p><strong>8.2. Validité</strong></p>
         <p>
-          La carte cadeau est valable <strong>12 mois</strong> à compter de la
+          La carte cadeau est valable <strong>6 mois</strong> à compter de la
           date d&apos;achat. La date d&apos;expiration est indiquée dans
           l&apos;email de délivrance.
         </p>
