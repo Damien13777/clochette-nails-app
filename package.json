@@ -23,6 +23,7 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@react-pdf/renderer": "^4.5.1",
+    "@sentry/nextjs": "^10.58.0",
     "@tiptap/extension-image": "^3.23.5",
     "@tiptap/extension-link": "^3.23.5",
     "@tiptap/extension-text-align": "^3.23.5",

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 import { buildCsp } from "./src/lib/csp";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -87,4 +88,12 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Wrapper Sentry : tunnel `/monitoring` (same-origin → pas de modif CSP,
+ * contourne les adblockers). Pas d'org/projet/authToken → upload des source
+ * maps désactivé pour l'instant (à activer plus tard avec un SENTRY_AUTH_TOKEN).
+ */
+export default withSentryConfig(nextConfig, {
+  tunnelRoute: "/monitoring",
+  silent: !process.env.CI,
+});
