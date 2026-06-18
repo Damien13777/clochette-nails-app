@@ -92,6 +92,7 @@ export const config = {
    *  - /api/* (les API routes gèrent leur propre auth via requireAdmin/auth())
    *  - assets Next.js et favicon
    *  - /uploads/* (servis statiquement par Nginx en prod, par Next en dev)
+   *  - /monitoring (tunnel Sentry, doit passer sans interception)
    */
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|uploads/).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|uploads/|monitoring).*)"],
 };
