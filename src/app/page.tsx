@@ -5,7 +5,8 @@
  * Server-rendered ; les îlots Client (Header avec scroll, Portfolio tabs,
  * ContactForm, NewsletterForm) sont isolés.
  *
- * ISR cible : 1h (à activer Phase 1.5 quand contenu DB stable).
+ * Rendu dynamique (force-dynamic) pour refléter en direct le contenu admin
+ * (photos hero/prestations, avis, settings). ISR envisageable plus tard.
  */
 
 import type { Metadata } from "next";
@@ -20,6 +21,8 @@ import { FinalCTA } from "@/components/landing/final-cta";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { LocalBusinessJsonLd } from "@/components/landing/local-business-jsonld";
 import { Reveal } from "@/components/reveal";
+
+export const dynamic = "force-dynamic"; // contenu admin live (photos, prestations, avis) — pas d'ISR pour V1
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
