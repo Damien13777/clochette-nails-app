@@ -95,7 +95,7 @@ export function ReservationSummary({
         </div>
 
         {/* Breakdown : montant estimé + acompte */}
-        {totalPriceCents > 0 && (
+        {service && (
           <div className="mt-2 pt-2 border-t border-[var(--color-line)] space-y-1">
             <div className="flex items-center justify-between text-xs">
               <span
@@ -105,7 +105,9 @@ export function ReservationSummary({
                 Montant estimé
               </span>
               <span style={{ fontFamily: "var(--font-serif)" }}>
-                {formatCents(totalPriceCents)}
+                {service.priceCents === 0
+                  ? "Sur devis"
+                  : formatCents(totalPriceCents)}
               </span>
             </div>
             {depositCents > 0 &&
@@ -215,30 +217,32 @@ export function ReservationSummary({
             </div>
           </div>
 
-          {totalPriceCents > 0 && (
-            <div className="pt-4 border-t border-[var(--color-line)]">
-              <div className="flex justify-between items-baseline">
-                <span
-                  className="text-xs text-[var(--color-ink-500)] uppercase tracking-[0.14em]"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  Montant estimé
-                </span>
-                <span
-                  className="text-base text-[var(--color-violet-700)]"
-                  style={{ fontFamily: "var(--font-serif)" }}
-                >
-                  {formatCents(totalPriceCents)}
-                </span>
-              </div>
+          <div className="pt-4 border-t border-[var(--color-line)]">
+            <div className="flex justify-between items-baseline">
+              <span
+                className="text-xs text-[var(--color-ink-500)] uppercase tracking-[0.14em]"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Montant estimé
+              </span>
+              <span
+                className="text-base text-[var(--color-violet-700)]"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                {service.priceCents === 0
+                  ? "Sur devis"
+                  : formatCents(totalPriceCents)}
+              </span>
+            </div>
+            {service.priceCents > 0 && (
               <p
                 className="mt-1.5 text-[10px] text-[var(--color-ink-500)]"
                 style={{ fontFamily: "var(--font-ui)" }}
               >
                 Prestation + options · ajustable le jour du RDV
               </p>
-            </div>
-          )}
+            )}
+          </div>
 
           {date && startTime && (
             <div className="pt-4 border-t border-[var(--color-line)]">

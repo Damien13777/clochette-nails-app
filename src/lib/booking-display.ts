@@ -85,6 +85,7 @@ export function formatCents(cents: number): string {
  * de » reflète que les options ajoutées font monter le total.
  */
 export function formatPriceFrom(cents: number): string {
+  if (cents <= 0) return "Sur devis";
   const euros =
     cents % 100 === 0
       ? String(cents / 100)
