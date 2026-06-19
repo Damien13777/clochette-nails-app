@@ -1,7 +1,8 @@
 /**
  * Page /admin/bookings — liste des réservations.
  *
- * Filtres : ?filter=all|today|upcoming|awaiting|completed|cancelled (défaut all)
+ * Filtres : ?filter=all|today|upcoming|awaiting|completed|cancelled (défaut upcoming)
+ * Le défaut "upcoming" = URL nue /admin/bookings ; "all" = /admin/bookings?filter=all
  * Pagination : ?page=N (50 par page)
  *
  * Tri :
@@ -64,12 +65,12 @@ export default async function AdminBookingsPage({
   }
 
   const params = await searchParams;
-  const filter: FilterKey = isFilterKey(params.filter) ? params.filter : "all";
+  const filter: FilterKey = isFilterKey(params.filter) ? params.filter : "upcoming";
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
   const skip = (page - 1) * PAGE_SIZE;
 
   const backParams = new URLSearchParams();
-  if (filter !== "all") backParams.set("filter", filter);
+  if (filter !== "upcoming") backParams.set("filter", filter);
   if (page > 1) backParams.set("page", String(page));
   const backTo = backParams.toString();
 
@@ -143,7 +144,7 @@ export default async function AdminBookingsPage({
             label={f.label}
             count={counts[f.key]}
             active={filter === f.key}
-            href={f.key === "all" ? "/admin/bookings" : `/admin/bookings?filter=${f.key}`}
+            href={f.key === "upcoming" ? "/admin/bookings" : `/admin/bookings?filter=${f.key}`}
           />
         ))}
       </div>
@@ -378,7 +379,7 @@ async function fetchFilterCounts(
 
 function buildPageHref(filter: FilterKey, page: number): string {
   const params = new URLSearchParams();
-  if (filter !== "all") params.set("filter", filter);
+  if (filter !== "upcoming") params.set("filter", filter);
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   return qs ? `/admin/bookings?${qs}` : "/admin/bookings";
