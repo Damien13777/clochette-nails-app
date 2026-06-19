@@ -37,10 +37,36 @@ export async function Hero() {
   const heroMobileSrcSet = heroMobile ? buildSrcSet(heroMobile.variants) : undefined;
 
   return (
-    <section
-      id="accueil"
-      className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pt-32 md:pt-40 pb-20 md:pb-32"
-    >
+    <>
+      {/* Precharge LCP : démarre le téléchargement de l'image hero AVANT la CSS.
+          1 preload par breakpoint (media) → seule la variante affichée est préchargée.
+          React 19 hisse ces <link> dans le <head>. */}
+      {heroMobile && (
+        <link
+          rel="preload"
+          as="image"
+          href={heroMobile.url}
+          imageSrcSet={heroMobileSrcSet}
+          imageSizes="100vw"
+          media="(max-width: 1023px)"
+          fetchPriority="high"
+        />
+      )}
+      {heroDesktop && (
+        <link
+          rel="preload"
+          as="image"
+          href={heroDesktop.url}
+          imageSrcSet={heroDesktopSrcSet}
+          imageSizes="40vw"
+          media="(min-width: 1024px)"
+          fetchPriority="high"
+        />
+      )}
+      <section
+        id="accueil"
+        className="max-w-[1240px] mx-auto px-5 md:px-8 lg:px-12 pt-32 md:pt-40 pb-20 md:pb-32"
+      >
       <div className="grid lg:grid-cols-[1.5fr_1fr] gap-10 lg:gap-16 items-stretch">
         {/* Colonne texte */}
         <div className="flex flex-col">
@@ -227,6 +253,7 @@ export async function Hero() {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
