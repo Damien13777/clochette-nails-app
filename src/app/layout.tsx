@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     template: "%s · Clochette Nails",
   },
   description:
-    "Studio de prothésie ongulaire à Moncoutant-sur-Sèvre. Manucure russe, pose semi-permanente et nail-art en cabine privée. Sur rendez-vous.",
+    "Salon de prothésie ongulaire à Moncoutant-sur-Sèvre. Manucure russe, pose semi-permanente et nail-art, sur rendez-vous.",
   authors: [{ name: "Chloé Girard" }],
   creator: "Clochette Nails",
   metadataBase: new URL(

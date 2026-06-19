@@ -44,7 +44,7 @@ const GEO_LAT = 46.7457435;
 const GEO_LNG = -0.6028939;
 
 const FOUNDER_NAME = "Chloé Girard";
-const SLOGAN = "Studio de prothésie ongulaire — sur rendez-vous, en cabine privée.";
+const SLOGAN = "Salon de prothésie ongulaire — sur rendez-vous.";
 
 const OPENING_HOURS = [
   // Lundi, Mardi, Jeudi, Vendredi, Samedi : 8h-20h
@@ -186,10 +186,10 @@ export async function LocalBusinessJsonLd() {
     additionalType: "https://www.wikidata.org/wiki/Q282990",
     name: "Clochette Nails",
     legalName: "Clochette Nails",
-    alternateName: "Studio Clochette Nails",
+    alternateName: "Salon Clochette Nails",
     slogan: SLOGAN,
     description:
-      "Studio de prothésie ongulaire à Moncoutant-sur-Sèvre, dans le Bocage bressuirais. Manucure russe, pose semi-permanente, rallongements gel et résine, nail-art en cabine privée, sur rendez-vous. Chloé reçoit du lundi au samedi (sauf mercredi).",
+      "Salon de prothésie ongulaire à Moncoutant-sur-Sèvre, dans le Bocage bressuirais. Manucure russe, pose semi-permanente, rallongements gel et résine, nail-art, sur rendez-vous. Chloé reçoit du lundi au samedi (sauf mercredi).",
     url: SITE_URL,
     telephone: globals.contactPhone,
     email: globals.contactEmail,

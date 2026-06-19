@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Clochette Nails · Prothésiste ongulaire à Moncoutant-sur-Sèvre",
     description:
-      "Studio de prothésie ongulaire à Moncoutant-sur-Sèvre. Manucure russe, pose semi-permanente et nail-art en cabine privée. Sur rendez-vous.",
+      "Salon de prothésie ongulaire à Moncoutant-sur-Sèvre. Manucure russe, pose semi-permanente et nail-art, sur rendez-vous.",
     url: "/",
     type: "website",
     locale: "fr_FR",

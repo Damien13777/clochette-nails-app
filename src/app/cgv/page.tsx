@@ -104,7 +104,7 @@ export default function CGVPage() {
       <LegalSection id="prestations" title="5. Prestations en salon">
         <p>
           Le Prestataire propose des prestations de prothésie ongulaire
-          réalisées en cabine privée à son adresse de siège. Le détail des
+          réalisées dans son salon à son adresse de siège. Le détail des
           prestations (durée, options, contenu) est consultable sur la{" "}
           <Link href="/prestations">page Prestations</Link> du site.
         </p>
