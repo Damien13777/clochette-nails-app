@@ -20,7 +20,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Clochette Nails",
     short_name: "Clochette",
     description:
-      "Studio de prothésie ongulaire à Moncoutant-sur-Sèvre. Sur rendez-vous.",
+      "Salon de prothésie ongulaire à Moncoutant-sur-Sèvre. Sur rendez-vous.",
     start_url: "/",
     display: "standalone",
     background_color: "#FCFBF7", // cream
