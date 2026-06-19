@@ -83,29 +83,13 @@ export async function ServicesSection() {
         </Link>
       </div>
 
-      {/* Mobile : carousel horizontal, snap par paire */}
-      <div className="sm:hidden -mx-5 overflow-x-auto snap-x snap-mandatory scroll-pl-8 scroll-pr-8">
-        <div className="flex gap-4 pb-4 pl-8">
-          {services.map((svc, i) => {
-            const isPairEnd = i % 2 === 1;
-            const isLast = i === services.length - 1;
-            return (
-              <div
-                key={svc.id}
-                className={`shrink-0 basis-[calc((100vw-5rem)/2)] ${
-                  i % 2 === 0 ? "snap-start" : ""
-                }`}
-                style={
-                  isPairEnd && !isLast ? { marginRight: "2rem" } : undefined
-                }
-              >
-                <ServiceCard svc={svc} compact />
-              </div>
-            );
-          })}
-          {/* Trailing spacer : garantit 2rem (gap-4 + 1rem) d'espace après la dernière card */}
-          <div aria-hidden="true" className="shrink-0" style={{ width: "1rem" }} />
-        </div>
+      {/* Mobile : carousel horizontal scroll-snap — 2 cards visibles + aperçu de la suivante */}
+      <div className="sm:hidden flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-px-5 -mx-5 px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {services.map((svc) => (
+          <div key={svc.id} className="snap-start shrink-0 w-[40%]">
+            <ServiceCard svc={svc} compact />
+          </div>
+        ))}
       </div>
 
       {/* Desktop : grid 2/3 cols */}
@@ -135,8 +119,8 @@ function ServiceCard({ svc, compact = false }: ServiceCardProps) {
   const badge = CATEGORY_BADGES[svc.category];
   const cover = svc.photos[0] ?? null;
   const coverSrcSet = cover ? buildSrcSet(cover.variants) : undefined;
-  // Mobile carousel : 2 cards par viewport (~50vw). sm-lg : 2 cols grid (~50vw). lg+ : 3 cols (~33vw).
-  const coverSizes = "(min-width: 1024px) 33vw, 50vw";
+  // Mobile carousel : 2 cards visibles + aperçu (~40vw). sm-lg : 2 cols grid (~50vw). lg+ : 3 cols (~33vw).
+  const coverSizes = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 40vw";
   return (
     <Link
       href={`/prestations/${svc.slug}`}
