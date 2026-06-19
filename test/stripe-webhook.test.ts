@@ -117,6 +117,26 @@ describe("Webhook Stripe — idempotence sur rejeu", () => {
     expect(await db.stripeEvent.count({ where: { id: eventId } })).toBe(1);
   });
 
+  it("paiement reçu sur un RDV expiré → ne le confirme pas", async () => {
+    const booking = await makeAwaitingBooking();
+    // Simule l'expiration par le cron avant l'arrivée (tardive) du webhook
+    await db.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: "EXPIRED",
+        cancelledAt: new Date(),
+        cancellationReason: "Délai de paiement dépassé",
+      },
+    });
+
+    const res = await POST(signedRequest("evt_test_paid_after_expiry", booking.id));
+    // Le webhook répond 200 (event traité) mais NE confirme PAS le RDV expiré.
+    expect(res.status).toBe(200);
+    expect(
+      (await db.booking.findUniqueOrThrow({ where: { id: booking.id } })).status,
+    ).toBe("EXPIRED");
+  });
+
   it("signature invalide → 400", async () => {
     const res = await POST(
       new Request("http://localhost/api/webhooks/stripe", {

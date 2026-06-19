@@ -863,7 +863,12 @@ export type CreateBookingAdminResult =
       fieldErrors?: Record<string, string>;
     };
 
-const ADMIN_PAYMENT_LINK_TTL_HOURS = 24;
+// Le créneau est réservé 3 jours (cron expire-pending le libère au-delà).
+const SLOT_HOLD_HOURS = 72;
+// Plafond dur de Stripe Checkout : expires_at ≤ 24h après création. Le lien
+// est donc valable 24h ; au-delà, l'admin peut « Renvoyer le lien » (nouvelle
+// session) tant que le créneau est encore réservé.
+const STRIPE_LINK_TTL_HOURS = 24;
 
 class AdminBookingConflictError extends Error {
   constructor() {
@@ -1050,9 +1055,9 @@ export async function createBookingAdmin(
       };
     }
 
-    const expiresAt = new Date(
-      Date.now() + ADMIN_PAYMENT_LINK_TTL_HOURS * 60 * 60 * 1000,
-    );
+    const nowMs = Date.now();
+    const linkExpiresAt = new Date(nowMs + STRIPE_LINK_TTL_HOURS * 60 * 60 * 1000);
+    const slotHeldUntil = new Date(nowMs + SLOT_HOLD_HOURS * 60 * 60 * 1000);
 
     let session;
     try {
@@ -1079,7 +1084,7 @@ export async function createBookingAdmin(
         },
         customer_email: data.client.email,
         locale: "fr",
-        expires_at: Math.floor(expiresAt.getTime() / 1000),
+        expires_at: Math.floor(linkExpiresAt.getTime() / 1000),
         success_url: `${origin}/reservation/succes?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/reservation/echec?token=${booking.confirmationToken}`,
       });
@@ -1100,13 +1105,14 @@ export async function createBookingAdmin(
       where: { id: booking.id },
       data: {
         stripeSessionId: session.id,
-        paymentExpiresAt: expiresAt,
+        paymentExpiresAt: slotHeldUntil,
       },
     });
 
     await audit(admin.id, booking.id, "booking.created_by_admin_send_link", {
       depositCents,
-      paymentExpiresAt: expiresAt.toISOString(),
+      paymentExpiresAt: slotHeldUntil.toISOString(),
+      linkExpiresAt: linkExpiresAt.toISOString(),
     });
 
     // Email cliente : lien de paiement
@@ -1121,7 +1127,8 @@ export async function createBookingAdmin(
         totalDurationMinutes,
         depositCents,
         checkoutUrl: session.url!,
-        expiresInHours: ADMIN_PAYMENT_LINK_TTL_HOURS,
+        expiresInHours: STRIPE_LINK_TTL_HOURS,
+        slotHeldUntil,
       });
       await sendEmail({
         to: data.client.email,
@@ -1271,5 +1278,137 @@ export async function createBookingAdmin(
       data.paymentMode === "PAID_IN_PERSON"
         ? `RDV créé et confirmé. Acompte de ${(effectiveDepositCents / 100).toFixed(2).replace(".", ",")} € enregistré.`
         : "RDV créé et confirmé sans acompte.",
+  };
+}
+
+// ─────────────────────────────────────────────────────────
+// Renvoi du lien de paiement (RDV admin AWAITING_DEPOSIT)
+// ─────────────────────────────────────────────────────────
+
+/**
+ * Régénère une session Stripe Checkout (24h) pour un RDV encore en attente
+ * de paiement, et renvoie le lien par email. Ré-arme le hold du créneau (72h).
+ * Utile quand le lien initial a expiré (Stripe plafonne à 24h) mais que le
+ * créneau est toujours réservé.
+ */
+export async function resendBookingPaymentLink(
+  bookingId: string,
+): Promise<ActionResult & { checkoutUrl?: string }> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Non autorisé" };
+
+  if (!stripe) {
+    return { ok: false, error: "Stripe non configuré, impossible d'envoyer un lien." };
+  }
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      status: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      totalDurationMinutes: true,
+      depositCents: true,
+      confirmationToken: true,
+      clientFirstName: true,
+      clientEmail: true,
+      service: { select: { title: true } },
+      options: { select: { serviceOption: { select: { title: true } } } },
+    },
+  });
+  if (!booking) return { ok: false, error: "Booking introuvable" };
+  if (booking.status !== "AWAITING_DEPOSIT") {
+    return {
+      ok: false,
+      error: `Renvoi impossible : statut ${booking.status} (un lien ne se renvoie que sur un RDV en attente de paiement).`,
+    };
+  }
+
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const nowMs = Date.now();
+  const linkExpiresAt = new Date(nowMs + STRIPE_LINK_TTL_HOURS * 60 * 60 * 1000);
+  const slotHeldUntil = new Date(nowMs + SLOT_HOLD_HOURS * 60 * 60 * 1000);
+
+  let session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: `Acompte — ${booking.service.title}`,
+              description: `RDV du ${booking.date.toISOString().slice(0, 10)} à ${booking.startTime}`,
+            },
+            unit_amount: booking.depositCents,
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        type: "booking",
+        bookingId: booking.id,
+        createdByAdmin: "true",
+      },
+      customer_email: booking.clientEmail,
+      locale: "fr",
+      expires_at: Math.floor(linkExpiresAt.getTime() / 1000),
+      success_url: `${origin}/reservation/succes?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/reservation/echec?token=${booking.confirmationToken}`,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Erreur Stripe";
+    console.error("[resendBookingPaymentLink] Stripe error:", err);
+    return { ok: false, error: `Création Stripe échouée : ${msg}` };
+  }
+
+  // Nouvelle session + ré-armement du hold créneau (72h).
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: {
+      stripeSessionId: session.id,
+      paymentExpiresAt: slotHeldUntil,
+    },
+  });
+
+  await audit(admin.id, booking.id, "booking.payment_link_resent", {
+    paymentExpiresAt: slotHeldUntil.toISOString(),
+    linkExpiresAt: linkExpiresAt.toISOString(),
+  });
+
+  try {
+    const mail = buildBookingAdminPaymentLinkEmail({
+      clientFirstName: booking.clientFirstName,
+      serviceTitle: booking.service.title,
+      optionsTitles: booking.options.map((o) => o.serviceOption.title),
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      totalDurationMinutes: booking.totalDurationMinutes,
+      depositCents: booking.depositCents,
+      checkoutUrl: session.url!,
+      expiresInHours: STRIPE_LINK_TTL_HOURS,
+      slotHeldUntil,
+    });
+    await sendEmail({
+      to: booking.clientEmail,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      tag: "booking.admin-payment-link",
+    });
+  } catch (err) {
+    console.error("[resendBookingPaymentLink] email échoué:", err);
+  }
+
+  revalidatePath("/admin", "layout");
+  return {
+    ok: true,
+    message: "Nouveau lien de paiement envoyé à la cliente (valable 24 h).",
+    checkoutUrl: session.url ?? undefined,
   };
 }

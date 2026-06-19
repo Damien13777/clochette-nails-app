@@ -5,7 +5,8 @@
  * Diffère de booking-confirmation :
  *  - Le RDV n'est PAS encore confirmé (statut AWAITING_DEPOSIT)
  *  - Gros CTA "Régler l'acompte" → Stripe Checkout
- *  - Mention claire du délai (24h) et de l'annulation auto si pas payé
+ *  - Le lien Stripe est valable 24h (plafond Stripe), MAIS le créneau reste
+ *    réservé jusqu'à `slotHeldUntil` (72h) — au-delà il est libéré par le cron.
  *
  * Une fois le paiement reçu, le webhook Stripe enverra le mail booking-confirmation
  * standard (avec liens d'annulation/déplacement).
@@ -24,8 +25,10 @@ export type BookingAdminPaymentLinkInput = {
   depositCents: number;
   /** URL Stripe Checkout (24h de validité) */
   checkoutUrl: string;
-  /** Heures restantes avant expiration du lien (typiquement 24) */
+  /** Heures de validité du lien Stripe (plafond Stripe : 24) */
   expiresInHours: number;
+  /** Date jusqu'à laquelle le créneau reste réservé (72h, libéré par le cron au-delà) */
+  slotHeldUntil: Date;
 };
 
 function formatDateFr(date: Date): string {
@@ -34,6 +37,16 @@ function formatDateFr(date: Date): string {
     day: "numeric",
     month: "long",
     year: "numeric",
+  });
+}
+
+function formatDateTimeFr(date: Date): string {
+  return date.toLocaleString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -69,7 +82,8 @@ export function buildBookingAdminPaymentLinkEmail(
     ``,
     `Régler l'acompte : ${input.checkoutUrl}`,
     ``,
-    `⏱ Lien valable ${input.expiresInHours} heures. Sans paiement dans ce délai, le rendez-vous sera automatiquement annulé et le créneau libéré.`,
+    `⏱ Ce lien est valable ${input.expiresInHours} h. Votre créneau reste réservé jusqu'au ${formatDateTimeFr(input.slotHeldUntil)} — passé ce délai sans règlement, il sera automatiquement libéré.`,
+    `(Lien expiré avant d'avoir payé ? Contactez-nous, on vous en renvoie un.)`,
     ``,
     `Adresse : Moncoutant-sur-Sèvre, 79320`,
     `Téléphone : {{contactPhone}}`,
@@ -132,10 +146,14 @@ export function buildBookingAdminPaymentLinkEmail(
     </div>
 
     <div style="background-color:#fff5f0;border-left:3px solid #c87850;padding:12px 16px;border-radius:4px;margin:0 0 24px 0;">
-      <p style="margin:0;font-size:13px;color:${COLORS.ink700};">
-        ⏱ <strong style="color:#c87850;">Lien valable ${input.expiresInHours} heures.</strong>
-        Sans paiement dans ce délai, le rendez-vous sera automatiquement annulé
-        et le créneau libéré.
+      <p style="margin:0 0 6px 0;font-size:13px;color:${COLORS.ink700};">
+        ⏱ <strong style="color:#c87850;">Ce lien est valable ${input.expiresInHours} h.</strong>
+        Votre créneau reste réservé jusqu'au
+        <strong style="color:${COLORS.ink900};text-transform:capitalize;">${formatDateTimeFr(input.slotHeldUntil)}</strong> —
+        passé ce délai sans règlement, il sera automatiquement libéré.
+      </p>
+      <p style="margin:0;font-size:12px;color:${COLORS.ink500};">
+        Lien expiré avant d'avoir payé ? Contactez-nous, on vous en renvoie un.
       </p>
     </div>
 
