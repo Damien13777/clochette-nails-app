@@ -90,10 +90,18 @@ const nextConfig: NextConfig = {
 
 /**
  * Wrapper Sentry : tunnel `/monitoring` (same-origin → pas de modif CSP,
- * contourne les adblockers). Pas d'org/projet/authToken → upload des source
- * maps désactivé pour l'instant (à activer plus tard avec un SENTRY_AUTH_TOKEN).
+ * contourne les adblockers).
+ *
+ * Upload des source maps (stack traces lisibles en prod) : activé dès que le
+ * build dispose de `SENTRY_AUTH_TOKEN` (+ `SENTRY_ORG`, `SENTRY_PROJECT`,
+ * `SENTRY_URL` pour la région EU). Ces valeurs sont lues depuis l'env par le
+ * plugin Sentry — rien de spécifique au client en dur ici (multi-instance).
+ * Sans token (ex. build local), l'upload est simplement ignoré → build OK.
+ * Les source maps sont supprimées après upload (jamais servies publiquement).
  */
 export default withSentryConfig(nextConfig, {
   tunnelRoute: "/monitoring",
   silent: !process.env.CI,
+  widenClientFileUpload: true,
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
 });
