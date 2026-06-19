@@ -14,6 +14,7 @@ import {
   markBookingCompleted,
   markBookingNoShow,
   refundBookingFull,
+  resendBookingPaymentLink,
   updateBookingRevenue,
   type MarkCompletedInput,
 } from "@/lib/actions/booking-admin";
@@ -125,6 +126,13 @@ export function BookingActions({
             onClick={() =>
               runAction(() => forceConfirmBooking(bookingId))
             }
+          />
+          <ActionButton
+            label="Renvoyer le lien de paiement"
+            description="Nouveau lien Stripe (24h) par email · créneau gardé 3 jours"
+            variant="secondary"
+            disabled={isPending}
+            onClick={() => runAction(() => resendBookingPaymentLink(bookingId))}
           />
           <ActionButton
             label="Annuler la réservation"

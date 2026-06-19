@@ -67,6 +67,8 @@ export async function GET(request: Request) {
       date: true,
       startTime: true,
       clientEmail: true,
+      clientFirstName: true,
+      clientLastName: true,
     },
     take: BATCH_LIMIT,
     orderBy: { createdAt: "asc" },
@@ -92,6 +94,26 @@ export async function GET(request: Request) {
       cancellationReason: "Délai de paiement dépassé",
     },
   });
+
+  // ── Notif admin in-app : prévenir Chloé des expirations (relance possible) ──
+  if (result.count > 0) {
+    const adminUser = await prisma.user.findFirst({
+      where: { role: "ADMIN", isActive: true },
+      select: { id: true },
+    });
+    if (adminUser) {
+      await prisma.notification.createMany({
+        data: candidates.map((b) => ({
+          userId: adminUser.id,
+          type: "BOOKING_CANCELLED" as const,
+          title: `RDV expiré (acompte non réglé) : ${b.clientFirstName} ${b.clientLastName}`,
+          body: `${b.date.toISOString().slice(0, 10)} à ${b.startTime} — créneau libéré. Relance possible.`,
+          link: `/admin/bookings/${b.id}`,
+          metadata: { bookingId: b.id, reason: "payment_expired" } as object,
+        })),
+      });
+    }
+  }
 
   // ── Outbound events ───────────────────────────────────
   const targetUrl = process.env.MANAGEMENT_API_URL;

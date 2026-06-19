@@ -548,7 +548,40 @@ async function confirmBookingFromSession(
     return;
   }
   if (booking.status === "CONFIRMED") {
-    // Déjà confirmé (race avec un autre webhook ?)
+    // Déjà confirmé (webhook rejoué) — idempotent.
+    return;
+  }
+  if (booking.status !== "AWAITING_DEPOSIT") {
+    // Paiement reçu sur un RDV qui n'est plus en attente (ex : EXPIRED par le
+    // cron après 72h, ou annulé) → le créneau a pu être libéré/repris. On NE
+    // confirme PAS, et on alerte l'admin pour vérification / remboursement.
+    console.error(
+      `[stripe webhook] paiement reçu sur booking ${booking.id} en statut ${booking.status} (≠ AWAITING_DEPOSIT) — non confirmé, à vérifier/rembourser.`,
+    );
+    try {
+      const adminUser = await prisma.user.findFirst({
+        where: { role: "ADMIN", isActive: true },
+        select: { id: true },
+      });
+      if (adminUser) {
+        await prisma.notification.create({
+          data: {
+            userId: adminUser.id,
+            type: "BOOKING_CANCELLED",
+            title: "⚠️ Paiement reçu sur un RDV expiré/annulé",
+            body: `${booking.clientFirstName} — RDV ${booking.date.toISOString().slice(0, 10)} ${booking.startTime} (statut ${booking.status}). À vérifier / rembourser.`,
+            link: `/admin/bookings/${booking.id}`,
+            metadata: {
+              bookingId: booking.id,
+              status: booking.status,
+              anomaly: "paid_after_expiry",
+            } as object,
+          },
+        });
+      }
+    } catch (err) {
+      console.error("[stripe webhook] notif anomalie paiement tardif échouée:", err);
+    }
     return;
   }
 
