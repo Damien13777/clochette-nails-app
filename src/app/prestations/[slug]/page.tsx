@@ -20,6 +20,7 @@ import { prisma } from "@/lib/prisma";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { buildSrcSet } from "@/lib/image-srcset";
+import { formatPriceFrom } from "@/lib/booking-display";
 import { PrestationGallery } from "@/components/prestation-gallery";
 import { breadcrumbJsonLd } from "@/lib/seo-jsonld";
 import { Reveal } from "@/components/reveal";
@@ -332,6 +333,20 @@ export default async function ServiceDetailPage({
                     style={{ fontFamily: "var(--font-serif)" }}
                   >
                     {formatDuration(service.durationMinutes)}
+                  </dd>
+                </div>
+                <div>
+                  <dt
+                    className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-ink-500)]"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    Tarif
+                  </dt>
+                  <dd
+                    className="mt-1 text-base text-[var(--color-violet-700)]"
+                    style={{ fontFamily: "var(--font-serif)" }}
+                  >
+                    {formatPriceFrom(service.priceCents)}
                   </dd>
                 </div>
                 <div>

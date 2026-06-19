@@ -2,13 +2,14 @@
  * ServicesSection — Server Component.
  *
  * Branché sur Prisma (fetch les 6 prestations PUBLISHED vedettes).
- * Pas d'affichage de prix (politique salon Clochette).
+ * Affiche le prix « à partir de » (priceCents) sur chaque card.
  * Card → lien vers /prestations/[slug] (page détail à venir).
  */
 
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { buildSrcSet } from "@/lib/image-srcset";
+import { formatPriceFrom } from "@/lib/booking-display";
 
 const CATEGORY_BADGES: Record<string, { label: string; cls: string } | undefined> = {
   POSE_NATURELS: { label: "Signature", cls: "bg-[var(--color-rose-100)] text-[#8a3c4a]" },
@@ -36,6 +37,7 @@ export async function ServicesSection() {
       shortDesc: true,
       category: true,
       durationMinutes: true,
+      priceCents: true,
       photos: {
         where: { featured: true },
         take: 1,
@@ -110,6 +112,7 @@ type ServiceCardProps = {
     shortDesc: string;
     category: string;
     durationMinutes: number;
+    priceCents: number;
     photos: { url: string; alt: string; variants: unknown }[];
   };
   compact?: boolean;
@@ -167,6 +170,12 @@ function ServiceCard({ svc, compact = false }: ServiceCardProps) {
         >
           {svc.title}
         </h3>
+        <p
+          className={`text-[var(--color-violet-700)] ${compact ? "mt-1 text-xs" : "mt-1.5 text-base"}`}
+          style={{ fontFamily: "var(--font-serif)" }}
+        >
+          {formatPriceFrom(svc.priceCents)}
+        </p>
         {!compact && (
           <p className="text-sm text-[var(--color-ink-700)] mt-2 pb-4 leading-relaxed">
             {svc.shortDesc}

@@ -79,6 +79,20 @@ export function formatCents(cents: number): string {
   return (cents / 100).toFixed(2).replace(".", ",") + " €";
 }
 
+/**
+ * Prix public « à partir de » (centimes → "À partir de 45 €"). Sans décimales
+ * si le montant est un nombre d'euros entier, sinon 2 décimales. Le « à partir
+ * de » reflète que les options ajoutées font monter le total.
+ */
+export function formatPriceFrom(cents: number): string {
+  if (cents <= 0) return "Sur devis";
+  const euros =
+    cents % 100 === 0
+      ? String(cents / 100)
+      : (cents / 100).toFixed(2).replace(".", ",");
+  return `À partir de ${euros} €`;
+}
+
 export function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;

@@ -3,8 +3,9 @@
 /**
  * Récap réservation — desktop sticky + mobile bottom bar.
  *
- * Le PRIX TOTAL n'est jamais affiché (politique salon). Seul l'acompte
- * éventuel sera visible sur la page success après calcul server-side.
+ * Affiche un « montant estimé » (prestation + options sélectionnées) — c'est une
+ * estimation indicative, le total final peut varier (ajustements le jour du RDV).
+ * L'acompte éventuel est calculé server-side.
  */
 
 import type { OptionLite, ServiceLite } from "./reservation-flow";
@@ -30,6 +31,7 @@ type Props = {
   service: ServiceLite | null;
   options: OptionLite[];
   totalDuration: number;
+  totalPriceCents: number;
   date: string | null;
   startTime: string | null;
   stripeConfigured: boolean;
@@ -47,6 +49,7 @@ export function ReservationSummary({
   service,
   options,
   totalDuration,
+  totalPriceCents,
   date,
   startTime,
   stripeConfigured,
@@ -91,34 +94,48 @@ export function ReservationSummary({
           )}
         </div>
 
-        {/* Breakdown acompte sur sa propre ligne */}
-        {depositCents > 0 && (
-          <div className="mt-2 pt-2 border-t border-[var(--color-line)]">
-            {giftCardApplied > 0 ? (
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-[var(--color-success)]">
-                  Code cadeau −{formatCents(giftCardApplied)}
-                </span>
-                <span
-                  className="text-[var(--color-violet-700)]"
-                  style={{ fontFamily: "var(--font-serif)" }}
-                >
-                  À payer&nbsp;<strong>{formatCents(remainingDeposit)}</strong>
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between text-xs">
-                <span
-                  className="uppercase tracking-[0.12em] text-[var(--color-ink-500)]"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  Acompte
-                </span>
-                <span style={{ fontFamily: "var(--font-serif)" }}>
-                  {formatCents(depositCents)}
-                </span>
-              </div>
-            )}
+        {/* Breakdown : montant estimé + acompte */}
+        {service && (
+          <div className="mt-2 pt-2 border-t border-[var(--color-line)] space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span
+                className="uppercase tracking-[0.12em] text-[var(--color-ink-500)]"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Montant estimé
+              </span>
+              <span style={{ fontFamily: "var(--font-serif)" }}>
+                {service.priceCents === 0
+                  ? "Sur devis"
+                  : formatCents(totalPriceCents)}
+              </span>
+            </div>
+            {depositCents > 0 &&
+              (giftCardApplied > 0 ? (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[var(--color-success)]">
+                    Code cadeau −{formatCents(giftCardApplied)}
+                  </span>
+                  <span
+                    className="text-[var(--color-violet-700)]"
+                    style={{ fontFamily: "var(--font-serif)" }}
+                  >
+                    À payer&nbsp;<strong>{formatCents(remainingDeposit)}</strong>
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between text-xs">
+                  <span
+                    className="uppercase tracking-[0.12em] text-[var(--color-ink-500)]"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    Acompte
+                  </span>
+                  <span style={{ fontFamily: "var(--font-serif)" }}>
+                    {formatCents(depositCents)}
+                  </span>
+                </div>
+              ))}
           </div>
         )}
       </div>
@@ -198,6 +215,33 @@ export function ReservationSummary({
                 {formatDuration(totalDuration)}
               </span>
             </div>
+          </div>
+
+          <div className="pt-4 border-t border-[var(--color-line)]">
+            <div className="flex justify-between items-baseline">
+              <span
+                className="text-xs text-[var(--color-ink-500)] uppercase tracking-[0.14em]"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Montant estimé
+              </span>
+              <span
+                className="text-base text-[var(--color-violet-700)]"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                {service.priceCents === 0
+                  ? "Sur devis"
+                  : formatCents(totalPriceCents)}
+              </span>
+            </div>
+            {service.priceCents > 0 && (
+              <p
+                className="mt-1.5 text-[10px] text-[var(--color-ink-500)]"
+                style={{ fontFamily: "var(--font-ui)" }}
+              >
+                Prestation + options · ajustable le jour du RDV
+              </p>
+            )}
           </div>
 
           {date && startTime && (

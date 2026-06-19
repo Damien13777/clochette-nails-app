@@ -4,8 +4,7 @@
  * Affiche TOUS les services en status PUBLISHED, groupés par catégorie.
  * Chaque catégorie = section avec H2 (SEO + structure).
  * Cards cliquables → /prestations/[slug] pour le détail.
- *
- * Pas de prix affiché (politique salon — visible seulement dans le tunnel résa).
+ * Prix « à partir de » affiché sur chaque card.
  */
 
 import type { Metadata } from "next";
@@ -15,6 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { buildSrcSet } from "@/lib/image-srcset";
+import { formatPriceFrom } from "@/lib/booking-display";
 import { Reveal } from "@/components/reveal";
 
 export const metadata: Metadata = {
@@ -81,6 +81,7 @@ export default async function PrestationsPage() {
       shortDesc: true,
       category: true,
       durationMinutes: true,
+      priceCents: true,
       photos: {
         where: { featured: true },
         take: 1,
@@ -253,39 +254,47 @@ export default async function PrestationsPage() {
                           >
                             {svc.shortDesc}
                           </p>
-                          <div className="mt-auto pt-5 flex items-center justify-between border-t border-[var(--color-line)]">
-                            <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-500)]">
-                              <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 6v6l4 2" />
-                              </svg>
-                              {formatDuration(svc.durationMinutes)}
-                            </span>
-                            <span
-                              className="text-xs text-[var(--color-violet-700)] inline-flex items-center gap-1 group-hover:gap-2 transition-all"
-                              style={{ fontFamily: "var(--font-display)" }}
+                          <div className="mt-auto pt-5 border-t border-[var(--color-line)]">
+                            <p
+                              className="text-base text-[var(--color-violet-700)] mb-2"
+                              style={{ fontFamily: "var(--font-serif)" }}
                             >
-                              Voir le détail
-                              <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
+                              {formatPriceFrom(svc.priceCents)}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-ink-500)]">
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                >
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M12 6v6l4 2" />
+                                </svg>
+                                {formatDuration(svc.durationMinutes)}
+                              </span>
+                              <span
+                                className="text-xs text-[var(--color-violet-700)] inline-flex items-center gap-1 group-hover:gap-2 transition-all"
+                                style={{ fontFamily: "var(--font-display)" }}
                               >
-                                <path d="M5 12h14M13 5l7 7-7 7" />
-                              </svg>
-                            </span>
+                                Voir le détail
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                >
+                                  <path d="M5 12h14M13 5l7 7-7 7" />
+                                </svg>
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </Link>

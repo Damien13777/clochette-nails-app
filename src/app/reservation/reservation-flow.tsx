@@ -127,13 +127,18 @@ export function ReservationFlow({
     );
   }, [selectedService, selectedOptions]);
 
+  const totalPriceCents = useMemo(() => {
+    if (!selectedService) return 0;
+    return (
+      selectedService.priceCents +
+      selectedOptions.reduce((s, o) => s + o.addedPriceCents, 0)
+    );
+  }, [selectedService, selectedOptions]);
+
   const depositCents = useMemo(() => {
     if (!selectedService) return 0;
-    const totalCents =
-      selectedService.priceCents +
-      selectedOptions.reduce((s, o) => s + o.addedPriceCents, 0);
-    return computeDepositCents(totalCents, depositSettings);
-  }, [selectedService, selectedOptions, depositSettings]);
+    return computeDepositCents(totalPriceCents, depositSettings);
+  }, [selectedService, totalPriceCents, depositSettings]);
 
   const giftCardApplied = Math.min(giftCardAmount, depositCents);
   const remainingDeposit = Math.max(0, depositCents - giftCardApplied);
@@ -391,6 +396,7 @@ export function ReservationFlow({
               service={selectedService}
               options={selectedOptions}
               totalDuration={totalDuration}
+              totalPriceCents={totalPriceCents}
               date={date}
               startTime={startTime}
               stripeConfigured={stripeConfigured}
@@ -408,6 +414,7 @@ export function ReservationFlow({
           service={selectedService}
           options={selectedOptions}
           totalDuration={totalDuration}
+          totalPriceCents={totalPriceCents}
           date={date}
           startTime={startTime}
           stripeConfigured={stripeConfigured}
