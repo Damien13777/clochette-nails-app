@@ -35,6 +35,7 @@ import { buildGiftCardAdminIssuedEmail } from "@/lib/email/templates/gift-card-a
 import { buildGiftCardPurchaseReceiptEmail } from "@/lib/email/templates/gift-card-purchase-receipt";
 import { buildGiftCardNotifAdminEmail } from "@/lib/email/templates/gift-card-notif-admin";
 import { buildEbookPurchasedEmail } from "@/lib/email/templates/ebook-purchased";
+import { buildEbookNotifAdminEmail } from "@/lib/email/templates/ebook-notif-admin";
 import {
   createInvoiceForEbookPurchase,
   createInvoiceForGiftCard,
@@ -309,6 +310,30 @@ async function confirmEbookPurchaseFromSession(
     }
   } catch (err) {
     console.error(`[stripe webhook] email ebook exception pour ${purchase.id}:`, err);
+  }
+
+  // Email admin (Chloé) — notif de vente, comme pour les RDV et les cartes cadeau
+  try {
+    const adminMail = buildEbookNotifAdminEmail({
+      purchaseId: purchase.id,
+      ebookTitle: purchase.ebook.title,
+      amountCents: purchase.amount,
+      buyerName: purchase.clientName,
+      buyerEmail: purchase.clientEmail,
+      giftCardAmountCents: giftCardAmountCents || undefined,
+      stripePaidCents: amountPaidCents,
+      purchasedAt: now,
+    });
+    await sendEmail({
+      to: ADMIN_EMAIL,
+      subject: adminMail.subject,
+      html: adminMail.html,
+      text: adminMail.text,
+      replyTo: purchase.clientEmail,
+      tag: "ebook.notif-admin",
+    });
+  } catch (err) {
+    console.error("[stripe webhook] email admin ebook échec:", err);
   }
 }
 
