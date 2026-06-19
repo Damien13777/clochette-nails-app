@@ -3,6 +3,10 @@
  *
  * Toutes les photos portfolio (ServicePhoto featured=false), filtrables par
  * catégorie, rendues par paquets de 24 ("Voir plus"), lightbox au clic.
+ *
+ * SEO : title court local + meta description, OG/Twitter avec une vraie photo
+ * (1ʳᵉ du portfolio) au lieu du logo, JSON-LD ImageGallery (Google Images) +
+ * BreadcrumbList. Canonical + entrée sitemap. Page indexable.
  */
 import type { Metadata } from "next";
 import type { ServiceCategory } from "@prisma/client";
@@ -11,15 +15,49 @@ import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { PortfolioGallery } from "@/components/portfolio/portfolio-gallery";
 import { CATEGORY_LABELS, type PortfolioPhoto } from "@/components/portfolio/types";
-
-export const metadata: Metadata = {
-  title: "Réalisations · Nail art & prothésie ongulaire",
-  description:
-    "Découvrez les réalisations de Clochette Nails : manucure russe, pose semi-permanente, rallongements et nail-art. Salon de prothésie ongulaire à Moncoutant-sur-Sèvre.",
-  alternates: { canonical: "/realisations" },
-};
+import { getVariantUrl } from "@/lib/image-srcset";
+import { safeJsonLd } from "@/lib/jsonld";
+import { SITE_URL, breadcrumbJsonLd } from "@/lib/seo-jsonld";
 
 export const dynamic = "force-dynamic";
+
+const PAGE_TITLE = "Réalisations nail art à Moncoutant";
+const PAGE_DESCRIPTION =
+  "Découvrez les réalisations de Clochette Nails : manucure russe, pose semi-permanente, rallongements et nail-art. Salon de prothésie ongulaire à Moncoutant-sur-Sèvre.";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const first = await prisma.servicePhoto.findFirst({
+    where: { featured: false },
+    orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
+    select: { url: true, alt: true, variants: true },
+  });
+  const ogImage = first ? getVariantUrl(first.variants, "large") ?? first.url : null;
+
+  return {
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
+    alternates: { canonical: "/realisations" },
+    openGraph: {
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      url: "/realisations",
+      type: "website",
+      ...(ogImage
+        ? {
+            images: [
+              { url: ogImage, alt: first?.alt ?? "Réalisation Clochette Nails" },
+            ],
+          }
+        : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: PAGE_TITLE,
+      description: PAGE_DESCRIPTION,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+  };
+}
 
 export default async function RealisationsPage() {
   const photos: PortfolioPhoto[] = await prisma.servicePhoto.findMany({
@@ -38,8 +76,43 @@ export default async function RealisationsPage() {
     new Set(photos.map((p) => p.category)),
   );
 
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Accueil", path: "/" },
+    { name: "Réalisations", path: "/realisations" },
+  ]);
+
+  const galleryJsonLd =
+    photos.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ImageGallery",
+          name: "Réalisations — Clochette Nails",
+          description:
+            "Galerie des réalisations de Clochette Nails, salon de prothésie ongulaire à Moncoutant-sur-Sèvre.",
+          url: `${SITE_URL}/realisations`,
+          image: photos.slice(0, 50).map((p) => ({
+            "@type": "ImageObject",
+            contentUrl: `${SITE_URL}${getVariantUrl(p.variants, "large") ?? p.url}`,
+            thumbnailUrl: `${SITE_URL}${getVariantUrl(p.variants, "thumb") ?? p.url}`,
+            name: p.alt,
+            ...(p.caption ? { caption: p.caption } : {}),
+          })),
+        }
+      : null;
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumb) }}
+      />
+      {galleryJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(galleryJsonLd) }}
+        />
+      )}
+
       <SiteHeader />
       <main className="bg-[var(--color-cream)]">
         {/* Header / intro */}
