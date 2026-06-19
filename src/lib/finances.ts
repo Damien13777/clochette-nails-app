@@ -229,6 +229,7 @@ async function loadGiftCardTransactions(
       prefix: true,
       initialAmountCents: true,
       stripeFeeCents: true,
+      refundedAmount: true,
       buyerName: true,
       buyerEmail: true,
       paidAt: true,
@@ -241,6 +242,9 @@ async function loadGiftCardTransactions(
     // Vente en salon (ADMIN_SALE) = paiement physique, pas de frais Stripe.
     // Vente publique (PUBLIC) = Stripe Checkout, frais réels via webhook.
     const fee = c.creationMode === "PUBLIC" ? (c.stripeFeeCents ?? 0) : 0;
+    // Remboursement (refundGiftCardStripe pose status=REFUNDED + refundedAmount,
+    // mais garde paymentStatus=PAID → la carte reste comptée ici, on déduit le refund).
+    const refunded = c.refundedAmount ?? 0;
     return {
       id: `giftcard:${c.id}`,
       type: "gift_card" as TransactionType,
@@ -253,8 +257,8 @@ async function loadGiftCardTransactions(
       grossCents: gross,
       giftCardUsedCents: 0,
       stripeFeeCents: fee,
-      refundedCents: 0,
-      netCents: Math.max(0, gross - fee),
+      refundedCents: refunded,
+      netCents: Math.max(0, gross - fee - refunded),
     };
   });
 }

@@ -33,6 +33,7 @@ import { buildBookingConfirmationEmail } from "@/lib/email/templates/booking-con
 import { buildBookingNotifAdminEmail } from "@/lib/email/templates/booking-notif-admin";
 import { buildGiftCardAdminIssuedEmail } from "@/lib/email/templates/gift-card-admin-issued";
 import { buildGiftCardPurchaseReceiptEmail } from "@/lib/email/templates/gift-card-purchase-receipt";
+import { buildGiftCardNotifAdminEmail } from "@/lib/email/templates/gift-card-notif-admin";
 import { buildEbookPurchasedEmail } from "@/lib/email/templates/ebook-purchased";
 import {
   createInvoiceForEbookPurchase,
@@ -454,6 +455,33 @@ async function activateGiftCardFromSession(
     }
   } catch (err) {
     console.error("[stripe webhook] reçu acheteuse gift card échec:", err);
+  }
+
+  // Email admin (Chloé) — notif de vente, comme pour les RDV (la notif in-app
+  // ne suffit pas si Chloé ne se connecte pas).
+  try {
+    const adminMail = buildGiftCardNotifAdminEmail({
+      giftCardId: card.id,
+      prefix: card.prefix,
+      amountCents: card.initialAmountCents,
+      buyerName: card.buyerName,
+      buyerEmail: card.buyerEmail,
+      recipientName: card.recipientName,
+      recipientEmail: card.recipientEmail,
+      giftMessage: card.giftMessage,
+      purchasedAt: new Date(),
+      expiresAt: card.expiresAt,
+    });
+    await sendEmail({
+      to: ADMIN_EMAIL,
+      subject: adminMail.subject,
+      html: adminMail.html,
+      text: adminMail.text,
+      replyTo: card.buyerEmail,
+      tag: "gift-card.notif-admin",
+    });
+  } catch (err) {
+    console.error("[stripe webhook] email admin gift card échec:", err);
   }
 }
 
