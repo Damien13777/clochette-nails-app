@@ -52,6 +52,7 @@ export function PortfolioGallery({ photos, categories }: Props) {
             index={idx}
             sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
             onOpen={setLightboxIdx}
+            eager={idx < 4}
           />
         ))}
       </div>

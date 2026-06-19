@@ -2,8 +2,13 @@
 
 /**
  * Vignette portfolio partagée : bouton ratio 4:5 (coins arrondis), image
- * lazy + srcSet, légende au survol. Clic → onOpen(index) (ouvre la lightbox).
+ * srcSet, légende au survol. Clic → onOpen(index) (ouvre la lightbox).
  * `sizes` passé en prop (teaser et page ont des largeurs différentes).
+ *
+ * `eager` (page /realisations, 1ʳᵉ rangée au-dessus de la ligne de flottaison) :
+ * charge l'image sans lazy (sinon le navigateur dé-priorise le LCP) ; la
+ * toute première (index 0) passe en `fetchPriority="high"`. Par défaut lazy
+ * (teaser landing = portfolio en bas de page).
  */
 import { buildSrcSet } from "@/lib/image-srcset";
 import type { PortfolioPhoto } from "./types";
@@ -13,9 +18,10 @@ type Props = {
   index: number;
   sizes: string;
   onOpen: (index: number) => void;
+  eager?: boolean;
 };
 
-export function PortfolioThumb({ photo, index, sizes, onOpen }: Props) {
+export function PortfolioThumb({ photo, index, sizes, onOpen, eager = false }: Props) {
   return (
     <button
       type="button"
@@ -29,7 +35,8 @@ export function PortfolioThumb({ photo, index, sizes, onOpen }: Props) {
         srcSet={buildSrcSet(photo.variants)}
         sizes={sizes}
         alt={photo.alt}
-        loading="lazy"
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager && index === 0 ? "high" : undefined}
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
       />
       {photo.caption && (
