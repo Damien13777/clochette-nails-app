@@ -97,6 +97,8 @@ export function buildBookingConfirmationEmail(input: BookingConfirmationInput) {
     `Adresse : Moncoutant-sur-Sèvre, 79320`,
     `Téléphone (en cas d'imprévu) : {{contactPhone}}`,
     ``,
+    `Avant votre rendez-vous, vous recevrez deux rappels par email (7 jours avant, puis la veille). Pour être sûre de les recevoir, ajoutez {{contactEmail}} à vos contacts et pensez à vérifier vos courriers indésirables.`,
+    ``,
     `Annulation gratuite jusqu'à 72h avant le RDV — au-delà l'acompte est conservé.`,
     cancelUrl ? `Annuler mon RDV : ${cancelUrl}` : "",
     rescheduleUrl ? `Déplacer mon RDV : ${rescheduleUrl}` : "",
@@ -184,6 +186,14 @@ export function buildBookingConfirmationEmail(input: BookingConfirmationInput) {
     <p style="margin:0 0 24px 0;">
       <strong style="color:${COLORS.ink900};">Imprévu de dernière minute ?</strong>
       Appelez-nous au <a href="{{contactPhoneHref}}" style="color:${COLORS.violet700};">{{contactPhone}}</a>.
+    </p>
+
+    <p style="margin:0 0 24px 0;font-size:14px;color:${COLORS.ink700};">
+      <strong style="color:${COLORS.ink900};">Avant votre rendez-vous,</strong>
+      vous recevrez deux rappels par email (7 jours avant, puis la veille).
+      Pour être sûre de les recevoir, ajoutez
+      <a href="mailto:{{contactEmail}}" style="color:${COLORS.violet700};">{{contactEmail}}</a>
+      à vos contacts et pensez à vérifier vos courriers indésirables.
     </p>
 
     <div style="background-color:${COLORS.violet50};border-left:3px solid ${COLORS.violet600};padding:12px 16px;border-radius:4px;margin:0 0 24px 0;">
