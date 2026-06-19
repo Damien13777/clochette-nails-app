@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { href: "/cartes-cadeau", label: "Cartes cadeau" },
   { href: "/blog", label: "Journal" },
   { href: "/ebooks", label: "Ebooks" },
-  { href: "/#portfolio", label: "Portfolio" },
+  { href: "/realisations", label: "Réalisations" },
   { href: "/#avis", label: "Avis" },
   { href: "/#contact", label: "Contact" },
 ];
