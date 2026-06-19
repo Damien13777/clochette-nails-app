@@ -3,7 +3,8 @@
  *
  * Avis lus en DB (table Testimonial, gérée sur /admin/parametres/avis).
  * Section masquée si aucun avis publié. Ligne Google depuis PlatformSettings.
- * Mobile : snap-x horizontal scroll (CSS only). Desktop : grid 3 cols.
+ * Mobile : carrousel scroll-snap, 1 avis/vue + aperçu du suivant (aligné
+ * sur la section engagement). Desktop : grid 3 cols.
  */
 
 import { prisma } from "@/lib/prisma";
@@ -69,11 +70,11 @@ export async function TestimonialsSection() {
         )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-5 overflow-x-auto snap-x snap-mandatory md:overflow-visible -mx-5 px-5 md:mx-0 md:px-0 pb-2">
+      <div className="flex md:grid md:grid-cols-3 gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none scroll-px-5 -mx-5 px-5 md:mx-0 md:px-0 pb-1 md:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {testimonials.map((t) => (
           <article
             key={t.id}
-            className="snap-center min-w-[85%] md:min-w-0 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 flex flex-col"
+            className="snap-start shrink-0 w-[82%] sm:w-[48%] md:w-auto bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 flex flex-col"
           >
             <svg
               className="w-5 h-5 text-[var(--color-violet-300)] mb-4"
