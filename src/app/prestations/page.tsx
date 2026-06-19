@@ -20,7 +20,7 @@ import { Reveal } from "@/components/reveal";
 export const metadata: Metadata = {
   title: "Prestations · Manucure & soin des ongles",
   description:
-    "Découvrez l'ensemble des prestations Clochette Nails : pose ongles naturels, rallongements, soins des mains et des pieds, dépose. Studio à Moncoutant-sur-Sèvre.",
+    "Découvrez l'ensemble des prestations Clochette Nails : pose ongles naturels, rallongements, soins des mains et des pieds, dépose. Salon à Moncoutant-sur-Sèvre.",
   alternates: { canonical: "/prestations" },
 };
 
