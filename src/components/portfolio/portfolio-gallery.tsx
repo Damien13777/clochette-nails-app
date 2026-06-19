@@ -37,7 +37,6 @@ export function PortfolioGallery({ photos, categories }: Props) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset volontaire au changement de filtre
     setVisibleCount(PAGE_SIZE);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset volontaire au changement de filtre
     setLightboxIdx(null);
   }, [active]);
 
