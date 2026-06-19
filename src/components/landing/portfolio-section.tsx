@@ -1,30 +1,25 @@
 /**
- * PortfolioSection — Server Component.
+ * PortfolioSection — Server Component (teaser landing).
  *
- * Fetch les photos portfolio (ServicePhoto featured=false) groupées par
- * catégorie, et délègue le filtering interactif au Client subcomponent.
- *
- * Si aucune photo n'est uploadée, affiche un placeholder hachuré (legacy).
+ * Fetch un pool borné de photos portfolio (featured=false) et délègue
+ * l'affichage (filtres + slide mobile + grille desktop + lightbox + lien
+ * « Voir tout ») au PortfolioTeaser. Si aucune photo : placeholder hachuré.
  */
-
 import type { ServiceCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { PortfolioGallery, type PortfolioGalleryPhoto } from "./portfolio-gallery";
+import { PortfolioTeaser } from "@/components/portfolio/portfolio-teaser";
+import {
+  CATEGORY_LABELS,
+  type PortfolioPhoto,
+} from "@/components/portfolio/types";
 
-const CATEGORY_LABELS: Record<ServiceCategory, string> = {
-  POSE_NATURELS: "Pose sur ongles naturels",
-  RALLONGEMENT: "Rallongements",
-  PACK_SPECIAL: "Packs",
-  SOIN_MAINS: "Soin mains",
-  SOIN_PIEDS: "Soin pieds",
-  DEPOSE: "Dépose",
-};
+const TEASER_POOL = 40;
 
 export async function PortfolioSection() {
-  const photos: PortfolioGalleryPhoto[] = await prisma.servicePhoto.findMany({
+  const photos: PortfolioPhoto[] = await prisma.servicePhoto.findMany({
     where: { featured: false },
     orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
-    take: 60,
+    take: TEASER_POOL,
     select: {
       id: true,
       url: true,
@@ -35,7 +30,6 @@ export async function PortfolioSection() {
     },
   });
 
-  // Catégories effectivement présentes
   const presentCats: ServiceCategory[] = Array.from(
     new Set(photos.map((p) => p.category)),
   );
@@ -52,20 +46,20 @@ export async function PortfolioSection() {
             className="text-xs uppercase tracking-[0.22em] text-[var(--color-ink-500)]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Réalisations
+            Mon travail
           </p>
           <h2
             className="mt-4 text-[clamp(1.5rem,2.8vw,2rem)]"
             style={{ fontFamily: "var(--font-serif)" }}
           >
-            Portfolio
+            Réalisations
           </h2>
         </div>
 
         {photos.length === 0 ? (
           <EmptyPlaceholder />
         ) : (
-          <PortfolioGallery
+          <PortfolioTeaser
             photos={photos}
             categories={presentCats.map((c) => ({
               id: c,
@@ -84,7 +78,7 @@ function EmptyPlaceholder() {
       {Array.from({ length: 8 }).map((_, i) => (
         <div
           key={i}
-          className="relative aspect-square rounded-[var(--radius-sm)] overflow-hidden border border-[var(--color-line)]"
+          className="relative aspect-[4/5] rounded-[var(--radius-sm)] overflow-hidden border border-[var(--color-line)]"
           style={{
             backgroundColor: "var(--color-rose-100)",
             backgroundImage:

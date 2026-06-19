@@ -69,10 +69,10 @@ export function FooterContent({
               </li>
               <li>
                 <Link
-                  href="/#portfolio"
+                  href="/realisations"
                   className="hover:text-[var(--color-violet-700)] transition-colors"
                 >
-                  Portfolio
+                  Réalisations
                 </Link>
               </li>
               <li>
