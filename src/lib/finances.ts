@@ -17,6 +17,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { sumTotals } from "@/lib/finances-totals";
 
 export type TransactionType = "booking" | "gift_card" | "ebook";
 
@@ -314,32 +315,6 @@ async function loadEbookTransactions(
       netCents: net,
     };
   });
-}
-
-// ─── Agrégation ────────────────────────────────────────────
-
-function sumTotals(txs: FinanceTransaction[]): FinanceTotals {
-  const t = txs.reduce(
-    (acc, x) => ({
-      grossCents: acc.grossCents + x.grossCents,
-      giftCardUsedCents: acc.giftCardUsedCents + x.giftCardUsedCents,
-      stripeFeeCents: acc.stripeFeeCents + x.stripeFeeCents,
-      refundedCents: acc.refundedCents + x.refundedCents,
-      netCents: acc.netCents + x.netCents,
-    }),
-    {
-      grossCents: 0,
-      giftCardUsedCents: 0,
-      stripeFeeCents: 0,
-      refundedCents: 0,
-      netCents: 0,
-    },
-  );
-  return {
-    ...t,
-    count: txs.length,
-    averageGrossCents: txs.length > 0 ? Math.round(t.grossCents / txs.length) : 0,
-  };
 }
 
 // ─── Série temporelle pour graphique ───────────────────────

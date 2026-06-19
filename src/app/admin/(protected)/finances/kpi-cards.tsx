@@ -363,7 +363,7 @@ function AverageTicketContent({
         className="text-xs text-[var(--color-ink-500)]"
         style={{ fontFamily: "var(--font-ui)" }}
       >
-        Ticket moyen = brut total / nombre de transactions, pour chaque source.
+        Ticket moyen = brut total / nombre de transactions encaissées (hors 0 €), pour chaque source.
       </p>
 
       <ul className="divide-y divide-[var(--color-line)] border border-[var(--color-line)] rounded-[var(--radius-md)] overflow-hidden">
