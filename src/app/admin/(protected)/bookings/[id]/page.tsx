@@ -22,6 +22,7 @@ import {
   formatDuration,
 } from "@/lib/booking-display";
 import { BookingActions } from "./booking-actions";
+import { BookingPhotos } from "./booking-photos";
 import { InvoiceBlock } from "@/components/admin/invoice-block";
 import { BookingNotes } from "./booking-notes";
 import { BookingReminders } from "./booking-reminders";
@@ -87,6 +88,37 @@ export default async function BookingDetailPage({
 
   const visual = STATUS_VISUAL[booking.status];
   const isStripePaid = !!booking.stripePaymentId;
+
+  // Catalogue éditable (changement de prestation depuis le dialog Modifier).
+  // Chargé seulement pour les statuts éditables — sinon listes vides.
+  const isEditable =
+    booking.status === "AWAITING_DEPOSIT" || booking.status === "CONFIRMED";
+  const [editableServices, editableOptions] = isEditable
+    ? await Promise.all([
+        prisma.service.findMany({
+          where: { status: "PUBLISHED" },
+          orderBy: { displayOrder: "asc" },
+          select: {
+            id: true,
+            title: true,
+            category: true,
+            durationMinutes: true,
+            priceCents: true,
+          },
+        }),
+        prisma.serviceOption.findMany({
+          where: { status: "PUBLISHED" },
+          orderBy: { displayOrder: "asc" },
+          select: {
+            id: true,
+            title: true,
+            applicableCategories: true,
+            addedDurationMinutes: true,
+            addedPriceCents: true,
+          },
+        }),
+      ])
+    : [[], []];
 
   return (
     <div className="max-w-[1400px] px-5 lg:px-8 py-10">
@@ -386,35 +418,7 @@ export default async function BookingDetailPage({
           {/* Photos jointes par la cliente */}
           {booking.files.length > 0 && (
             <Section title={`Photos jointes (${booking.files.length})`}>
-              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {booking.files.map((f) => (
-                  <li key={f.id}>
-                    <a
-                      href={f.url}
-                      target="_blank"
-                      rel="noopener"
-                      className="block group"
-                      title={f.originalName}
-                    >
-                      <div className="relative aspect-square rounded-[var(--radius-sm)] overflow-hidden bg-[var(--color-bone)] border border-[var(--color-line)]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={f.url}
-                          alt={f.originalName}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                      <p
-                        className="mt-1 text-[10px] text-[var(--color-ink-500)] truncate"
-                        style={{ fontFamily: "var(--font-ui)" }}
-                      >
-                        {f.originalName}
-                      </p>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <BookingPhotos files={booking.files} />
             </Section>
           )}
 
@@ -539,6 +543,15 @@ export default async function BookingDetailPage({
                 booking.paymentMethod === "stripe" && !!booking.paidAt
               }
               revenueCents={booking.revenueCents}
+              editableServices={editableServices}
+              editableOptions={editableOptions}
+              currentServiceId={booking.serviceId}
+              currentOptionIds={booking.options.map((o) => o.serviceOptionId)}
+              clientFirstName={booking.clientFirstName}
+              clientLastName={booking.clientLastName}
+              clientEmail={booking.clientEmail}
+              clientPhone={booking.clientPhone}
+              clientMessage={booking.clientMessage ?? ""}
             />
           </div>
         </aside>
