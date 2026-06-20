@@ -104,4 +104,11 @@ export default withSentryConfig(nextConfig, {
   silent: !process.env.CI,
   widenClientFileUpload: true,
   sourcemaps: { deleteSourcemapsAfterUpload: true },
+  // Associe les commits git à la release → "suspect commits" dans Sentry
+  // (quel commit a probablement causé l'erreur). Nécessite l'intégration
+  // GitHub côté Sentry (OK) + le repo git au build (VPS). ignoreMissing évite
+  // de casser le build si l'historique/commit précédent est introuvable.
+  release: {
+    setCommits: { auto: true, ignoreMissing: true },
+  },
 });
