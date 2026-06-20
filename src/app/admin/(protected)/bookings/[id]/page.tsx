@@ -22,6 +22,7 @@ import {
   formatDuration,
 } from "@/lib/booking-display";
 import { BookingActions } from "./booking-actions";
+import { BookingPhotos } from "./booking-photos";
 import { InvoiceBlock } from "@/components/admin/invoice-block";
 import { BookingNotes } from "./booking-notes";
 import { BookingReminders } from "./booking-reminders";
@@ -417,35 +418,7 @@ export default async function BookingDetailPage({
           {/* Photos jointes par la cliente */}
           {booking.files.length > 0 && (
             <Section title={`Photos jointes (${booking.files.length})`}>
-              <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {booking.files.map((f) => (
-                  <li key={f.id}>
-                    <a
-                      href={f.url}
-                      target="_blank"
-                      rel="noopener"
-                      className="block group"
-                      title={f.originalName}
-                    >
-                      <div className="relative aspect-square rounded-[var(--radius-sm)] overflow-hidden bg-[var(--color-bone)] border border-[var(--color-line)]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={f.url}
-                          alt={f.originalName}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                          loading="lazy"
-                        />
-                      </div>
-                      <p
-                        className="mt-1 text-[10px] text-[var(--color-ink-500)] truncate"
-                        style={{ fontFamily: "var(--font-ui)" }}
-                      >
-                        {f.originalName}
-                      </p>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <BookingPhotos files={booking.files} />
             </Section>
           )}
 
