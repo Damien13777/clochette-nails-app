@@ -19,6 +19,7 @@ import {
   getAvailableSlotsForReschedule,
   rescheduleBookingAdmin,
 } from "@/lib/actions/booking-admin";
+import { ModalPortal } from "@/components/modal-portal";
 
 type Props = {
   bookingId: string;
@@ -129,12 +130,12 @@ export function RescheduleDialog({
   const isSameAsCurrent =
     date === currentDate && selectedSlot === currentStartTime;
 
-  return (
+  const overlay = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Déplacer la réservation"
-      className="fixed inset-0 z-50 bg-black/40 grid place-items-center px-4 py-8 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-black/40 grid place-items-center px-4 py-8 overflow-y-auto"
       onClick={onCancel}
     >
       <div
@@ -301,4 +302,6 @@ export function RescheduleDialog({
       </div>
     </div>
   );
+
+  return <ModalPortal>{overlay}</ModalPortal>;
 }

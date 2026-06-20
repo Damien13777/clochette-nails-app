@@ -21,6 +21,7 @@ import {
 import { lookupGiftCardForAdmin } from "@/lib/actions/gift-card-admin";
 import { formatCents } from "@/lib/booking-display";
 import { RescheduleDialog } from "./reschedule-dialog";
+import { ModalPortal } from "@/components/modal-portal";
 import {
   EditBookingDialog,
   type EditableService,
@@ -453,12 +454,12 @@ function ReasonDialog({
   onConfirm: () => void;
   disabled?: boolean;
 }) {
-  return (
+  const overlay = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-50 bg-black/40 grid place-items-center px-4"
+      className="fixed inset-0 z-[60] bg-black/40 grid place-items-center px-4"
       onClick={onCancel}
     >
       <div
@@ -525,6 +526,8 @@ function ReasonDialog({
       </div>
     </div>
   );
+
+  return <ModalPortal>{overlay}</ModalPortal>;
 }
 
 function paymentMethodLabelFr(method: string | null): string {
@@ -581,12 +584,12 @@ function EditRevenueDialog({
   const valid = Number.isFinite(parsed) && parsed >= 0 && parsed <= 100_000;
   const cents = valid ? Math.round(parsed * 100) : 0;
 
-  return (
+  const overlay = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Modifier le montant perçu"
-      className="fixed inset-0 z-50 bg-black/40 grid place-items-center px-4"
+      className="fixed inset-0 z-[60] bg-black/40 grid place-items-center px-4"
       onClick={onCancel}
     >
       <div
@@ -674,6 +677,8 @@ function EditRevenueDialog({
       </div>
     </div>
   );
+
+  return <ModalPortal>{overlay}</ModalPortal>;
 }
 
 // ─── Modale "Marquer comme honorée" (création) ──────────────────
@@ -804,12 +809,12 @@ function MarkCompletedDialog({
     onConfirm(payload);
   }
 
-  return (
+  const overlay = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Marquer comme honorée"
-      className="fixed inset-0 z-50 bg-black/40 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-black/40 overflow-y-auto"
       onClick={onCancel}
     >
       <div className="min-h-full grid place-items-center px-4 py-6">
@@ -1122,4 +1127,6 @@ function MarkCompletedDialog({
       </div>
     </div>
   );
+
+  return <ModalPortal>{overlay}</ModalPortal>;
 }
