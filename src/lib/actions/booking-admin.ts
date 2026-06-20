@@ -1412,3 +1412,220 @@ export async function resendBookingPaymentLink(
     checkoutUrl: session.url ?? undefined,
   };
 }
+
+// ─── Édition admin d'un RDV (coordonnées + prestation/options) ──────
+// Modifie un booking AWAITING_DEPOSIT ou CONFIRMED : corrige les coordonnées
+// et/ou change la prestation + options. Le créneau (date + startTime) est
+// conservé ; endTime est recalculé selon la nouvelle durée. Le chevauchement
+// renvoie le code "OVERLAP" tant que force !== true.
+
+const updateBookingDetailsSchema = z.object({
+  client: z.object({
+    firstName: z.string().trim().min(1).max(50),
+    lastName: z.string().trim().min(1).max(50),
+    email: z.string().trim().toLowerCase().email().max(150),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^(?:\+33|0)[1-9](?:[ .-]?\d{2}){4}$/, "Téléphone FR invalide"),
+    message: z.string().trim().max(2000).optional().nullable(),
+  }),
+  serviceId: z.string().min(1),
+  optionIds: z.array(z.string().min(1)).default([]),
+  force: z.boolean().optional(),
+  notifyClient: z.boolean().optional(),
+});
+
+export type UpdateBookingDetailsInput = z.input<typeof updateBookingDetailsSchema>;
+
+export type UpdateBookingDetailsResult =
+  | { ok: true; message: string }
+  | {
+      ok: false;
+      error: string;
+      code?: string;
+      fieldErrors?: Record<string, string>;
+    };
+
+export async function updateBookingDetails(
+  bookingId: string,
+  input: UpdateBookingDetailsInput,
+): Promise<UpdateBookingDetailsResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Non autorisé" };
+
+  const parsed = updateBookingDetailsSchema.safeParse(input);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const path = issue.path.join(".");
+      if (path && !fieldErrors[path]) fieldErrors[path] = issue.message;
+    }
+    return {
+      ok: false,
+      error: "Vérifiez les champs marqués.",
+      code: "VALIDATION_ERROR",
+      fieldErrors,
+    };
+  }
+  const data = parsed.data;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      status: true,
+      date: true,
+      startTime: true,
+      clientActionToken: true,
+      paymentMethod: true,
+    },
+  });
+  if (!booking) return { ok: false, error: "Réservation introuvable." };
+  if (booking.status !== "AWAITING_DEPOSIT" && booking.status !== "CONFIRMED") {
+    return {
+      ok: false,
+      error: `Modification impossible : seules les réservations en attente d'acompte ou confirmées sont éditables (statut actuel : ${booking.status}).`,
+      code: "STATUS_NOT_EDITABLE",
+    };
+  }
+
+  const [service, options, settings] = await Promise.all([
+    prisma.service.findFirst({
+      where: { id: data.serviceId, status: "PUBLISHED" },
+      select: { id: true, title: true, durationMinutes: true, priceCents: true },
+    }),
+    data.optionIds.length > 0
+      ? prisma.serviceOption.findMany({
+          where: { id: { in: data.optionIds }, status: "PUBLISHED" },
+          select: {
+            id: true,
+            title: true,
+            addedDurationMinutes: true,
+            addedPriceCents: true,
+          },
+        })
+      : Promise.resolve(
+          [] as {
+            id: string;
+            title: string;
+            addedDurationMinutes: number;
+            addedPriceCents: number;
+          }[],
+        ),
+    prisma.platformSettings.findFirst(),
+  ]);
+
+  if (!service) {
+    return {
+      ok: false,
+      error: "Prestation introuvable ou non publiée.",
+      code: "SERVICE_NOT_FOUND",
+    };
+  }
+  if (options.length !== data.optionIds.length) {
+    return {
+      ok: false,
+      error: "Une ou plusieurs options sont introuvables ou non publiées.",
+      code: "OPTION_NOT_FOUND",
+    };
+  }
+
+  const totalDurationMinutes =
+    service.durationMinutes +
+    options.reduce((sum, o) => sum + o.addedDurationMinutes, 0);
+  const totalPriceCents =
+    service.priceCents + options.reduce((sum, o) => sum + o.addedPriceCents, 0);
+  const depositCents = computeDepositCents(totalPriceCents, settings);
+  const endTime = addMinutesToTime(booking.startTime, totalDurationMinutes);
+
+  // Overlap : exclut le booking lui-même. Bornes strictes → les créneaux qui se
+  // touchent (endTime === startTime voisin) ne comptent pas comme chevauchement.
+  const conflict = await prisma.booking.findFirst({
+    where: {
+      date: booking.date,
+      id: { not: bookingId },
+      status: { in: ["AWAITING_DEPOSIT", "CONFIRMED"] },
+      AND: [{ startTime: { lt: endTime } }, { endTime: { gt: booking.startTime } }],
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+      clientFirstName: true,
+      clientLastName: true,
+    },
+  });
+  if (conflict && !data.force) {
+    return {
+      ok: false,
+      code: "OVERLAP",
+      error: `La nouvelle durée chevauche le RDV de ${conflict.clientFirstName} ${conflict.clientLastName} (${conflict.startTime}–${conflict.endTime}). Appliquer quand même ?`,
+    };
+  }
+
+  await prisma.$transaction([
+    prisma.bookingOption.deleteMany({ where: { bookingId } }),
+    prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        clientFirstName: data.client.firstName,
+        clientLastName: data.client.lastName,
+        clientEmail: data.client.email,
+        clientPhone: data.client.phone,
+        clientMessage: data.client.message?.trim() || null,
+        serviceId: service.id,
+        totalDurationMinutes,
+        totalPriceCents,
+        depositCents,
+        endTime,
+        options: {
+          create: data.optionIds.map((id) => ({ serviceOptionId: id })),
+        },
+      },
+    }),
+  ]);
+
+  await audit(admin.id, bookingId, "booking.updated", {
+    serviceId: service.id,
+    optionIds: data.optionIds,
+    totalPriceCents,
+    depositCents,
+    endTime,
+    forced: Boolean(conflict && data.force),
+  });
+
+  if (data.notifyClient) {
+    const mail = buildBookingConfirmationEmail({
+      clientFirstName: data.client.firstName,
+      clientEmail: data.client.email,
+      serviceTitle: service.title,
+      optionsTitles: options.map((o) => o.title),
+      date: booking.date,
+      startTime: booking.startTime,
+      endTime,
+      totalDurationMinutes,
+      depositCents,
+      giftCardAmountCents: 0,
+      clientActionToken: booking.clientActionToken ?? undefined,
+      paymentMethod: booking.paymentMethod ?? undefined,
+    });
+    const sent = await sendEmail({
+      to: data.client.email,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+      tag: "booking.updated",
+    });
+    if (!sent.ok) {
+      console.error("[updateBookingDetails] email cliente échoué:", sent.error);
+    }
+  }
+
+  revalidatePath("/admin", "layout");
+  return {
+    ok: true,
+    message:
+      conflict && data.force
+        ? "Réservation modifiée (chevauchement forcé)."
+        : "Réservation modifiée.",
+  };
+}
