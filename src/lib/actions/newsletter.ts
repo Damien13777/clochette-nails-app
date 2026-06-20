@@ -29,6 +29,7 @@ import { sendEmail } from "@/lib/email/send";
 import { buildNewsletterConfirmEmail } from "@/lib/email/templates/newsletter-confirm";
 import { buildNewsletterWelcomeEmail } from "@/lib/email/templates/newsletter-welcome";
 import { getClientIp } from "@/lib/client-ip";
+import { verifyRecaptcha } from "@/lib/recaptcha";
 import {
   NEWSLETTER,
   checkRateLimit,
@@ -70,6 +71,7 @@ export async function subscribeNewsletter(
   rawEmail: string,
   rawSource?: string,
   honeypot?: string,
+  recaptchaToken?: string,
 ): Promise<SubscribeResult> {
   const h = await headers();
   const ip = getClientIp(h);
@@ -87,6 +89,16 @@ export async function subscribeNewsletter(
       ok: false,
       error: "Trop d'inscriptions depuis cette adresse. Réessayez plus tard.",
       code: "RATE_LIMITED",
+    };
+  }
+
+  // reCAPTCHA v3 (skip si pas de clé serveur → dev ; fail-open si Google down)
+  const captcha = await verifyRecaptcha(recaptchaToken, "newsletter", ip);
+  if (!captcha.ok) {
+    return {
+      ok: false,
+      error: "La vérification de sécurité a échoué. Merci de réessayer.",
+      code: "RECAPTCHA_FAILED",
     };
   }
 
