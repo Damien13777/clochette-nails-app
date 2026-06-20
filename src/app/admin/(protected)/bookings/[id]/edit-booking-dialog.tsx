@@ -10,7 +10,8 @@
  * « Appliquer quand même » (rappel avec force=true).
  */
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import {
   updateBookingDetails,
   type UpdateBookingDetailsResult,
@@ -71,6 +72,15 @@ export function EditBookingDialog({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [overlap, setOverlap] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Verrou du scroll de fond pendant que la modale est ouverte.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   const selectedService = useMemo(
     () => services.find((s) => s.id === serviceId) ?? null,
@@ -156,12 +166,12 @@ export function EditBookingDialog({
     phone.trim().length > 0 &&
     serviceId.length > 0;
 
-  return (
+  const overlay = (
     <div
       role="dialog"
       aria-modal="true"
       aria-label="Modifier la réservation"
-      className="fixed inset-0 z-50 bg-black/40 overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-black/40 overflow-y-auto"
       onClick={onCancel}
     >
       <div className="min-h-full grid place-items-center px-4 py-6">
@@ -398,6 +408,13 @@ export function EditBookingDialog({
       </div>
     </div>
   );
+
+  // Portal vers <body> : la modale doit échapper à tout ancêtre qui crée un
+  // containing block pour `position: fixed` (la topbar admin `backdrop-blur`
+  // + le contenu confiné la masquaient sinon). Même pattern que photo-lightbox
+  // et calendar-side-panel.
+  if (typeof document === "undefined") return null;
+  return createPortal(overlay, document.body);
 }
 
 function Field({
