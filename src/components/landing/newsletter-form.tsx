@@ -10,6 +10,8 @@
 
 import { useState, useTransition } from "react";
 import { subscribeNewsletter } from "@/lib/actions/newsletter";
+import { executeRecaptcha, loadRecaptcha } from "@/lib/recaptcha-client";
+import { RecaptchaNotice } from "@/components/recaptcha-notice";
 
 type ViewState =
   | { kind: "idle" }
@@ -27,7 +29,13 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
     e.preventDefault();
     if (!email.trim()) return;
     startTransition(async () => {
-      const res = await subscribeNewsletter(email, source, website);
+      const token = await executeRecaptcha("newsletter");
+      const res = await subscribeNewsletter(
+        email,
+        source,
+        website,
+        token ?? undefined,
+      );
       if (res.ok) {
         setView({ kind: "success", alreadyConfirmed: !!res.alreadyConfirmed });
         setEmail("");
@@ -87,6 +95,7 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
             setEmail(e.target.value);
             if (view.kind === "error") setView({ kind: "idle" });
           }}
+          onFocus={() => void loadRecaptcha()}
           disabled={pending}
           placeholder="vous@exemple.fr"
           className="input flex-1 min-w-0 px-3 py-2 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-sm)] text-sm text-[var(--color-ink-900)] focus:outline-none focus:border-[var(--color-violet-600)] focus:shadow-[var(--shadow-focus)] transition-all disabled:opacity-60"
@@ -110,6 +119,7 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
           {view.message}
         </p>
       )}
+      <RecaptchaNotice />
     </div>
   );
 }
