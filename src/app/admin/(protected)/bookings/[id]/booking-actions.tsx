@@ -21,6 +21,11 @@ import {
 import { lookupGiftCardForAdmin } from "@/lib/actions/gift-card-admin";
 import { formatCents } from "@/lib/booking-display";
 import { RescheduleDialog } from "./reschedule-dialog";
+import {
+  EditBookingDialog,
+  type EditableService,
+  type EditableOption,
+} from "./edit-booking-dialog";
 
 type Props = {
   bookingId: string;
@@ -38,6 +43,16 @@ type Props = {
   isDepositReceived: boolean;
   /** Montant déjà saisi au markCompleted (null = non honoré). */
   revenueCents: number | null;
+  /** Coordonnées + prestation actuelles (préremplissage du dialog Modifier). */
+  editableServices: EditableService[];
+  editableOptions: EditableOption[];
+  currentServiceId: string;
+  currentOptionIds: string[];
+  clientFirstName: string;
+  clientLastName: string;
+  clientEmail: string;
+  clientPhone: string;
+  clientMessage: string;
 };
 
 type Feedback = { kind: "success" | "error"; text: string } | null;
@@ -55,6 +70,15 @@ export function BookingActions({
   paymentMethod,
   isDepositReceived,
   revenueCents,
+  editableServices,
+  editableOptions,
+  currentServiceId,
+  currentOptionIds,
+  clientFirstName,
+  clientLastName,
+  clientEmail,
+  clientPhone,
+  clientMessage,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -63,6 +87,7 @@ export function BookingActions({
   const [showRefund, setShowRefund] = useState(false);
   const [refundReason, setRefundReason] = useState("");
   const [showReschedule, setShowReschedule] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [showRevenue, setShowRevenue] = useState<false | "create" | "edit">(false);
   const router = useRouter();
 
@@ -135,6 +160,13 @@ export function BookingActions({
             onClick={() => runAction(() => resendBookingPaymentLink(bookingId))}
           />
           <ActionButton
+            label="Modifier la réservation"
+            description="Corriger les coordonnées ou la prestation"
+            variant="secondary"
+            disabled={isPending}
+            onClick={() => setShowEdit(true)}
+          />
+          <ActionButton
             label="Annuler la réservation"
             variant="danger"
             disabled={isPending}
@@ -158,6 +190,13 @@ export function BookingActions({
             variant="secondary"
             disabled={isPending}
             onClick={() => setShowReschedule(true)}
+          />
+          <ActionButton
+            label="Modifier la réservation"
+            description="Corriger les coordonnées ou la prestation"
+            variant="secondary"
+            disabled={isPending}
+            onClick={() => setShowEdit(true)}
           />
           <ActionButton
             label="Marquer absente (no-show)"
@@ -250,6 +289,30 @@ export function BookingActions({
           onCancel={() => setShowReschedule(false)}
           onSuccess={(message) => {
             setShowReschedule(false);
+            setFeedback({ kind: "success", text: message });
+            router.refresh();
+          }}
+        />
+      )}
+
+      {/* Modale Modification (coordonnées + prestation) */}
+      {showEdit && (
+        <EditBookingDialog
+          bookingId={bookingId}
+          current={{
+            firstName: clientFirstName,
+            lastName: clientLastName,
+            email: clientEmail,
+            phone: clientPhone,
+            message: clientMessage,
+            serviceId: currentServiceId,
+            optionIds: currentOptionIds,
+          }}
+          services={editableServices}
+          options={editableOptions}
+          onCancel={() => setShowEdit(false)}
+          onSuccess={(message) => {
+            setShowEdit(false);
             setFeedback({ kind: "success", text: message });
             router.refresh();
           }}
