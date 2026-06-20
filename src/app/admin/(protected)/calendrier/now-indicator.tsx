@@ -55,7 +55,7 @@ export function NowIndicator({
 
   return (
     <div
-      className="pointer-events-none absolute left-0 right-0 z-30 flex items-center"
+      className="pointer-events-none absolute left-0 right-0 z-20 flex items-center"
       style={{ top: `${top}px` }}
       aria-label={`Heure actuelle ${label}`}
     >
