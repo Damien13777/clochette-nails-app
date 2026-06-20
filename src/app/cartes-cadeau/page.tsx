@@ -86,6 +86,7 @@ export default async function GiftCardsPublicPage() {
               priceCurrency: "EUR",
               lowPrice: "10",
               highPrice: "1000",
+              offerCount: 5,
               availability: "https://schema.org/InStock",
               url: `${SITE_URL}/cartes-cadeau`,
               seller: { "@id": BEAUTYSALON_ID },
