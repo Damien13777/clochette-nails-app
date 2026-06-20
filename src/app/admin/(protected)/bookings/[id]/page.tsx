@@ -88,6 +88,37 @@ export default async function BookingDetailPage({
   const visual = STATUS_VISUAL[booking.status];
   const isStripePaid = !!booking.stripePaymentId;
 
+  // Catalogue éditable (changement de prestation depuis le dialog Modifier).
+  // Chargé seulement pour les statuts éditables — sinon listes vides.
+  const isEditable =
+    booking.status === "AWAITING_DEPOSIT" || booking.status === "CONFIRMED";
+  const [editableServices, editableOptions] = isEditable
+    ? await Promise.all([
+        prisma.service.findMany({
+          where: { status: "PUBLISHED" },
+          orderBy: { displayOrder: "asc" },
+          select: {
+            id: true,
+            title: true,
+            category: true,
+            durationMinutes: true,
+            priceCents: true,
+          },
+        }),
+        prisma.serviceOption.findMany({
+          where: { status: "PUBLISHED" },
+          orderBy: { displayOrder: "asc" },
+          select: {
+            id: true,
+            title: true,
+            applicableCategories: true,
+            addedDurationMinutes: true,
+            addedPriceCents: true,
+          },
+        }),
+      ])
+    : [[], []];
+
   return (
     <div className="max-w-[1400px] px-5 lg:px-8 py-10">
       {/* Back link — revient à la page précédente (calendrier+semaine, liste+filtre…) */}
@@ -539,6 +570,15 @@ export default async function BookingDetailPage({
                 booking.paymentMethod === "stripe" && !!booking.paidAt
               }
               revenueCents={booking.revenueCents}
+              editableServices={editableServices}
+              editableOptions={editableOptions}
+              currentServiceId={booking.serviceId}
+              currentOptionIds={booking.options.map((o) => o.serviceOptionId)}
+              clientFirstName={booking.clientFirstName}
+              clientLastName={booking.clientLastName}
+              clientEmail={booking.clientEmail}
+              clientPhone={booking.clientPhone}
+              clientMessage={booking.clientMessage ?? ""}
             />
           </div>
         </aside>
