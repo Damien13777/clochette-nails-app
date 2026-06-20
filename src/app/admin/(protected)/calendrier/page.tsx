@@ -331,7 +331,7 @@ export default async function AdminCalendarPage({
   });
 
   return (
-    <div className="max-w-[1600px] px-4 lg:px-6 py-8">
+    <div className="max-w-[1600px] px-4 lg:px-6 py-8 md:py-6 md:flex md:flex-col md:h-[calc(100dvh-4rem)]">
       <CalendarHeader
         weekStartIso={weekStartIso}
         granularity={granularity}
@@ -356,7 +356,8 @@ export default async function AdminCalendarPage({
       />
 
       {view === "month" ? (
-        <MonthView
+        <div className="md:flex-1 md:min-h-0 md:overflow-auto">
+          <MonthView
           weekStartIso={weekStartIso}
           todayIso={todayIso}
           bookings={serializedBookings.map((b) => ({
@@ -376,6 +377,7 @@ export default async function AdminCalendarPage({
             new Set(monthsToDisplay.filter((m) => m.isOpen).map((m) => `${m.year}-${m.month}`))
           }
         />
+        </div>
       ) : (
         <>
       {/* Vue mobile (< md) */}
@@ -403,7 +405,7 @@ export default async function AdminCalendarPage({
       </div>
 
       {/* Vue desktop (md+) — semaine */}
-      <div className="hidden md:block">
+      <div className="hidden md:flex md:flex-col md:flex-1 md:min-h-0">
         <WeekGrid
           weekStartIso={weekStartIso}
           granularity={granularity}

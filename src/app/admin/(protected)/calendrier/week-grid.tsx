@@ -212,10 +212,10 @@ export function WeekGrid({
   }
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       <div
         ref={scrollRef}
-        className="relative bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] overflow-auto max-h-[calc(100vh-220px)]"
+        className="relative bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] overflow-auto flex-1 min-h-0"
       >
         <div className="grid grid-cols-[60px_repeat(7,minmax(120px,1fr))] min-w-[920px]">
           {/* Coin top-left */}
@@ -490,7 +490,7 @@ export function WeekGrid({
       </div>
 
       {/* Légende */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-xs text-[var(--color-ink-700)]" style={{ fontFamily: "var(--font-ui)" }}>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 shrink-0 text-xs text-[var(--color-ink-700)]" style={{ fontFamily: "var(--font-ui)" }}>
         <LegendDot color="bg-[var(--color-success)]" label="Confirmé" />
         <LegendDot color="bg-[var(--color-warning)]" label="Acompte attendu" />
         <LegendDot color="bg-[var(--color-ink-500)]" label="Honoré" />
@@ -577,7 +577,7 @@ export function WeekGrid({
           onClose={() => setCellAction({ open: false })}
         />
       )}
-    </>
+    </div>
   );
 }
 
