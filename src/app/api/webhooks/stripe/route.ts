@@ -392,6 +392,15 @@ async function activateGiftCardFromSession(
           : (session.payment_intent?.id ?? null),
     },
   });
+  await emitOutboundEvent("gift_card.purchased", {
+    giftCardId: card.id,
+    amountCents: card.initialAmountCents,
+    channel: "public",
+    stripePaymentId:
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : (session.payment_intent?.id ?? null),
+  });
 
   // Notification in-app pour Chloé
   try {

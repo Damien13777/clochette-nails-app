@@ -21,6 +21,7 @@ import { sendEmail } from "@/lib/email/send";
 import { buildGiftCardAdminIssuedEmail } from "@/lib/email/templates/gift-card-admin-issued";
 import { buildGiftCardResentEmail } from "@/lib/email/templates/gift-card-resent";
 import { buildGiftCardPurchaseReceiptEmail } from "@/lib/email/templates/gift-card-purchase-receipt";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import {
   generateGiftCardCode,
   giftCardPrefix,
@@ -240,6 +241,17 @@ export async function createGiftCardAdmin(
     mode: input.mode,
     paymentMethod: salePaymentMethod,
   });
+  await emitOutboundEvent(
+    input.mode === "ADMIN_GIFT"
+      ? "gift_card.admin_gift_issued"
+      : "gift_card.purchased",
+    {
+      giftCardId: created.id,
+      amountCents: initialAmountCents,
+      channel: input.mode === "ADMIN_GIFT" ? "admin_gift" : "admin_sale",
+      paymentMethod: salePaymentMethod,
+    },
+  );
 
   // Facture pour les ventes en salon (fail-soft ; jamais pour ADMIN_GIFT)
   if (input.mode === "ADMIN_SALE") {
@@ -456,6 +468,10 @@ export async function refundGiftCardStripe(
       refundedAmount: refund.amount,
       remainingAmountCents: 0,
     },
+  });
+  await emitOutboundEvent("gift_card.refunded", {
+    giftCardId: id,
+    refundedAmountCents: refund.amount,
   });
   await audit(admin.id, id, "gift_card.refunded_stripe", {
     refundId: refund.id,

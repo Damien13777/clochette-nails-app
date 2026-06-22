@@ -17,6 +17,7 @@ import type { GiftCardRedemptionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email/send";
 import { buildGiftCardDepletedEmail } from "@/lib/email/templates/gift-card-depleted";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 
 export type RedemptionInput = {
   giftCardId: string;
@@ -80,6 +81,7 @@ export async function applyGiftCardRedemption(
   }
 
   let didDeplete = false;
+  let didRedeem = false;
   let depletedCardInfo: {
     prefix: string;
     initialAmountCents: number;
@@ -169,6 +171,8 @@ export async function applyGiftCardRedemption(
       },
     });
 
+    didRedeem = true;
+
     if (newStatus === "FULLY_USED") {
       didDeplete = true;
       depletedCardInfo = {
@@ -185,6 +189,19 @@ export async function applyGiftCardRedemption(
   // Email "carte épuisée" (hors transaction, best-effort)
   if (didDeplete && depletedCardInfo) {
     void sendDepletedEmail(depletedCardInfo);
+  }
+
+  if (didRedeem) {
+    await emitOutboundEvent("gift_card.redeemed", {
+      giftCardId,
+      amountUsedCents: amountCents,
+      type,
+      bookingId: type === "EBOOK" ? null : bookingId,
+      ebookPurchaseId: type === "EBOOK" ? ebookPurchaseId : null,
+    });
+    if (didDeplete) {
+      await emitOutboundEvent("gift_card.depleted", { giftCardId });
+    }
   }
 }
 
@@ -204,6 +221,8 @@ export async function reverseGiftCardRedemption(
   redemptionId: string,
   options?: { partialAmountCents?: number },
 ): Promise<{ reversedAmountCents: number; giftCardPrefix: string }> {
+  let reversedGiftCardId: string | null = null;
+  let reversedAmountForEvent = 0;
   const result = await prisma.$transaction(async (tx) => {
     const redemption = await tx.giftCardRedemption.findUnique({
       where: { id: redemptionId },
@@ -279,11 +298,21 @@ export async function reverseGiftCardRedemption(
       },
     });
 
+    reversedGiftCardId = redemption.giftCardId;
+    reversedAmountForEvent = amountToReverse;
+
     return {
       reversedAmountCents: amountToReverse,
       giftCardPrefix: card.prefix,
     };
   });
+
+  if (reversedGiftCardId) {
+    await emitOutboundEvent("gift_card.reversed", {
+      giftCardId: reversedGiftCardId,
+      amountReversedCents: reversedAmountForEvent,
+    });
+  }
 
   return result;
 }
