@@ -28,6 +28,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyCronAuth } from "@/lib/cron-auth";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -94,6 +95,12 @@ export async function GET(request: Request) {
       cancellationReason: "Délai de paiement dépassé",
     },
   });
+
+  if (result.count > 0) {
+    for (const b of candidates) {
+      await emitOutboundEvent("booking.expired", { bookingId: b.id });
+    }
+  }
 
   // ── Notif admin in-app : prévenir Chloé des expirations (relance possible) ──
   if (result.count > 0) {

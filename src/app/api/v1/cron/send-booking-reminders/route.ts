@@ -34,6 +34,7 @@ import {
   buildBookingReminderJ7Email,
 } from "@/lib/email/templates/booking-reminder";
 import { verifyCronAuth } from "@/lib/cron-auth";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -180,6 +181,10 @@ async function sendReminder(
         type === "J-7"
           ? { reminderJ7SentAt: new Date(), reminderJ7MessageId: r.id ?? null }
           : { reminderJ1SentAt: new Date(), reminderJ1MessageId: r.id ?? null },
+    });
+    await emitOutboundEvent("booking.reminder_sent", {
+      bookingId: booking.id,
+      type: type === "J-7" ? "J7" : "J1",
     });
     return { status: "ok" };
   } catch (err) {
