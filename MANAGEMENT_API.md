@@ -4,10 +4,27 @@ Spécification de l'intégration future avec l'**app de gestion centrale** (le
 "main point" du projet global) à laquelle Clochette Nails communiquera ses
 events business.
 
-> **État actuel** : infrastructure en place (table + helper + viewer admin),
-> **2 events émis** sur ~30 prévus, **pas encore de worker** qui dépile la
-> queue. Concrètement, la queue accumule des rows `PENDING` qui partiront le
-> jour où on déploiera le worker.
+> **État actuel (MAJ 22/06/2026 — Phase A émetteur terminée)** : infrastructure
+> en place (table + helper centralisé `lib/outbound-events.ts` + viewer admin).
+> **~27 events émis** sur ~30 (cf. liste ci-dessous), **pas encore de worker**
+> qui dépile la queue, et **pas encore d'`MANAGEMENT_API_URL`** posée.
+>
+> ⚠️ **Comportement du helper** : sans `MANAGEMENT_API_URL`, `emitOutboundEvent`
+> **log seulement, ne crée PAS de row**. Donc la queue ne s'accumule pas encore ;
+> l'historique antérieur au déploiement de l'ERP se reconstruira par **backfill**
+> depuis les tables source (cf. Étape 5).
+>
+> **✅ Émis (Phase A)** : bookings (created, confirmed, completed, no_show,
+> cancelled_by_admin, cancelled_by_client, refunded, rescheduled, expired,
+> reminder_sent) · gift_card (purchased, admin_gift_issued, redeemed, depleted,
+> reversed, refunded) · ebook (purchased, refunded, reissued) · invoice.issued ·
+> contact.received · newsletter (subscriber_added/confirmed/unsubscribed,
+> campaign_sent/campaign_failed) · service (created/updated/archived).
+>
+> **🚧 Différés (YAGNI — pas de consommateur ERP pour l'instant)** :
+> `ebook.downloaded`, `gift_card.expired` (pas de cron d'expiration GC),
+> `photo.uploaded/deleted`, `platform_settings.updated`, `email_globals.updated`.
+> Triviaux à brancher le jour où l'ERP en a besoin.
 >
 > Ce fichier est la **source de vérité unique** pour cette intégration.
 > Le `CLAUDE.md` ne fait que pointer ici.
