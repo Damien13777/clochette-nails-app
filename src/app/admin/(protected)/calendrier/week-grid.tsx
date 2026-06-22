@@ -217,7 +217,12 @@ export function WeekGrid({
         ref={scrollRef}
         className="relative isolate bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] cal-scroll"
       >
-        <div className="grid grid-cols-[60px_repeat(7,minmax(120px,1fr))] min-w-[920px]">
+        {/* Wrapper à la largeur réelle de la grille (min 920px) : sert de
+            référent au positionnement absolu de l'overlay RDV, pour qu'il
+            s'aligne sur les colonnes même quand la grille déborde
+            horizontalement (largeur dispo < 920px). */}
+        <div className="relative min-w-[920px]">
+        <div className="grid grid-cols-[60px_repeat(7,minmax(120px,1fr))]">
           {/* Coin top-left */}
           <div
             ref={cornerRef}
@@ -486,6 +491,7 @@ export function WeekGrid({
               </div>
             ))}
           </div>
+        </div>
         </div>
       </div>
 
