@@ -33,6 +33,7 @@ import { buildEbookRefundedEmail } from "@/lib/email/templates/ebook-refunded";
 import { createCreditNote, InvoiceError } from "@/lib/invoice/create-invoice";
 import { readInvoicePdf } from "@/lib/invoice/invoice-files";
 import { markInvoiceSent } from "@/lib/invoice/invoice-email";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 
 type ActionResult =
   | { ok: true; message?: string }
@@ -204,6 +205,7 @@ export async function reissueEbookDownload(
     previousCount: purchase.downloadCount,
     newCount,
   });
+  await emitOutboundEvent("ebook.reissued", { purchaseId: purchase.id });
   revalidatePath(`/admin/ebooks/ventes/${purchase.id}`);
   revalidatePath("/admin/ebooks/ventes");
   return { ok: true, message: "Nouveau lien envoyé. L'ancien est révoqué." };
@@ -326,6 +328,11 @@ export async function refundEbookPurchase(
     gcRefundedCents,
     gcPrefix,
     reason: reason || null,
+  });
+  await emitOutboundEvent("ebook.refunded", {
+    purchaseId: purchase.id,
+    stripeRefundedCents,
+    gcRefundedCents,
   });
 
   // Avoir automatique si une facture avait été émise (joint au mail de remboursement)

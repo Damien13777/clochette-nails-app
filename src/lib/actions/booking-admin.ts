@@ -36,6 +36,7 @@ import { buildBookingConfirmationEmail } from "@/lib/email/templates/booking-con
 import { buildBookingNotifAdminEmail } from "@/lib/email/templates/booking-notif-admin";
 import { computeAvailableSlots } from "@/lib/availability";
 import { computeDepositCents } from "@/lib/deposit";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import { reverseGiftCardRedemption } from "@/lib/gift-card-redeem";
 import { createInvoiceForBooking, InvoiceError } from "@/lib/invoice/create-invoice";
 import { sendInvoiceEmail } from "@/lib/invoice/invoice-email";
@@ -189,6 +190,12 @@ export async function markBookingCompleted(
     completionPaymentMethod,
     giftCardAmountCents: giftCard?.amountCents ?? 0,
   });
+  await emitOutboundEvent("booking.completed", {
+    bookingId,
+    revenueCents,
+    completionPaymentMethod: revenueCents > 0 ? completionPaymentMethod : null,
+    giftCardAmountCents: giftCard?.amountCents ?? 0,
+  });
 
   let invoiceNote = "";
   try {
@@ -282,6 +289,7 @@ export async function markBookingNoShow(
     data: { status: "NO_SHOW" },
   });
   await audit(admin.id, bookingId, "booking.no_show");
+  await emitOutboundEvent("booking.no_show", { bookingId });
 
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Cliente marquée absente (no-show)." };
@@ -330,6 +338,10 @@ export async function cancelBookingAdmin(
     },
   });
   await audit(admin.id, bookingId, "booking.cancelled_admin", { reason });
+  await emitOutboundEvent("booking.cancelled_by_admin", {
+    bookingId,
+    reason: reason.trim(),
+  });
 
   // Email cliente — annulation sans remboursement.
   // depositKept=false côté admin : on ne sait pas si l'admin va rembourser
@@ -386,6 +398,10 @@ export async function forceConfirmBooking(
     },
   });
   await audit(admin.id, bookingId, "booking.force_confirmed");
+  await emitOutboundEvent("booking.confirmed", {
+    bookingId,
+    paidVia: "out_of_band",
+  });
 
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Réservation confirmée manuellement (paiement out-of-band)." };
@@ -516,6 +532,12 @@ export async function refundBookingFull(
     stripeRefundedCents,
     gcRefundedCents,
     gcPrefix,
+    reason,
+  });
+  await emitOutboundEvent("booking.refunded", {
+    bookingId,
+    stripeRefundedCents,
+    gcRefundedCents,
     reason,
   });
 
@@ -722,6 +744,14 @@ export async function rescheduleBookingAdmin(
     newStartTime,
     newEndTime,
     reason: reason ?? null,
+  });
+  await emitOutboundEvent("booking.rescheduled", {
+    bookingId,
+    oldDate: oldDateIso,
+    oldStartTime: booking.startTime,
+    newDate,
+    newStartTime,
+    by: "admin",
   });
 
   // Notification in-app admin (trace dans la cloche)

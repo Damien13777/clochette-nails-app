@@ -19,6 +19,7 @@ import {
   buildBookingReminderJ1Email,
   buildBookingReminderJ7Email,
 } from "@/lib/email/templates/booking-reminder";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 
 type ActionResult =
   | { ok: true; message?: string }
@@ -105,6 +106,10 @@ export async function resendBookingReminder(
             reminderJ1OpenedAt: null,
             reminderJ1BouncedAt: null,
           },
+  });
+  await emitOutboundEvent("booking.reminder_sent", {
+    bookingId: booking.id,
+    type,
   });
 
   // Audit

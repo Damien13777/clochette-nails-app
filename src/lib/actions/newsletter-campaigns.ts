@@ -28,6 +28,7 @@ import type {
 } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import { sendEmail } from "@/lib/email/send";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { buildNewsletterCampaignEmail } from "@/lib/email/templates/newsletter-campaign";
@@ -406,6 +407,11 @@ export async function executeCampaignSend(
       await audit(adminId, campaignId, "newsletter.send_failed", {
         reason: "audience vide",
       });
+    await emitOutboundEvent("newsletter.campaign_failed", {
+      campaignId,
+      recipientCount: 0,
+      reason: "audience vide",
+    });
     return { ok: false, error: "Audience vide : aucune abonnée ne correspond aux filtres." };
   }
 
@@ -505,6 +511,17 @@ export async function executeCampaignSend(
       failedCount,
     },
   });
+  await emitOutboundEvent(
+    finalStatus === "SENT"
+      ? "newsletter.campaign_sent"
+      : "newsletter.campaign_failed",
+    {
+      campaignId,
+      recipientCount: audience.length,
+      sentCount,
+      failedCount,
+    },
+  );
 
   if (adminId) {
     await audit(adminId, campaignId, "newsletter.sent", {

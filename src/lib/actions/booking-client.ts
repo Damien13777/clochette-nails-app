@@ -25,6 +25,7 @@ import { buildBookingCancelledByClientNotifAdminEmail } from "@/lib/email/templa
 import { buildBookingRescheduledEmail } from "@/lib/email/templates/booking-rescheduled";
 import { buildBookingRescheduledByClientNotifAdminEmail } from "@/lib/email/templates/booking-rescheduled-by-client-notif-admin";
 import { computeAvailableSlots } from "@/lib/availability";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import {
   AUTH_FAIL,
   checkRateLimit,
@@ -210,6 +211,10 @@ export async function cancelBookingByClient(
         : {}),
       clientActionUsedAt: now,
     },
+  });
+  await emitOutboundEvent("booking.cancelled_by_client", {
+    bookingId: booking.id,
+    refundedCents: totalRefundedCents,
   });
 
   // Pas d'AuditLog (adminId obligatoire) : les infos forensic sont tracées sur
@@ -569,6 +574,13 @@ export async function rescheduleBookingByClient(
       endTime: newEndTime,
       clientActionUsedAt: now,
     },
+  });
+  await emitOutboundEvent("booking.rescheduled", {
+    bookingId: booking.id,
+    oldStartTime: booking.startTime,
+    newDate,
+    newStartTime,
+    by: "client",
   });
 
   // Notification in-app admin

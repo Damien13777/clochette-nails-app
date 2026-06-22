@@ -38,6 +38,7 @@ import {
   generateDownloadToken,
 } from "@/lib/ebook-download-token";
 import { sendEmail } from "@/lib/email/send";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import { buildEbookPurchasedEmail } from "@/lib/email/templates/ebook-purchased";
 
 const purchaseSchema = z.object({
@@ -334,6 +335,12 @@ export async function deliverEbook(input: {
   origin: string;
 }): Promise<void> {
   const downloadUrl = `${input.origin}/ebooks/telechargement/${input.downloadToken}`;
+
+  await emitOutboundEvent("ebook.purchased", {
+    purchaseId: input.purchaseId,
+    amountPaidCents: input.amountPaidCents,
+    giftCardAmountCents: input.giftCardAmountCents,
+  });
 
   try {
     const mail = buildEbookPurchasedEmail({

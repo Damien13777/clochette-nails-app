@@ -27,6 +27,7 @@ import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { applyGiftCardRedemption } from "@/lib/gift-card-redeem";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import { sendEmail } from "@/lib/email/send";
 import { ADMIN_EMAIL } from "@/lib/email/client";
 import { buildBookingConfirmationEmail } from "@/lib/email/templates/booking-confirmation";
@@ -390,6 +391,15 @@ async function activateGiftCardFromSession(
           ? session.payment_intent
           : (session.payment_intent?.id ?? null),
     },
+  });
+  await emitOutboundEvent("gift_card.purchased", {
+    giftCardId: card.id,
+    amountCents: card.initialAmountCents,
+    channel: "public",
+    stripePaymentId:
+      typeof session.payment_intent === "string"
+        ? session.payment_intent
+        : (session.payment_intent?.id ?? null),
   });
 
   // Notification in-app pour Chloé
@@ -759,25 +769,6 @@ async function handlePaymentFailed(
 // ─────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────
-
-async function emitOutboundEvent(
-  type: string,
-  payload: Record<string, unknown>,
-): Promise<void> {
-  const targetUrl = process.env.MANAGEMENT_API_URL;
-  if (!targetUrl) {
-    console.log(`[outbound] ${type}`, payload);
-    return;
-  }
-  await prisma.outboundEvent.create({
-    data: {
-      type,
-      payload: payload as object,
-      targetUrl,
-      targetService: "management",
-    },
-  });
-}
 
 async function notifyAdmin(
   bookingId: string,

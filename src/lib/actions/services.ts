@@ -20,6 +20,7 @@ import type { ContentStatus, ServiceCategory } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/prisma";
 import { getStorage } from "@/lib/storage";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 
 type ActionResult =
   | { ok: true; id?: string }
@@ -175,6 +176,10 @@ export async function createService(formData: FormData): Promise<ActionResult> {
     data: { ...parsed.data, status: "DRAFT" },
     select: { id: true },
   });
+  await emitOutboundEvent("service.created", {
+    serviceId: created.id,
+    slug: parsed.data.slug,
+  });
 
   revalidatePath("/admin/prestations");
   revalidatePath("/");
@@ -210,6 +215,10 @@ export async function updateService(
     where: { id },
     data: parsed.data,
   });
+  await emitOutboundEvent("service.updated", {
+    serviceId: id,
+    slug: parsed.data.slug,
+  });
 
   revalidatePath("/admin/prestations");
   revalidatePath(`/admin/prestations/${id}`);
@@ -230,6 +239,9 @@ export async function changeServiceStatus(
     return { ok: false, error: "Status invalide." };
 
   await prisma.service.update({ where: { id }, data: { status } });
+  if (status === "ARCHIVED") {
+    await emitOutboundEvent("service.archived", { serviceId: id });
+  }
 
   revalidatePath("/admin/prestations");
   revalidatePath(`/admin/prestations/${id}`);
