@@ -32,6 +32,7 @@ import {
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { getClientIp } from "@/lib/client-ip";
 import { computeDepositCents } from "@/lib/deposit";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import { sendEmail } from "@/lib/email/send";
 import { ADMIN_EMAIL } from "@/lib/email/client";
 import { buildBookingConfirmationEmail } from "@/lib/email/templates/booking-confirmation";
@@ -528,27 +529,6 @@ class BookingConflictError extends Error {
     super("SLOT_TAKEN");
     this.name = "BookingConflictError";
   }
-}
-
-async function emitOutboundEvent(
-  type: string,
-  payload: Record<string, unknown>,
-): Promise<void> {
-  // Insertion dans la queue OutboundEvent (worker traitera plus tard)
-  // Pour V1 : si pas de targetUrl configurée, on log et on skip
-  const targetUrl = process.env.MANAGEMENT_API_URL;
-  if (!targetUrl) {
-    console.log(`[outbound] ${type}`, payload);
-    return;
-  }
-  await prisma.outboundEvent.create({
-    data: {
-      type,
-      payload: payload as object,
-      targetUrl,
-      targetService: "management",
-    },
-  });
 }
 
 async function notifyAdmin(
