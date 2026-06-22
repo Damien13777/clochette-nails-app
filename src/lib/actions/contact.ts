@@ -20,6 +20,7 @@ import { ADMIN_EMAIL } from "@/lib/email/client";
 import { buildContactNotifAdminEmail } from "@/lib/email/templates/contact-notif-admin";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { getClientIp } from "@/lib/client-ip";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Nom trop court").max(100),
@@ -134,6 +135,11 @@ export async function submitContactAction(
       userAgent: h.get("user-agent")?.slice(0, 250) ?? null,
     },
     select: { id: true },
+  });
+  await emitOutboundEvent("contact.received", {
+    contactId: created.id,
+    email: data.email.trim().toLowerCase(),
+    subject: data.subject || null,
   });
 
   // Notification admin par email (replyTo = email cliente pour répondre direct)

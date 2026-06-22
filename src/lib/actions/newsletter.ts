@@ -30,6 +30,7 @@ import { buildNewsletterConfirmEmail } from "@/lib/email/templates/newsletter-co
 import { buildNewsletterWelcomeEmail } from "@/lib/email/templates/newsletter-welcome";
 import { getClientIp } from "@/lib/client-ip";
 import { verifyRecaptcha } from "@/lib/recaptcha";
+import { emitOutboundEvent } from "@/lib/outbound-events";
 import {
   NEWSLETTER,
   checkRateLimit,
@@ -142,6 +143,7 @@ export async function subscribeNewsletter(
         unsubscribeToken: newToken(),
       },
     });
+    await emitOutboundEvent("newsletter.subscriber_added", { email, source });
   } else {
     // Cas (b) ou (d) : re-active avec nouveau token (efface ancien désabo si présent)
     await prisma.newsletterSubscriber.update({
@@ -227,6 +229,9 @@ export async function confirmSubscription(
       confirmToken: null,
     },
   });
+  await emitOutboundEvent("newsletter.subscriber_confirmed", {
+    email: subscriber.email,
+  });
 
   const unsubscribeUrl = `${siteUrl()}/newsletter/desinscrire?token=${subscriber.unsubscribeToken}`;
 
@@ -293,6 +298,10 @@ export async function unsubscribeNewsletter(
     await prisma.newsletterSubscriber.update({
       where: { id: subscriber.id },
       data: { unsubscribedAt: new Date() },
+    });
+    await emitOutboundEvent("newsletter.subscriber_unsubscribed", {
+      email: subscriber.email,
+      via: "link",
     });
   }
 
