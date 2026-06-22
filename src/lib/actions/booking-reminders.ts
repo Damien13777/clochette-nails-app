@@ -87,12 +87,24 @@ export async function resendBookingReminder(
   });
   if (!r.ok) return { ok: false, error: `Envoi échoué : ${r.error}` };
 
+  // Renvoi = nouvel email → nouveau messageId + on réinitialise le tracking
+  // (l'open/bounce de l'envoi précédent ne vaut plus pour ce nouveau mail).
   await prisma.booking.update({
     where: { id: booking.id },
     data:
       type === "J7"
-        ? { reminderJ7SentAt: new Date() }
-        : { reminderJ1SentAt: new Date() },
+        ? {
+            reminderJ7SentAt: new Date(),
+            reminderJ7MessageId: r.id ?? null,
+            reminderJ7OpenedAt: null,
+            reminderJ7BouncedAt: null,
+          }
+        : {
+            reminderJ1SentAt: new Date(),
+            reminderJ1MessageId: r.id ?? null,
+            reminderJ1OpenedAt: null,
+            reminderJ1BouncedAt: null,
+          },
   });
 
   // Audit

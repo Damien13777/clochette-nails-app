@@ -510,6 +510,10 @@ export default async function BookingDetailPage({
               status={booking.status}
               reminderJ7SentAt={booking.reminderJ7SentAt?.toISOString() ?? null}
               reminderJ1SentAt={booking.reminderJ1SentAt?.toISOString() ?? null}
+              reminderJ7OpenedAt={booking.reminderJ7OpenedAt?.toISOString() ?? null}
+              reminderJ1OpenedAt={booking.reminderJ1OpenedAt?.toISOString() ?? null}
+              reminderJ7BouncedAt={booking.reminderJ7BouncedAt?.toISOString() ?? null}
+              reminderJ1BouncedAt={booking.reminderJ1BouncedAt?.toISOString() ?? null}
             />
           </Section>
 

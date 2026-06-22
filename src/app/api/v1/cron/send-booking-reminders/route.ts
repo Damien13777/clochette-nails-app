@@ -172,13 +172,14 @@ async function sendReminder(
       );
       return { status: "ko", reason: r.error };
     }
-    // Marque envoyé pour idempotence
+    // Marque envoyé pour idempotence + stocke le messageId Resend (tracking
+    // open/bounce via le webhook)
     await prisma.booking.update({
       where: { id: booking.id },
       data:
         type === "J-7"
-          ? { reminderJ7SentAt: new Date() }
-          : { reminderJ1SentAt: new Date() },
+          ? { reminderJ7SentAt: new Date(), reminderJ7MessageId: r.id ?? null }
+          : { reminderJ1SentAt: new Date(), reminderJ1MessageId: r.id ?? null },
     });
     return { status: "ok" };
   } catch (err) {
