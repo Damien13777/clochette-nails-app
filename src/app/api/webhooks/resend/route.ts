@@ -30,6 +30,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { recordReminderEmailEvent } from "@/lib/reminder-email-events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -110,7 +111,18 @@ export async function POST(request: Request) {
   });
 
   if (!delivery) {
-    return NextResponse.json({ ok: true, ignored: "not_a_newsletter" });
+    // Pas une newsletter → peut-être un rappel RDV : on tracke open + bounce.
+    if (event.type === "email.opened" || event.type === "email.bounced") {
+      const matched = await recordReminderEmailEvent(
+        messageId,
+        event.type === "email.opened" ? "opened" : "bounced",
+        new Date(),
+      );
+      if (matched) {
+        return NextResponse.json({ ok: true, reminder: event.type });
+      }
+    }
+    return NextResponse.json({ ok: true, ignored: "not_tracked" });
   }
 
   await handleResendEvent(event, delivery);

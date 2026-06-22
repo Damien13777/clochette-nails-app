@@ -22,6 +22,10 @@ type Props = {
   status: string; // BookingStatus
   reminderJ7SentAt: string | null;
   reminderJ1SentAt: string | null;
+  reminderJ7OpenedAt: string | null;
+  reminderJ1OpenedAt: string | null;
+  reminderJ7BouncedAt: string | null;
+  reminderJ1BouncedAt: string | null;
 };
 
 export function BookingReminders({
@@ -30,6 +34,10 @@ export function BookingReminders({
   status,
   reminderJ7SentAt,
   reminderJ1SentAt,
+  reminderJ7OpenedAt,
+  reminderJ1OpenedAt,
+  reminderJ7BouncedAt,
+  reminderJ1BouncedAt,
 }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +91,8 @@ export function BookingReminders({
         label="J-7"
         scheduledFor={addDays(rdvDate, -7)}
         sentAt={reminderJ7SentAt}
+        openedAt={reminderJ7OpenedAt}
+        bouncedAt={reminderJ7BouncedAt}
         onResend={() => handleResend("J7")}
         disabled={!isConfirmed || (isPending && pendingType !== "J7")}
         loading={isPending && pendingType === "J7"}
@@ -91,6 +101,8 @@ export function BookingReminders({
         label="J-1"
         scheduledFor={addDays(rdvDate, -1)}
         sentAt={reminderJ1SentAt}
+        openedAt={reminderJ1OpenedAt}
+        bouncedAt={reminderJ1BouncedAt}
         onResend={() => handleResend("J1")}
         disabled={!isConfirmed || (isPending && pendingType !== "J1")}
         loading={isPending && pendingType === "J1"}
@@ -112,6 +124,8 @@ function ReminderRow({
   label,
   scheduledFor,
   sentAt,
+  openedAt,
+  bouncedAt,
   onResend,
   disabled,
   loading,
@@ -119,6 +133,8 @@ function ReminderRow({
   label: string;
   scheduledFor: Date;
   sentAt: string | null;
+  openedAt: string | null;
+  bouncedAt: string | null;
   onResend: () => void;
   disabled: boolean;
   loading: boolean;
@@ -154,6 +170,30 @@ function ReminderRow({
           {sent ? "✓ " : ""}
           {statusLabel}
         </p>
+        {sent &&
+          (bouncedAt ? (
+            <p
+              className="text-[11px] mt-0.5 text-[var(--color-danger)]"
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              ⚠ N&apos;est pas arrivé (rejeté le{" "}
+              {formatDateTime(new Date(bouncedAt))})
+            </p>
+          ) : openedAt ? (
+            <p
+              className="text-[11px] mt-0.5 text-[var(--color-violet-700)]"
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              👁 Ouvert le {formatDateTime(new Date(openedAt))}
+            </p>
+          ) : (
+            <p
+              className="text-[11px] mt-0.5 text-[var(--color-ink-500)]"
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              Pas encore ouvert
+            </p>
+          ))}
       </div>
       <button
         type="button"

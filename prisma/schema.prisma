@@ -513,6 +513,14 @@ model Booking {
   // Rappels par mail (cron) — null tant que pas envoyé
   reminderJ7SentAt DateTime?
   reminderJ1SentAt DateTime?
+  // Tracking Resend des rappels : messageId capturé à l'envoi (match webhook),
+  // openedAt (1re ouverture) / bouncedAt (rappel non délivré)
+  reminderJ7MessageId String?
+  reminderJ1MessageId String?
+  reminderJ7OpenedAt  DateTime?
+  reminderJ1OpenedAt  DateTime?
+  reminderJ7BouncedAt DateTime?
+  reminderJ1BouncedAt DateTime?
 
   // Audit dates
   confirmedAt        DateTime?
@@ -530,6 +538,8 @@ model Booking {
   @@index([date, startTime]) // CRITIQUE : overlap detection
   @@index([status, createdAt])
   @@index([clientEmail])
+  @@index([reminderJ7MessageId]) // lookup webhook Resend (open/bounce rappels)
+  @@index([reminderJ1MessageId])
   @@map("bookings")
 }
 
