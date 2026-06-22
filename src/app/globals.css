@@ -456,3 +456,21 @@
 .grecaptcha-badge {
   visibility: hidden;
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   Calendrier admin — coquille « app-shell » adaptative.
+   Desktop/tablette (≥ 768px de large ET ≥ 640px de haut) : hauteur figée
+   à la fenêtre + scroll interne de la grille (la page ne scrolle pas, les
+   en-têtes de jours restent collés en haut de la grille).
+   En dessous (ex. téléphone en paysage, ~390px de haut) : flux naturel —
+   la grille s'affiche en entier, la page scrolle, la barre de contrôle
+   sticky reste sous la topbar (plus piégée dans une boîte courte), et les
+   en-têtes de jours repassent en statique (plus de chevauchement). */
+.cal-stick { position: static; }
+
+@media (min-width: 768px) and (min-height: 640px) {
+  .cal-shell  { display: flex; flex-direction: column; height: calc(100dvh - 4rem); }
+  .cal-fill   { flex: 1 1 0%; min-height: 0; }
+  .cal-scroll { flex: 1 1 0%; min-height: 0; overflow: auto; }
+  .cal-stick  { position: sticky; top: 0; }
+}

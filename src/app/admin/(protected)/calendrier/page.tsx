@@ -331,7 +331,7 @@ export default async function AdminCalendarPage({
   });
 
   return (
-    <div className="max-w-[1600px] px-4 lg:px-6 py-8 md:py-6 md:flex md:flex-col md:h-[calc(100dvh-4rem)]">
+    <div className="max-w-[1600px] px-4 lg:px-6 py-8 md:py-6 cal-shell">
       <CalendarHeader
         weekStartIso={weekStartIso}
         granularity={granularity}
@@ -405,7 +405,7 @@ export default async function AdminCalendarPage({
       </div>
 
       {/* Vue desktop (md+) — semaine */}
-      <div className="hidden md:flex md:flex-col md:flex-1 md:min-h-0">
+      <div className="hidden md:flex md:flex-col cal-fill">
         <WeekGrid
           weekStartIso={weekStartIso}
           granularity={granularity}

@@ -212,16 +212,16 @@ export function WeekGrid({
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col cal-fill">
       <div
         ref={scrollRef}
-        className="relative bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] overflow-auto flex-1 min-h-[22rem]"
+        className="relative isolate bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] cal-scroll"
       >
         <div className="grid grid-cols-[60px_repeat(7,minmax(120px,1fr))] min-w-[920px]">
           {/* Coin top-left */}
           <div
             ref={cornerRef}
-            className="sticky top-0 z-40 border-b border-r border-[var(--color-line)] bg-[var(--color-bone)]"
+            className="cal-stick z-40 border-b border-r border-[var(--color-line)] bg-[var(--color-bone)]"
           />
 
           {/* En-têtes jours (cliquables → édition horaires) */}
@@ -244,7 +244,7 @@ export function WeekGrid({
                 type="button"
                 onClick={() => setEditingDay({ dayOfWeek: dow, dateIso: dayIso })}
                 aria-label={`Modifier horaires ${DAY_LABELS_SHORT_FR[dow]}`}
-                className={`sticky top-0 z-30 border-b border-r border-[var(--color-line)] last:border-r-0 p-2.5 text-left hover:bg-[var(--color-bone)] transition-colors ${
+                className={`cal-stick z-30 border-b border-r border-[var(--color-line)] last:border-r-0 p-2.5 text-left hover:bg-[var(--color-bone)] transition-colors ${
                   isToday ? "bg-[var(--color-violet-50)]" : "bg-[var(--color-paper)]"
                 }`}
               >
