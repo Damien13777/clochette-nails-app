@@ -40,10 +40,14 @@ import { emitOutboundEvent } from "@/lib/outbound-events";
 import { reverseGiftCardRedemption } from "@/lib/gift-card-redeem";
 import { createInvoiceForBooking, InvoiceError } from "@/lib/invoice/create-invoice";
 import { sendInvoiceEmail } from "@/lib/invoice/invoice-email";
+import { shouldSendReviewRequest } from "@/lib/review-request-guard";
+
+export { shouldSendReviewRequest } from "@/lib/review-request-guard";
 
 type ActionResult =
   | { ok: true; message?: string }
   | { ok: false; error: string };
+
 
 async function audit(
   adminId: string,
@@ -73,6 +77,8 @@ export type MarkCompletedInput = {
   };
   /** Envoyer la facture PDF à la cliente par email (opt-in, décoché par défaut). */
   sendInvoiceByEmail?: boolean;
+  /** Envoyer une demande d'avis Google à la cliente (opt-in, coché par défaut côté UI). */
+  requestReview?: boolean;
 };
 
 const COMPLETION_METHODS = ["cash", "card_terminal", "transfer", "check"] as const;
@@ -121,7 +127,12 @@ export async function markBookingCompleted(
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: { status: true, clientEmail: true },
+    select: {
+      status: true,
+      clientEmail: true,
+      clientFirstName: true,
+      service: { select: { title: true } },
+    },
   });
   if (!booking) return { ok: false, error: "Booking introuvable" };
   if (booking.status !== "CONFIRMED") {
@@ -214,8 +225,67 @@ export async function markBookingCompleted(
     invoiceNote = ` ⚠️ Facture non générée${detail} — bouton « Générer la facture » disponible sur la fiche.`;
   }
 
+  let reviewNote = "";
+  try {
+    if (input.requestReview) {
+      const settings = await prisma.platformSettings.findFirst({
+        select: { googleReviewUrl: true },
+      });
+      const googleReviewUrl = settings?.googleReviewUrl ?? null;
+      const last = booking.clientEmail
+        ? await prisma.booking.findFirst({
+            where: {
+              clientEmail: booking.clientEmail,
+              reviewRequestSentAt: { not: null },
+            },
+            orderBy: { reviewRequestSentAt: "desc" },
+            select: { reviewRequestSentAt: true },
+          })
+        : null;
+      const ok = shouldSendReviewRequest({
+        requestReview: true,
+        googleReviewUrl,
+        clientEmail: booking.clientEmail,
+        lastRequestForEmailAt: last?.reviewRequestSentAt ?? null,
+        now: new Date(),
+      });
+      if (ok && googleReviewUrl && booking.clientEmail) {
+        const { buildBookingReviewRequestEmail } = await import(
+          "@/lib/email/templates/booking-review-request"
+        );
+        const mail = buildBookingReviewRequestEmail({
+          clientFirstName: booking.clientFirstName,
+          serviceTitle: booking.service.title,
+          reviewUrl: googleReviewUrl,
+        });
+        const sent = await sendEmail({
+          to: booking.clientEmail,
+          subject: mail.subject,
+          html: mail.html,
+          text: mail.text,
+          tag: "booking.review_request",
+        });
+        if (sent.ok) {
+          await prisma.booking.update({
+            where: { id: bookingId },
+            data: { reviewRequestSentAt: new Date() },
+          });
+          await emitOutboundEvent("booking.review_requested", {
+            bookingId,
+            clientEmail: booking.clientEmail,
+          });
+          reviewNote = " Demande d'avis envoyée à la cliente.";
+        }
+      } else if (googleReviewUrl) {
+        reviewNote = " Avis déjà demandé récemment à cette cliente — non renvoyé.";
+      }
+    }
+  } catch (err) {
+    console.error("[review] envoi demande d'avis échoué:", err);
+  }
+
   revalidatePath("/admin", "layout");
-  return { ok: true, message: `Réservation marquée comme honorée.${invoiceNote}` };
+  return { ok: true, message: `Réservation marquée comme honorée.${invoiceNote}${reviewNote}` };
 }
 
 /** Édite le montant perçu après coup (cas erreur de saisie). */
