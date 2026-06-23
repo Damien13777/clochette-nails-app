@@ -42,8 +42,6 @@ import { createInvoiceForBooking, InvoiceError } from "@/lib/invoice/create-invo
 import { sendInvoiceEmail } from "@/lib/invoice/invoice-email";
 import { shouldSendReviewRequest } from "@/lib/review-request-guard";
 
-export { shouldSendReviewRequest } from "@/lib/review-request-guard";
-
 type ActionResult =
   | { ok: true; message?: string }
   | { ok: false; error: string };
@@ -275,6 +273,8 @@ export async function markBookingCompleted(
             clientEmail: booking.clientEmail,
           });
           reviewNote = " Demande d'avis envoyée à la cliente.";
+        } else {
+          reviewNote = " ⚠️ Email d'avis non envoyé (erreur d'envoi).";
         }
       } else if (googleReviewUrl) {
         reviewNote = " Avis déjà demandé récemment à cette cliente — non renvoyé.";
