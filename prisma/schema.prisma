@@ -513,6 +513,9 @@ model Booking {
   // Rappels par mail (cron) — null tant que pas envoyé
   reminderJ7SentAt DateTime?
   reminderJ1SentAt DateTime?
+  // Demande d'avis Google : horodatage du dernier envoi pour ce RDV
+  // (garde-fou anti-relance 120 j, par e-mail cliente) + traçabilité.
+  reviewRequestSentAt DateTime?
   // Tracking Resend des rappels : messageId capturé à l'envoi (match webhook),
   // openedAt (1re ouverture) / bouncedAt (rappel non délivré)
   reminderJ7MessageId String?
@@ -855,6 +858,9 @@ model PlatformSettings {
   /// Ligne agrégat externe affichée sous le titre de la section avis,
   /// ex : "4,9 / 5 · 87 avis Google". Vide/null = masquée.
   testimonialsGoogleLine String?
+  /// Lien court d'avis Google (ex : https://g.page/r/.../review). Source de
+  /// vérité du kit d'avis : e-mail de demande + CTA landing. Vide = masqué.
+  googleReviewUrl        String?
 
   // Facturation (factures PDF)
   /// Nom commercial en tête de facture. null → fallback businessName.
