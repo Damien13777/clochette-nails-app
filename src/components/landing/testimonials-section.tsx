@@ -144,10 +144,23 @@ export async function TestimonialsSection() {
             href={googleReviewUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[var(--color-violet-300)] text-[var(--color-violet-700)] hover:bg-[var(--color-violet-100)] transition-colors text-xs uppercase tracking-[0.12em]"
+            className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full border border-[var(--color-violet-300)] text-[var(--color-violet-700)] hover:bg-[var(--color-violet-100)] transition-colors text-[11px] uppercase tracking-[0.18em]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            ⭐ Laissez votre avis
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 17.3l-6.16 3.7 1.64-7.03L2 9.24l7.19-.61L12 2l2.81 6.63 7.19.61-5.48 4.73 1.64 7.03z" />
+            </svg>
+            Laisser un avis sur Google
           </a>
         </div>
       )}
