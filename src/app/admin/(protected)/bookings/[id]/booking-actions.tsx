@@ -54,6 +54,7 @@ type Props = {
   clientEmail: string;
   clientPhone: string;
   clientMessage: string;
+  googleReviewUrl: string | null;
 };
 
 type Feedback = { kind: "success" | "error"; text: string } | null;
@@ -80,6 +81,7 @@ export function BookingActions({
   clientEmail,
   clientPhone,
   clientMessage,
+  googleReviewUrl,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -328,6 +330,7 @@ export function BookingActions({
           giftCardAmountCents={giftCardAmountCents}
           paymentMethod={paymentMethod}
           isDepositReceived={isDepositReceived}
+          googleReviewUrl={googleReviewUrl}
           disabled={isPending}
           onCancel={() => setShowRevenue(false)}
           onConfirm={(payload) => {
@@ -711,6 +714,7 @@ function MarkCompletedDialog({
   giftCardAmountCents,
   paymentMethod,
   isDepositReceived,
+  googleReviewUrl,
   disabled,
   onCancel,
   onConfirm,
@@ -721,6 +725,7 @@ function MarkCompletedDialog({
   giftCardAmountCents: number;
   paymentMethod: string | null;
   isDepositReceived: boolean;
+  googleReviewUrl: string | null;
   disabled?: boolean;
   onCancel: () => void;
   onConfirm: (payload: MarkCompletedInput) => void;
@@ -743,6 +748,7 @@ function MarkCompletedDialog({
   const [lookup, setLookup] = useState<LookupState>({ status: "idle" });
   const [lookupPending, startLookup] = useTransition();
   const [sendInvoice, setSendInvoice] = useState(false);
+  const [requestReview, setRequestReview] = useState<boolean>(!!googleReviewUrl);
 
   const parsedCash = Number.parseFloat(completionAmount.replace(",", "."));
   const cashValid =
@@ -805,6 +811,7 @@ function MarkCompletedDialog({
           ? { code: gcCode.trim().toUpperCase(), amountCents: gcCents }
           : undefined,
       sendInvoiceByEmail: sendInvoice,
+      requestReview,
     };
     onConfirm(payload);
   }
@@ -1102,6 +1109,40 @@ function MarkCompletedDialog({
               </span>
             </span>
           </label>
+
+          {googleReviewUrl && (
+            <label className="inline-flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={requestReview}
+                onChange={(e) => setRequestReview(e.target.checked)}
+                disabled={disabled}
+                className="sr-only peer"
+              />
+              <span
+                aria-hidden="true"
+                className={`mt-0.5 shrink-0 w-5 h-5 rounded border-2 grid place-items-center transition-colors ${
+                  requestReview
+                    ? "border-[var(--color-violet-600)] bg-[var(--color-violet-600)] text-white"
+                    : "border-[var(--color-line)] bg-[var(--color-paper)]"
+                }`}
+              >
+                {requestReview && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                )}
+              </span>
+              <span>
+                <span className="block text-xs uppercase tracking-[0.14em] text-[var(--color-ink-700)]" style={{ fontFamily: "var(--font-display)" }}>
+                  Demander un avis Google à la cliente
+                </span>
+                <span className="block mt-0.5 text-[11px] text-[var(--color-ink-500)]" style={{ fontFamily: "var(--font-ui)" }}>
+                  Un email avec le lien d&apos;avis part immédiatement (jamais 2 fois en 120 jours).
+                </span>
+              </span>
+            </label>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <button
