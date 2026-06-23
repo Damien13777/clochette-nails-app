@@ -34,7 +34,7 @@ export default async function AdminTestimonialsPage() {
       },
     }),
     prisma.platformSettings.findFirstOrThrow({
-      select: { testimonialsGoogleLine: true },
+      select: { testimonialsGoogleLine: true, googleReviewUrl: true },
     }),
   ]);
 
@@ -72,6 +72,7 @@ export default async function AdminTestimonialsPage() {
       <TestimonialsManager
         initial={testimonials}
         googleLine={settings.testimonialsGoogleLine ?? ""}
+        googleReviewUrl={settings.googleReviewUrl ?? ""}
       />
     </div>
   );
