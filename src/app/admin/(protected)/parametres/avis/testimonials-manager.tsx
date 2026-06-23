@@ -16,6 +16,7 @@ import {
   toggleTestimonialPublished,
   reorderTestimonial,
   updateTestimonialsGoogleLine,
+  updateGoogleReviewUrl,
   type TestimonialInput,
 } from "@/lib/actions/testimonials-admin";
 
@@ -33,15 +34,18 @@ type ActionOutcome = { ok: boolean; message?: string; error?: string };
 export function TestimonialsManager({
   initial,
   googleLine,
+  googleReviewUrl,
 }: {
   initial: Item[];
   googleLine: string;
+  googleReviewUrl: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState<Item | "new" | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [googleValue, setGoogleValue] = useState(googleLine);
+  const [reviewUrlValue, setReviewUrlValue] = useState(googleReviewUrl);
 
   function run(action: () => Promise<ActionOutcome>) {
     setFeedback(null);
@@ -84,6 +88,40 @@ export function TestimonialsManager({
             Enregistrer
           </button>
         </div>
+      </section>
+
+      <section className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] p-6 space-y-3">
+        <h2
+          className="text-xs uppercase tracking-[0.18em] text-[var(--color-ink-700)]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Lien d&apos;avis Google
+        </h2>
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={reviewUrlValue}
+            onChange={(e) => setReviewUrlValue(e.target.value)}
+            placeholder="https://g.page/r/.../review"
+            className="flex-1 px-3 py-2 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-sm)] text-base sm:text-sm focus:outline-none focus:border-[var(--color-violet-600)] transition-colors"
+            style={{ fontFamily: "var(--font-ui)" }}
+          />
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => run(() => updateGoogleReviewUrl(reviewUrlValue))}
+            className="px-4 h-10 rounded-full bg-[var(--color-violet-600)] text-white text-xs uppercase tracking-[0.06em] hover:bg-[var(--color-violet-700)] disabled:opacity-50 transition-colors"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Enregistrer
+          </button>
+        </div>
+        <p
+          className="text-xs text-[var(--color-ink-500)]"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          Dans votre fiche Google → &quot;Demander des avis&quot; → copiez le lien court.
+        </p>
       </section>
 
       <div className="flex items-center justify-between">

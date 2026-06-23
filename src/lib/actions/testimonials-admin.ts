@@ -179,3 +179,26 @@ export async function updateTestimonialsGoogleLine(value: string): Promise<Actio
   revalidateAvis();
   return { ok: true, message: "Ligne Google mise à jour." };
 }
+
+export async function updateGoogleReviewUrl(value: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Non autorisé" };
+
+  const trimmed = value.trim();
+  if (trimmed && !/^https:\/\//i.test(trimmed)) {
+    return {
+      ok: false,
+      error: "Le lien d'avis doit commencer par https://",
+      fieldErrors: { googleReviewUrl: "URL https requise." },
+    };
+  }
+
+  const settings = await prisma.platformSettings.findFirstOrThrow({ select: { id: true } });
+  await prisma.platformSettings.update({
+    where: { id: settings.id },
+    data: { googleReviewUrl: trimmed === "" ? null : trimmed, updatedById: admin.id },
+  });
+  await audit(admin.id, "testimonial.google_review_url_updated", { value: trimmed || null });
+  revalidateAvis();
+  return { ok: true, message: "Lien d'avis Google mis à jour." };
+}

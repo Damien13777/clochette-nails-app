@@ -91,6 +91,10 @@ export default async function BookingDetailPage({
 
   // Catalogue éditable (changement de prestation depuis le dialog Modifier).
   // Chargé seulement pour les statuts éditables — sinon listes vides.
+  const reviewSettings = await prisma.platformSettings.findFirst({
+    select: { googleReviewUrl: true },
+  });
+
   const isEditable =
     booking.status === "AWAITING_DEPOSIT" || booking.status === "CONFIRMED";
   const [editableServices, editableOptions] = isEditable
@@ -556,6 +560,7 @@ export default async function BookingDetailPage({
               clientEmail={booking.clientEmail}
               clientPhone={booking.clientPhone}
               clientMessage={booking.clientMessage ?? ""}
+              googleReviewUrl={reviewSettings?.googleReviewUrl ?? null}
             />
           </div>
         </aside>
