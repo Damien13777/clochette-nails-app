@@ -23,12 +23,13 @@ export async function TestimonialsSection() {
       },
     }),
     prisma.platformSettings.findFirst({
-      select: { testimonialsGoogleLine: true },
+      select: { testimonialsGoogleLine: true, googleReviewUrl: true },
     }),
   ]);
 
   if (testimonials.length === 0) return null;
   const googleLine = settings?.testimonialsGoogleLine ?? null;
+  const googleReviewUrl = settings?.googleReviewUrl ?? null;
 
   return (
     <section
@@ -136,6 +137,20 @@ export async function TestimonialsSection() {
           </article>
         ))}
       </div>
+
+      {googleReviewUrl && (
+        <div className="text-center mt-10">
+          <a
+            href={googleReviewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[var(--color-violet-300)] text-[var(--color-violet-700)] hover:bg-[var(--color-violet-100)] transition-colors text-xs uppercase tracking-[0.12em]"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            ⭐ Laissez votre avis
+          </a>
+        </div>
+      )}
     </section>
   );
 }
