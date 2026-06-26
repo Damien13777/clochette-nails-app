@@ -11,6 +11,7 @@
 import { useState } from "react";
 import { AdminSidebar } from "./admin-sidebar";
 import { AdminTopbar } from "./admin-topbar";
+import { TabResumeRecovery } from "./tab-resume-recovery";
 import type { NotificationItem } from "./notifications-bell";
 
 type Props = {
@@ -32,6 +33,7 @@ export function AdminShell({
 
   return (
     <>
+      <TabResumeRecovery />
       <AdminSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
