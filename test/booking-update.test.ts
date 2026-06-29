@@ -13,7 +13,10 @@ vi.mock("@/lib/auth-guards", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import { requireAdmin } from "@/lib/auth-guards";
-import { updateBookingDetails } from "@/lib/actions/booking-admin";
+import {
+  updateBookingDetails,
+  updateBookingRevenue,
+} from "@/lib/actions/booking-admin";
 
 async function makeAdmin() {
   const rand = randomUUID().slice(0, 8);
@@ -280,5 +283,93 @@ describe("updateBookingDetails", () => {
       expect(res.code).toBe("VALIDATION_ERROR");
       expect(res.fieldErrors?.["client.phone"]).toBeTruthy();
     }
+  });
+});
+
+describe("updateBookingRevenue", () => {
+  async function makeCompleted(revenueCents: number, method: string | null) {
+    const service = await makeService(30, 2500);
+    const booking = await makeBooking({
+      serviceId: service.id,
+      startTime: "10:00",
+      endTime: "10:30",
+      status: "COMPLETED",
+    });
+    return db.booking.update({
+      where: { id: booking.id },
+      data: { revenueCents, completionPaymentMethod: method },
+    });
+  }
+
+  it("corrige le mode de règlement sans toucher au montant + trace l'audit", async () => {
+    const admin = await makeAdmin();
+    const booking = await makeCompleted(2500, "cash");
+
+    const res = await updateBookingRevenue(booking.id, 2500, "card_terminal");
+
+    expect(res.ok).toBe(true);
+    const after = await db.booking.findUnique({ where: { id: booking.id } });
+    expect(after?.revenueCents).toBe(2500);
+    expect(after?.completionPaymentMethod).toBe("card_terminal");
+
+    const logs = await db.auditLog.findMany({
+      where: { adminId: admin.id, action: "booking.revenue_updated" },
+    });
+    expect(logs).toHaveLength(1);
+    const meta = logs[0].metadata as Record<string, unknown>;
+    expect(meta.previousCompletionPaymentMethod).toBe("cash");
+    expect(meta.completionPaymentMethod).toBe("card_terminal");
+  });
+
+  it("exige un mode de règlement dès que le montant est > 0", async () => {
+    await makeAdmin();
+    const booking = await makeCompleted(2500, "cash");
+
+    const res = await updateBookingRevenue(booking.id, 3000);
+
+    expect(res.ok).toBe(false);
+    const after = await db.booking.findUnique({ where: { id: booking.id } });
+    expect(after?.revenueCents).toBe(2500);
+  });
+
+  it("force le mode à null quand le montant repasse à 0 (réglé 100% carte cadeau)", async () => {
+    await makeAdmin();
+    const booking = await makeCompleted(2500, "cash");
+
+    const res = await updateBookingRevenue(booking.id, 0, "cash");
+
+    expect(res.ok).toBe(true);
+    const after = await db.booking.findUnique({ where: { id: booking.id } });
+    expect(after?.revenueCents).toBe(0);
+    expect(after?.completionPaymentMethod).toBeNull();
+  });
+
+  it("ne fait rien si montant et mode sont inchangés (pas d'audit)", async () => {
+    const admin = await makeAdmin();
+    const booking = await makeCompleted(2500, "cash");
+
+    const res = await updateBookingRevenue(booking.id, 2500, "cash");
+
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.message).toContain("Aucune modification");
+    const logs = await db.auditLog.findMany({
+      where: { adminId: admin.id, action: "booking.revenue_updated" },
+    });
+    expect(logs).toHaveLength(0);
+  });
+
+  it("refuse la modification sur un RDV non honoré", async () => {
+    await makeAdmin();
+    const service = await makeService(30, 2500);
+    const booking = await makeBooking({
+      serviceId: service.id,
+      startTime: "10:00",
+      endTime: "10:30",
+      status: "CONFIRMED",
+    });
+
+    const res = await updateBookingRevenue(booking.id, 2500, "cash");
+
+    expect(res.ok).toBe(false);
   });
 });

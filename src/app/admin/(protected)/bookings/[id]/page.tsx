@@ -551,6 +551,7 @@ export default async function BookingDetailPage({
                 booking.paymentMethod === "stripe" && !!booking.paidAt
               }
               revenueCents={booking.revenueCents}
+              completionPaymentMethod={booking.completionPaymentMethod}
               editableServices={editableServices}
               editableOptions={editableOptions}
               currentServiceId={booking.serviceId}

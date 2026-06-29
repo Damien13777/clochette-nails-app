@@ -44,6 +44,8 @@ type Props = {
   isDepositReceived: boolean;
   /** Montant déjà saisi au markCompleted (null = non honoré). */
   revenueCents: number | null;
+  /** Mode de règlement du complément saisi au markCompleted (null = 100% carte cadeau). */
+  completionPaymentMethod: string | null;
   /** Coordonnées + prestation actuelles (préremplissage du dialog Modifier). */
   editableServices: EditableService[];
   editableOptions: EditableOption[];
@@ -72,6 +74,7 @@ export function BookingActions({
   paymentMethod,
   isDepositReceived,
   revenueCents,
+  completionPaymentMethod,
   editableServices,
   editableOptions,
   currentServiceId,
@@ -233,7 +236,7 @@ export function BookingActions({
               ? `Modifier montant perçu (${formatCents(revenueCents)})`
               : "Saisir le montant perçu"
           }
-          description="Corriger le CA réel encaissé sur ce RDV"
+          description="Corriger le montant encaissé ou le mode de règlement"
           variant="secondary"
           disabled={isPending}
           onClick={() => setShowRevenue("edit")}
@@ -348,11 +351,12 @@ export function BookingActions({
           paymentMethod={paymentMethod}
           isDepositReceived={isDepositReceived}
           currentRevenueCents={revenueCents}
+          currentCompletionMethod={completionPaymentMethod}
           disabled={isPending}
           onCancel={() => setShowRevenue(false)}
-          onConfirm={(cents) => {
+          onConfirm={(cents, method) => {
             setShowRevenue(false);
-            runAction(() => updateBookingRevenue(bookingId, cents));
+            runAction(() => updateBookingRevenue(bookingId, cents, method));
           }}
         />
       )}
@@ -554,9 +558,20 @@ function paymentMethodLabelFr(method: string | null): string {
   }
 }
 
+type CompletionMethod = "cash" | "card_terminal" | "transfer" | "check";
+
+const COMPLETION_METHOD_OPTIONS: { value: CompletionMethod; label: string }[] = [
+  { value: "cash", label: "Espèces" },
+  { value: "card_terminal", label: "TPE / CB" },
+  { value: "transfer", label: "Virement" },
+  { value: "check", label: "Chèque" },
+];
+
 /**
- * Modale "Modifier le montant perçu" — édition simple post-honoré.
- * N'affecte QUE revenueCents (la part cash/CB). La part GC est invariable.
+ * Modale "Corriger le montant ou le règlement" — édition simple post-honoré.
+ * N'affecte que revenueCents (part cash/CB) + son mode de règlement. La part GC
+ * est invariable. Le mode n'est pas une mention légale obligatoire : sa correction
+ * est tracée côté serveur et ne déclenche un avoir que si le montant change.
  */
 function EditRevenueDialog({
   totalPriceCents,
@@ -564,6 +579,7 @@ function EditRevenueDialog({
   paymentMethod,
   isDepositReceived,
   currentRevenueCents,
+  currentCompletionMethod,
   disabled,
   onCancel,
   onConfirm,
@@ -573,15 +589,21 @@ function EditRevenueDialog({
   paymentMethod: string | null;
   isDepositReceived: boolean;
   currentRevenueCents: number | null;
+  currentCompletionMethod: string | null;
   disabled?: boolean;
   onCancel: () => void;
-  onConfirm: (cents: number) => void;
+  onConfirm: (cents: number, method: CompletionMethod | null) => void;
 }) {
   const initialEuros =
     currentRevenueCents !== null
       ? (currentRevenueCents / 100).toFixed(2)
       : (totalPriceCents / 100).toFixed(2);
   const [amount, setAmount] = useState(initialEuros);
+  const [method, setMethod] = useState<CompletionMethod>(
+    COMPLETION_METHOD_OPTIONS.some((o) => o.value === currentCompletionMethod)
+      ? (currentCompletionMethod as CompletionMethod)
+      : "cash",
+  );
 
   const parsed = Number.parseFloat(amount.replace(",", "."));
   const valid = Number.isFinite(parsed) && parsed >= 0 && parsed <= 100_000;
@@ -591,7 +613,7 @@ function EditRevenueDialog({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Modifier le montant perçu"
+      aria-label="Corriger le montant ou le règlement"
       className="fixed inset-0 z-[60] bg-black/40 grid place-items-center px-4"
       onClick={onCancel}
     >
@@ -600,7 +622,7 @@ function EditRevenueDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
-          Modifier le montant perçu
+          Corriger le montant ou le règlement
         </h3>
 
         <dl
@@ -657,6 +679,42 @@ function EditRevenueDialog({
           </p>
         </div>
 
+        {cents > 0 && (
+          <div className="space-y-2">
+            <label
+              className="block text-xs uppercase tracking-[0.14em] text-[var(--color-ink-700)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Mode de règlement
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {COMPLETION_METHOD_OPTIONS.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() => setMethod(m.value)}
+                  disabled={disabled}
+                  className={`px-3 py-1.5 rounded-full text-xs uppercase tracking-[0.06em] transition-colors ${
+                    method === m.value
+                      ? "bg-[var(--color-violet-600)] text-white"
+                      : "bg-[var(--color-paper)] border border-[var(--color-line)] text-[var(--color-ink-700)] hover:bg-[var(--color-bone)]"
+                  }`}
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            <p
+              className="text-[11px] text-[var(--color-ink-500)]"
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              Correction tracée. Une facture déjà émise conserve son libellé
+              d&apos;origine (mention non obligatoire).
+            </p>
+          </div>
+        )}
+
         <div className="flex justify-end gap-2">
           <button
             type="button"
@@ -669,7 +727,7 @@ function EditRevenueDialog({
           </button>
           <button
             type="button"
-            onClick={() => onConfirm(cents)}
+            onClick={() => onConfirm(cents, cents > 0 ? method : null)}
             disabled={disabled || !valid}
             className="px-4 py-2 rounded-full text-xs uppercase tracking-[0.06em] disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-[var(--color-violet-600)] text-white hover:bg-[var(--color-violet-700)]"
             style={{ fontFamily: "var(--font-display)" }}
@@ -697,16 +755,6 @@ type LookupState =
       recipientName: string | null;
     }
   | { status: "error"; message: string };
-
-const COMPLETION_METHOD_OPTIONS: {
-  value: "cash" | "card_terminal" | "transfer" | "check";
-  label: string;
-}[] = [
-  { value: "cash", label: "Espèces" },
-  { value: "card_terminal", label: "TPE / CB" },
-  { value: "transfer", label: "Virement" },
-  { value: "check", label: "Chèque" },
-];
 
 function MarkCompletedDialog({
   totalPriceCents,
