@@ -288,10 +288,18 @@ export async function markBookingCompleted(
   return { ok: true, message: `Réservation marquée comme honorée.${invoiceNote}${reviewNote}` };
 }
 
-/** Édite le montant perçu après coup (cas erreur de saisie). */
+/**
+ * Édite le montant perçu et/ou le mode de règlement après coup (correction de saisie).
+ *
+ * Le mode de règlement n'est PAS une mention légale obligatoire d'une facture :
+ * sa correction (montant inchangé) est une simple correction de métadonnée comptable,
+ * légitime dès lors qu'elle est tracée (audit). La facture déjà émise reste immuable
+ * et valable — on ne déclenche d'avoir que si le MONTANT change (vrai cas légal).
+ */
 export async function updateBookingRevenue(
   bookingId: string,
   revenueCents: number,
+  completionPaymentMethod?: (typeof COMPLETION_METHODS)[number] | null,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "Non autorisé" };
@@ -300,9 +308,22 @@ export async function updateBookingRevenue(
     return { ok: false, error: "Montant invalide" };
   }
 
+  // Le mode n'a de sens qu'avec un montant perçu hors carte cadeau :
+  // > 0 € → un mode valide est requis ; 0 € → pas de mode (réglé 100% carte cadeau).
+  let resolvedMethod: (typeof COMPLETION_METHODS)[number] | null = null;
+  if (revenueCents > 0) {
+    if (
+      !completionPaymentMethod ||
+      !COMPLETION_METHODS.includes(completionPaymentMethod)
+    ) {
+      return { ok: false, error: "Mode de règlement requis pour le montant perçu." };
+    }
+    resolvedMethod = completionPaymentMethod;
+  }
+
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: { status: true, revenueCents: true },
+    select: { status: true, revenueCents: true, completionPaymentMethod: true },
   });
   if (!booking) return { ok: false, error: "Booking introuvable" };
   if (booking.status !== "COMPLETED") {
@@ -312,13 +333,21 @@ export async function updateBookingRevenue(
     };
   }
 
+  const amountChanged = booking.revenueCents !== revenueCents;
+  const methodChanged = (booking.completionPaymentMethod ?? null) !== resolvedMethod;
+  if (!amountChanged && !methodChanged) {
+    return { ok: true, message: "Aucune modification." };
+  }
+
   await prisma.booking.update({
     where: { id: bookingId },
-    data: { revenueCents },
+    data: { revenueCents, completionPaymentMethod: resolvedMethod },
   });
   await audit(admin.id, bookingId, "booking.revenue_updated", {
     previousRevenueCents: booking.revenueCents,
     revenueCents,
+    previousCompletionPaymentMethod: booking.completionPaymentMethod ?? null,
+    completionPaymentMethod: resolvedMethod,
   });
 
   revalidatePath("/admin", "layout");
@@ -328,12 +357,19 @@ export async function updateBookingRevenue(
     select: { number: true },
   });
   if (existingInvoice) {
+    if (amountChanged) {
+      return {
+        ok: true,
+        message: `Mise à jour enregistrée. ⚠️ La facture ${existingInvoice.number} a déjà été émise avec l'ancien montant — crée un avoir depuis Finances → Factures si nécessaire.`,
+      };
+    }
+    // Mode de règlement corrigé seul : mention non obligatoire → facture toujours valable.
     return {
       ok: true,
-      message: `Montant mis à jour. ⚠️ La facture ${existingInvoice.number} a déjà été émise avec l'ancien montant — crée un avoir depuis Finances → Factures si nécessaire.`,
+      message: `Mode de règlement corrigé. La facture ${existingInvoice.number} déjà émise conserve son ancien libellé (mention non obligatoire) ; la correction est tracée. Aucun avoir nécessaire.`,
     };
   }
-  return { ok: true, message: "Montant perçu mis à jour." };
+  return { ok: true, message: "Mise à jour enregistrée." };
 }
 
 export async function markBookingNoShow(
