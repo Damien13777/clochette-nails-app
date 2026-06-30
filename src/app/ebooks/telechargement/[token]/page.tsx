@@ -9,7 +9,6 @@
  */
 
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
   MAX_DOWNLOADS_PER_TOKEN,
@@ -91,11 +90,13 @@ function DownloadCard(props: {
 
       {props.coverImage && (
         <div className="mx-auto w-32 aspect-[4/5] rounded-[var(--radius-sm)] overflow-hidden border border-[var(--color-line)] bg-[var(--color-bone)]">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={props.coverImage}
             alt={props.coverImageAlt ?? props.ebookTitle}
             width={200}
             height={250}
+            loading="lazy"
             className="w-full h-full object-cover"
           />
         </div>
