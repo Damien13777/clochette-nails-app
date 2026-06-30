@@ -17,6 +17,7 @@ import {
 } from "@/lib/ebook-download-token";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { thumbUrl } from "@/lib/upload-thumb";
 
 export const dynamic = "force-dynamic";
 
@@ -92,7 +93,7 @@ function DownloadCard(props: {
         <div className="mx-auto w-32 aspect-[4/5] rounded-[var(--radius-sm)] overflow-hidden border border-[var(--color-line)] bg-[var(--color-bone)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={props.coverImage}
+            src={thumbUrl(props.coverImage)}
             alt={props.coverImageAlt ?? props.ebookTitle}
             width={200}
             height={250}

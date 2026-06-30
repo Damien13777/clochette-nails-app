@@ -11,6 +11,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { applyWatermark } from "@/lib/watermark";
+import { THUMB_WIDTH, THUMB_WEBP_QUALITY } from "@/lib/upload-thumb";
 
 export const BLOG_COVER_DIR = path.join(
   process.cwd(),
@@ -71,6 +72,7 @@ export async function processBlogCoverUpload(
 
   const inputBuffer = Buffer.from(await file.arrayBuffer());
   let outputBuffer: Buffer;
+  let thumbBuffer: Buffer;
   try {
     const resized = await sharp(inputBuffer)
       .rotate()
@@ -83,14 +85,27 @@ export async function processBlogCoverUpload(
       .toBuffer();
     const stamped = await applyWatermark(resized);
     outputBuffer = await sharp(stamped).webp({ quality: WEBP_QUALITY }).toBuffer();
+    // Vignette (listes) dérivée de la même image filigranée.
+    thumbBuffer = await sharp(stamped)
+      .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
+      .webp({ quality: THUMB_WEBP_QUALITY })
+      .toBuffer();
   } catch (err) {
     const reason = err instanceof Error ? err.message : "format non décodable";
     return { ok: false, error: `Image illisible (${reason}).` };
   }
 
-  await mkdir(BLOG_COVER_DIR, { recursive: true });
-  const filename = `${randomUUID()}.webp`;
-  await writeFile(path.join(BLOG_COVER_DIR, filename), outputBuffer);
+  const id = randomUUID();
+  const filename = `${id}.webp`;
+  const thumbName = `${id}-thumb.webp`;
+  try {
+    await mkdir(BLOG_COVER_DIR, { recursive: true });
+    await writeFile(path.join(BLOG_COVER_DIR, filename), outputBuffer);
+    await writeFile(path.join(BLOG_COVER_DIR, thumbName), thumbBuffer);
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : "écriture impossible";
+    return { ok: false, error: `Enregistrement de l'image impossible (${reason}).` };
+  }
 
   return {
     ok: true,
@@ -105,7 +120,9 @@ export async function deleteBlogCoverFile(relativeUrl: string): Promise<void> {
   if (!relativeUrl.startsWith(`${BLOG_COVER_URL_PREFIX}/`)) return;
   const filename = path.basename(relativeUrl);
   if (!/^[0-9a-f-]{36}\.webp$/i.test(filename)) return;
+  const thumbName = filename.replace(/\.webp$/i, "-thumb.webp");
   await unlink(path.join(BLOG_COVER_DIR, filename)).catch(() => {});
+  await unlink(path.join(BLOG_COVER_DIR, thumbName)).catch(() => {});
 }
 
 /**

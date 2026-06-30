@@ -16,6 +16,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { thumbUrl } from "@/lib/upload-thumb";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
@@ -288,7 +289,7 @@ export default async function BlogArticlePage({
                       {r.coverImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={r.coverImage}
+                          src={thumbUrl(r.coverImage)}
                           alt={r.coverImageAlt ?? r.title}
                           width={400}
                           height={250}
