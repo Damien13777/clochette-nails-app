@@ -16,6 +16,7 @@ import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { applyWatermark } from "@/lib/watermark";
+import { THUMB_WIDTH, THUMB_WEBP_QUALITY } from "@/lib/upload-thumb";
 
 // ─── Cover ─────────────────────────────────────────────────
 
@@ -65,6 +66,7 @@ export async function processEbookCoverUpload(file: File): Promise<CoverResult> 
 
   const input = Buffer.from(await file.arrayBuffer());
   let output: Buffer;
+  let thumb: Buffer;
   try {
     const resized = await sharp(input)
       .rotate()
@@ -77,14 +79,27 @@ export async function processEbookCoverUpload(file: File): Promise<CoverResult> 
       .toBuffer();
     const stamped = await applyWatermark(resized);
     output = await sharp(stamped).webp({ quality: COVER_WEBP_QUALITY }).toBuffer();
+    // Vignette (listes) dérivée de la même image filigranée.
+    thumb = await sharp(stamped)
+      .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
+      .webp({ quality: THUMB_WEBP_QUALITY })
+      .toBuffer();
   } catch (err) {
     const reason = err instanceof Error ? err.message : "format non décodable";
     return { ok: false, error: `Image illisible (${reason}).` };
   }
 
-  await mkdir(EBOOK_COVER_DIR, { recursive: true });
-  const filename = `${randomUUID()}.webp`;
-  await writeFile(path.join(EBOOK_COVER_DIR, filename), output);
+  const id = randomUUID();
+  const filename = `${id}.webp`;
+  const thumbName = `${id}-thumb.webp`;
+  try {
+    await mkdir(EBOOK_COVER_DIR, { recursive: true });
+    await writeFile(path.join(EBOOK_COVER_DIR, filename), output);
+    await writeFile(path.join(EBOOK_COVER_DIR, thumbName), thumb);
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : "écriture impossible";
+    return { ok: false, error: `Enregistrement de l'image impossible (${reason}).` };
+  }
 
   return {
     ok: true,
@@ -99,7 +114,9 @@ export async function deleteEbookCoverFile(url: string): Promise<void> {
   if (!url.startsWith(`${EBOOK_COVER_URL_PREFIX}/`)) return;
   const filename = path.basename(url);
   if (!/^[0-9a-f-]{36}\.webp$/i.test(filename)) return;
+  const thumbName = filename.replace(/\.webp$/i, "-thumb.webp");
   await unlink(path.join(EBOOK_COVER_DIR, filename)).catch(() => {});
+  await unlink(path.join(EBOOK_COVER_DIR, thumbName)).catch(() => {});
 }
 
 // ─── Inline images (TipTap dans la description ebook) ──────

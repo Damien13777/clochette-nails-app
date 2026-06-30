@@ -8,6 +8,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { thumbUrl } from "@/lib/upload-thumb";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 
@@ -98,7 +99,7 @@ export default async function EbooksIndexPage() {
                       {e.coverImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={e.coverImage}
+                          src={thumbUrl(e.coverImage)}
                           alt={e.coverImageAlt ?? e.title}
                           width={500}
                           height={625}

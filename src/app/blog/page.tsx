@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { thumbUrl } from "@/lib/upload-thumb";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
 import {
@@ -188,7 +189,7 @@ export default async function BlogIndexPage({
                       {p.coverImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={p.coverImage}
+                          src={thumbUrl(p.coverImage)}
                           alt={p.coverImageAlt ?? p.title}
                           width={640}
                           height={400}
