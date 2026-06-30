@@ -7,7 +7,6 @@
 
 import { safeJsonLd } from "@/lib/jsonld";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -178,12 +177,13 @@ export default async function EbookDetailPage({
             <div className="space-y-5">
               <div className="aspect-[4/5] rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-line)] bg-[var(--color-bone)] sticky top-32">
                 {ebook.coverImage ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={ebook.coverImage}
                     alt={ebook.coverImageAlt ?? ebook.title}
                     width={500}
                     height={625}
-                    priority
+                    fetchPriority="high"
                     className="w-full h-full object-cover"
                   />
                 ) : (

@@ -6,7 +6,6 @@
  */
 
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SiteHeader } from "@/components/landing/site-header";
@@ -97,12 +96,13 @@ export default async function EbooksIndexPage() {
                   >
                     <div className="aspect-[4/5] bg-[var(--color-bone)] overflow-hidden">
                       {e.coverImage ? (
-                        <Image
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={e.coverImage}
                           alt={e.coverImageAlt ?? e.title}
                           width={500}
                           height={625}
-                          priority={i === 0}
+                          fetchPriority={i === 0 ? "high" : undefined}
                           loading={i === 0 ? "eager" : "lazy"}
                           className="w-full h-full object-cover transition-transform group-hover:scale-105"
                         />
