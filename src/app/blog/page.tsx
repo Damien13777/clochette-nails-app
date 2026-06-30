@@ -9,7 +9,6 @@
  */
 
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -187,12 +186,13 @@ export default async function BlogIndexPage({
                   >
                     <div className="aspect-[16/10] bg-[var(--color-bone)] overflow-hidden">
                       {p.coverImage ? (
-                        <Image
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={p.coverImage}
                           alt={p.coverImageAlt ?? p.title}
                           width={640}
                           height={400}
-                          priority={i === 0}
+                          fetchPriority={i === 0 ? "high" : undefined}
                           loading={i === 0 ? "eager" : "lazy"}
                           className="w-full h-full object-cover transition-transform group-hover:scale-105"
                         />
