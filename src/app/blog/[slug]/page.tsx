@@ -13,7 +13,6 @@
 
 import { safeJsonLd } from "@/lib/jsonld";
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -229,12 +228,13 @@ export default async function BlogArticlePage({
           {/* Cover */}
           {post.coverImage && (
             <div className="rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-line)] bg-[var(--color-bone)] mb-10">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element -- image uploadée servie par Nginx, déjà optimisée par Sharp (cf. blog-cover-files) ; next/image ne peut pas lire les fichiers ajoutés à public/ après le build */}
+              <img
                 src={post.coverImage}
                 alt={post.coverImageAlt ?? post.title}
                 width={1280}
                 height={720}
-                priority
+                fetchPriority="high"
                 className="w-full h-auto"
               />
             </div>
@@ -286,11 +286,13 @@ export default async function BlogArticlePage({
                   >
                     <div className="aspect-[16/10] bg-[var(--color-bone)] overflow-hidden">
                       {r.coverImage ? (
-                        <Image
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                           src={r.coverImage}
                           alt={r.coverImageAlt ?? r.title}
                           width={400}
                           height={250}
+                          loading="lazy"
                           className="w-full h-full object-cover transition-transform group-hover:scale-105"
                         />
                       ) : (
