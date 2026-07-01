@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { OutboundDetailButton } from "./outbound-actions";
+import { DispatchNowButton } from "./dispatch-now-button";
 
 export const metadata: Metadata = {
   title: "Webhooks · Admin",
@@ -398,6 +399,16 @@ function OutboundSection({
 }) {
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <p
+          className="text-[11px] text-[var(--color-ink-500)]"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          Queue d&apos;envoi vers l&apos;ERP (canal 1) — le cron dépile toutes
+          les 2 min.
+        </p>
+        <DispatchNowButton />
+      </div>
       <nav
         role="tablist"
         aria-label="Filtrer par statut"
