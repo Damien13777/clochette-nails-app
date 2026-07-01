@@ -973,6 +973,7 @@ model StripeEvent {
 
 model OutboundEvent {
   id            String              @id @default(cuid())
+  eventId       String? // déterministe pour le backfill ; null en live → on signe avec l'id
   type          String // "booking.created", "booking.confirmed", "ebook.purchased"
   payload       Json
   targetUrl     String
@@ -987,6 +988,7 @@ model OutboundEvent {
 
   @@index([status, nextAttemptAt])
   @@index([type, createdAt])
+  @@index([eventId])
   @@map("outbound_events")
 }
 
