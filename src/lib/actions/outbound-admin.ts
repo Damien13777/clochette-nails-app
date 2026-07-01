@@ -4,19 +4,16 @@
  * Server actions admin pour la queue OutboundEvent.
  *
  * Actions :
- *  - retryOutboundEvent(id) : remet l'event en PENDING + reset attempts à 0
- *    + nextAttemptAt = now. Utile pour rejouer un FAILED ou ABANDONED.
+ *  - retryOutboundEvent(id) : remet l'event en PENDING + reset attempts à 0.
  *  - abandonOutboundEvent(id) : passe en ABANDONED (stoppe les retries futurs).
- *
- * Le worker qui dépile la queue n'existe pas encore (cf. PHASE_2.md →
- * "Outbound API - Intégration future Management"). Ces actions permettent
- * dès maintenant à l'admin de gérer manuellement la queue depuis
- * /admin/webhooks.
+ *  - dispatchOutboundNow() : force le dépilage immédiat de la queue vers l'ERP
+ *    (sans attendre le cron 2 min).
  */
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { dispatchPendingOutbound } from "@/lib/outbound/dispatch";
 
 type ActionResult =
   | { ok: true; message?: string }
@@ -81,4 +78,18 @@ export async function abandonOutboundEvent(id: string): Promise<ActionResult> {
 
   revalidatePath("/admin/webhooks");
   return { ok: true, message: "Event abandonné — plus de retry." };
+}
+
+export async function dispatchOutboundNow(): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return { ok: false, error: "Non autorisé" };
+  }
+
+  const r = await dispatchPendingOutbound();
+  revalidatePath("/admin/webhooks");
+  return {
+    ok: true,
+    message: `Dispatch : ${r.delivered} livré(s), ${r.retried} en retry, ${r.abandoned} abandonné(s) sur ${r.processed} traité(s).`,
+  };
 }
