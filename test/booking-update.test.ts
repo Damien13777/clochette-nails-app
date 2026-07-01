@@ -11,8 +11,21 @@ vi.mock("@/lib/auth-guards", () => ({
 }));
 // revalidatePath n'a pas de store de génération statique hors requête Next.
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// On isole l'envoi d'email : sendEmail no-op + builder espionné pour vérifier
+// le montant d'acompte réellement transmis à la cliente (notifyClient).
+vi.mock("@/lib/email/send", () => ({
+  sendEmail: vi.fn().mockResolvedValue({ ok: true, id: "test" }),
+}));
+vi.mock("@/lib/email/templates/booking-confirmation", () => ({
+  buildBookingConfirmationEmail: vi.fn(() => ({
+    subject: "s",
+    html: "h",
+    text: "t",
+  })),
+}));
 
 import { requireAdmin } from "@/lib/auth-guards";
+import { buildBookingConfirmationEmail } from "@/lib/email/templates/booking-confirmation";
 import {
   updateBookingDetails,
   updateBookingRevenue,
@@ -65,7 +78,11 @@ async function makeBooking(opts: {
   status?: "AWAITING_DEPOSIT" | "CONFIRMED" | "COMPLETED";
   totalDurationMinutes?: number;
   totalPriceCents?: number;
+  depositCents?: number;
   optionIds?: string[];
+  paidAt?: Date | null;
+  paymentMethod?: string | null;
+  stripePaymentId?: string | null;
 }) {
   return db.booking.create({
     data: {
@@ -79,8 +96,11 @@ async function makeBooking(opts: {
       clientPhone: "0600000000",
       totalDurationMinutes: opts.totalDurationMinutes ?? 30,
       totalPriceCents: opts.totalPriceCents ?? 2500,
-      depositCents: 750,
+      depositCents: opts.depositCents ?? 750,
       status: opts.status ?? "CONFIRMED",
+      paidAt: opts.paidAt ?? null,
+      paymentMethod: opts.paymentMethod ?? null,
+      stripePaymentId: opts.stripePaymentId ?? null,
       options: opts.optionIds
         ? { create: opts.optionIds.map((id) => ({ serviceOptionId: id })) }
         : undefined,
@@ -154,6 +174,84 @@ describe("updateBookingDetails", () => {
     expect(updated.endTime).toBe("11:00");
     // Pas de settings en base de test → fallback acompte 30 %.
     expect(updated.depositCents).toBe(1500);
+  });
+
+  it("fige l'acompte déjà encaissé (paidAt) même si la nouvelle prestation est moins chère", async () => {
+    // Régression : une cliente paie 34,50 € d'acompte via Stripe, puis l'admin
+    // corrige sa prestation pour une moins chère (acompte théorique 30 €). Le
+    // montant réellement perçu ne doit JAMAIS être réécrit — sinon on fausse
+    // l'affichage paiement, le remboursement proposé et le CA (finances).
+    await makeAdmin();
+    const paid = await makeService(230, 11500);
+    const cheaper = await makeService(230, 10000);
+    const booking = await makeBooking({
+      serviceId: paid.id,
+      startTime: "10:00",
+      endTime: "13:50",
+      totalDurationMinutes: 230,
+      totalPriceCents: 11500,
+      depositCents: 3450, // acompte réellement encaissé
+      paidAt: new Date("2026-07-01T17:09:00Z"),
+      paymentMethod: "stripe",
+      stripePaymentId: "pi_test_3450",
+    });
+
+    const res = await updateBookingDetails(booking.id, {
+      client: {
+        firstName: "Jean",
+        lastName: "Dupont",
+        email: "jean@test.local",
+        phone: "0600000000",
+        message: null,
+      },
+      serviceId: cheaper.id,
+      optionIds: [],
+    });
+
+    expect(res.ok).toBe(true);
+    const updated = await db.booking.findUniqueOrThrow({ where: { id: booking.id } });
+    // Le total de la prestation suit bien la correction…
+    expect(updated.totalPriceCents).toBe(10000);
+    // …mais l'acompte encaissé reste figé (pas recalculé à 3000).
+    expect(updated.depositCents).toBe(3450);
+  });
+
+  it("notifie la cliente avec l'acompte réellement encaissé, pas le recalcul", async () => {
+    // Ceinture-bretelles de la régression : l'email de modification doit porter
+    // le montant réellement payé (34,50 €), jamais l'acompte recalculé (30 €).
+    await makeAdmin();
+    vi.mocked(buildBookingConfirmationEmail).mockClear();
+    const paid = await makeService(230, 11500);
+    const cheaper = await makeService(230, 10000);
+    const booking = await makeBooking({
+      serviceId: paid.id,
+      startTime: "10:00",
+      endTime: "13:50",
+      totalDurationMinutes: 230,
+      totalPriceCents: 11500,
+      depositCents: 3450,
+      paidAt: new Date("2026-07-01T17:09:00Z"),
+      paymentMethod: "stripe",
+      stripePaymentId: "pi_test_3450",
+    });
+
+    const res = await updateBookingDetails(booking.id, {
+      client: {
+        firstName: "Jean",
+        lastName: "Dupont",
+        email: "jean@test.local",
+        phone: "0600000000",
+        message: null,
+      },
+      serviceId: cheaper.id,
+      optionIds: [],
+      notifyClient: true,
+    });
+
+    expect(res.ok).toBe(true);
+    expect(buildBookingConfirmationEmail).toHaveBeenCalledTimes(1);
+    const emailArg = vi.mocked(buildBookingConfirmationEmail).mock.calls[0][0];
+    expect(emailArg.depositCents).toBe(3450);
   });
 
   it("remplace les options (delete + recreate)", async () => {

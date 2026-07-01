@@ -1614,6 +1614,8 @@ export async function updateBookingDetails(
       startTime: true,
       clientActionToken: true,
       paymentMethod: true,
+      paidAt: true,
+      depositCents: true,
     },
   });
   if (!booking) return { ok: false, error: "Réservation introuvable." };
@@ -1671,7 +1673,14 @@ export async function updateBookingDetails(
     options.reduce((sum, o) => sum + o.addedDurationMinutes, 0);
   const totalPriceCents =
     service.priceCents + options.reduce((sum, o) => sum + o.addedPriceCents, 0);
-  const depositCents = computeDepositCents(totalPriceCents, settings);
+  // L'acompte n'est recalculé que si RIEN n'a encore été encaissé. Dès qu'un
+  // acompte a été perçu (paidAt non nul), le montant figé au paiement est
+  // immuable : le réécrire fausserait le montant affiché comme payé, le
+  // remboursement proposé et le CA dans /admin/finances (qui lisent tous
+  // depositCents comme "acompte réellement encaissé").
+  const depositCents = booking.paidAt
+    ? booking.depositCents
+    : computeDepositCents(totalPriceCents, settings);
   const endTime = addMinutesToTime(booking.startTime, totalDurationMinutes);
 
   // Overlap : exclut le booking lui-même. Bornes strictes → les créneaux qui se
