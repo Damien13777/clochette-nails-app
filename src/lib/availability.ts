@@ -12,13 +12,22 @@
  *  7. Granularité (default 30 min)
  *
  * Heures manipulées en string "HH:MM" Europe/Paris (cohérent avec le schema).
+ *
+ * ⚠ Unavailability.startsAt/endsAt sont des instants ABSOLUS (DateTime), pas de
+ * l'heure-mur. On les convertit en minutes-mur Paris (parisMinutesSinceMidnight)
+ * avant de les comparer aux créneaux, sinon décalage de l'offset UTC (2h l'été) :
+ * une indispo 08:00→10:00 saisie par l'admin bloquerait 06:00→08:00 → avant
+ * l'ouverture → aucun effet, et les clientes réservent par-dessus.
  */
 
 import { prisma } from "@/lib/prisma";
 import {
   currentTimeHHMMParis,
+  nextIsoDate,
+  parisWallClockToUtc,
   startOfTodayParisAsUtc,
   todayIsoParis,
+  unavailabilityToParisRange,
 } from "@/lib/paris-day";
 
 // ── Helpers temporels (string HH:MM) ──────────────────────
@@ -89,6 +98,11 @@ export async function computeAvailableSlots(
   const month = date.getUTCMonth() + 1;
   const dayOfWeek = date.getUTCDay(); // 0=Dim, 1=Lun, ..., 6=Sam
 
+  // Bornes UTC réelles du jour PARIS demandé (pas du jour UTC) : sert à ne
+  // récupérer que les indispos qui chevauchent ce jour Paris.
+  const parisDayStartUtc = parisWallClockToUtc(input.date, "00:00");
+  const parisDayEndUtc = parisWallClockToUtc(nextIsoDate(input.date), "00:00");
+
   // Fetch en parallèle
   const [
     bookableMonth,
@@ -119,8 +133,8 @@ export async function computeAvailableSlots(
     }),
     prisma.unavailability.findMany({
       where: {
-        startsAt: { lte: endOfDay(date) },
-        endsAt: { gte: startOfDay(date) },
+        startsAt: { lt: parisDayEndUtc },
+        endsAt: { gt: parisDayStartUtc },
       },
       select: { startsAt: true, endsAt: true },
     }),
@@ -198,11 +212,11 @@ export async function computeAvailableSlots(
     blockedRanges.push([breakStart, breakEnd]);
   }
 
-  // Unavailability ponctuelles : ne garder que la partie qui tombe dans CE jour
+  // Unavailability ponctuelles : convertir l'instant absolu en minutes-mur
+  // Paris et ne garder que la partie qui tombe dans CE jour Paris.
   for (const u of unavailabilities) {
-    const startMin = clampToDayMinutes(u.startsAt, date);
-    const endMin = clampToDayMinutes(u.endsAt, date);
-    if (startMin < endMin) blockedRanges.push([startMin, endMin]);
+    const range = unavailabilityToParisRange(u.startsAt, u.endsAt, input.date);
+    if (range) blockedRanges.push(range);
   }
 
   // RecurringUnavailability : si startTime/endTime null → toute la journée
@@ -256,31 +270,3 @@ export async function computeAvailableSlots(
   return { slots: candidates };
 }
 
-// ── Helpers de date ───────────────────────────────────────
-
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-}
-
-function endOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setUTCHours(23, 59, 59, 999);
-  return d;
-}
-
-/**
- * Convertit un DateTime arbitraire en minutes-since-midnight pour le jour
- * donné. Clampe à [0, 24*60] si l'event déborde du jour.
- */
-function clampToDayMinutes(at: Date, day: Date): number {
-  const dayStart = startOfDay(day).getTime();
-  const dayEnd = endOfDay(day).getTime();
-  const atTime = at.getTime();
-  if (atTime <= dayStart) return 0;
-  if (atTime >= dayEnd) return 24 * 60;
-  // Minutes depuis minuit local du jour
-  // (on assume tout en UTC ici, ce qui est cohérent avec Prisma)
-  return Math.floor((atTime - dayStart) / 60_000);
-}
