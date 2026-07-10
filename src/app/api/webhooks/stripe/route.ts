@@ -649,6 +649,10 @@ async function confirmBookingFromSession(
     stripeSessionId: session.id,
     amountTotalCents: session.amount_total,
     giftCardAmountUsed: booking.pendingGiftCardAmountCents ?? 0,
+    clientFirstName: booking.clientFirstName,
+    clientLastName: booking.clientLastName,
+    clientEmail: booking.clientEmail,
+    clientPhone: booking.clientPhone,
   });
 
   // Notification admin in-app (cloche)

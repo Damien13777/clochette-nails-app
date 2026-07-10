@@ -435,6 +435,9 @@ export async function createBookingAction(
         adjustedDepositCents,
         giftCardAmountUsed: giftCardAmountToUse,
         clientEmail: data.client.email,
+        clientFirstName: data.client.firstName,
+        clientLastName: data.client.lastName,
+        clientPhone: data.client.phone,
       });
 
       return { ok: true, checkoutUrl: session.url! };
