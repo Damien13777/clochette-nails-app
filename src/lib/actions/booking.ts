@@ -343,6 +343,14 @@ export async function createBookingAction(
         paidVia: "gift_card_full",
         depositCents: booking.depositCents,
         giftCardAmountUsed: giftCardAmountToUse,
+        clientFirstName: data.client.firstName,
+        clientLastName: data.client.lastName,
+        clientEmail: data.client.email,
+        clientPhone: data.client.phone,
+        serviceId: data.serviceId,
+        serviceTitle: service.title,
+        date: data.date,
+        startTime: data.startTime,
       });
       await notifyAdmin(booking.id, service.title, data.client.email);
 
@@ -429,6 +437,7 @@ export async function createBookingAction(
       await emitOutboundEvent("booking.created", {
         bookingId: booking.id,
         serviceId: data.serviceId,
+        serviceTitle: service.title,
         date: data.date,
         startTime: data.startTime,
         depositCents: booking.depositCents,

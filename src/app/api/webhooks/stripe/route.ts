@@ -653,6 +653,10 @@ async function confirmBookingFromSession(
     clientLastName: booking.clientLastName,
     clientEmail: booking.clientEmail,
     clientPhone: booking.clientPhone,
+    serviceTitle: booking.service.title,
+    date: booking.date.toISOString().slice(0, 10),
+    startTime: booking.startTime,
+    endTime: booking.endTime,
   });
 
   // Notification admin in-app (cloche)

@@ -1787,6 +1787,21 @@ export async function updateBookingDetails(
   }
 
   revalidatePath("/admin", "layout");
+  // Outbound event — l'ERP (CRM) doit refléter la modif ; sinon sa fiche reste
+  // figée sur les valeurs d'origine. Fail-open.
+  try {
+    await emitOutboundEvent("booking.updated", {
+      bookingId,
+      clientFirstName: data.client.firstName,
+      clientLastName: data.client.lastName,
+      clientEmail: data.client.email,
+      clientPhone: data.client.phone,
+      serviceTitle: service.title,
+    });
+  } catch (err) {
+    console.error(`[updateBookingDetails] émission booking.updated échouée pour ${bookingId}:`, err);
+  }
+
   return {
     ok: true,
     message:
