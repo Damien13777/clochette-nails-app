@@ -1321,6 +1321,27 @@ export async function createBookingAdmin(
         : 0,
   });
 
+  // Outbound event — une résa admin confirmée directement (payée en personne /
+  // sans acompte) n'a pas de webhook Stripe pour l'émettre. On émet ici avec
+  // l'identité cliente pour que l'ERP (CRM + agrégation) la capte. Fail-open.
+  try {
+    await emitOutboundEvent("booking.confirmed", {
+      bookingId: booking.id,
+      paidVia: data.paymentMode === "PAID_IN_PERSON" ? "in_person" : "none",
+      clientFirstName: data.client.firstName,
+      clientLastName: data.client.lastName,
+      clientEmail: data.client.email,
+      clientPhone: data.client.phone,
+      serviceId: data.serviceId,
+      serviceTitle: service.title,
+      date: data.date,
+      startTime: data.startTime,
+      depositCents: effectiveDepositCents,
+    });
+  } catch (err) {
+    console.error(`[booking-admin] émission booking.confirmed échouée pour ${booking.id}:`, err);
+  }
+
   // Notification in-app admin (trace)
   await prisma.notification.create({
     data: {
