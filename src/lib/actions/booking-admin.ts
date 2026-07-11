@@ -1698,14 +1698,21 @@ export async function updateBookingDetails(
     options.reduce((sum, o) => sum + o.addedDurationMinutes, 0);
   const totalPriceCents =
     service.priceCents + options.reduce((sum, o) => sum + o.addedPriceCents, 0);
-  // L'acompte n'est recalculé que si RIEN n'a encore été encaissé. Dès qu'un
-  // acompte a été perçu (paidAt non nul), le montant figé au paiement est
-  // immuable : le réécrire fausserait le montant affiché comme payé, le
-  // remboursement proposé et le CA dans /admin/finances (qui lisent tous
-  // depositCents comme "acompte réellement encaissé").
-  const depositCents = booking.paidAt
-    ? booking.depositCents
-    : computeDepositCents(totalPriceCents, settings);
+  // Détermination de l'acompte à l'édition, dans l'ordre :
+  //  - paymentMethod "none" : RDV créé SANS demande d'acompte (mode NO_DEPOSIT) →
+  //    l'acompte est TOUJOURS 0 (0 est sa valeur par définition). On force 0 : ça
+  //    empêche un acompte fantôme recalculé ET répare un éventuel montant déjà
+  //    corrompu par l'ancien bug (sinon on l'afficherait / le pousserait à l'ERP
+  //    alors que le bloc paiement dit "aucun acompte demandé").
+  //  - paidAt non nul : un acompte a été perçu → montant immuable (le réécrire
+  //    fausserait le montant affiché comme payé, le remboursement et le CA /finances).
+  //  - sinon (en attente d'acompte) : recalcul normal sur le nouveau prix.
+  const depositCents =
+    booking.paymentMethod === "none"
+      ? 0
+      : booking.paidAt
+        ? booking.depositCents
+        : computeDepositCents(totalPriceCents, settings);
   const endTime = addMinutesToTime(booking.startTime, totalDurationMinutes);
 
   // Overlap : exclut le booking lui-même. Bornes strictes → les créneaux qui se
