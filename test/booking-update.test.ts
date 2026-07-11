@@ -216,6 +216,42 @@ describe("updateBookingDetails", () => {
     expect(updated.depositCents).toBe(3450);
   });
 
+  it("force l'acompte à 0 pour un RDV sans demande d'acompte (NO_DEPOSIT) et répare une valeur corrompue", async () => {
+    // Régression : un RDV admin sans acompte (paymentMethod "none") ne doit jamais
+    // se voir attribuer un acompte recalculé à l'édition — sinon acompte fantôme
+    // dans l'admin ET poussé à tort dans l'ERP, alors que le bloc paiement dit
+    // "aucun acompte". On part d'une valeur DÉJÀ corrompue (1500) pour vérifier
+    // que l'édition la remet à 0 (réparation).
+    await makeAdmin();
+    const serviceA = await makeService(30, 2500);
+    const serviceB = await makeService(60, 8500);
+    const booking = await makeBooking({
+      serviceId: serviceA.id,
+      startTime: "10:00",
+      endTime: "10:30",
+      status: "CONFIRMED",
+      depositCents: 1500, // acompte fantôme laissé par l'ancien bug
+      paymentMethod: "none", // créé sans demande d'acompte
+    });
+
+    const res = await updateBookingDetails(booking.id, {
+      client: {
+        firstName: "Jean",
+        lastName: "Dupont",
+        email: "jean@test.local",
+        phone: "0600000000",
+        message: null,
+      },
+      serviceId: serviceB.id,
+      optionIds: [],
+    });
+
+    expect(res.ok).toBe(true);
+    const updated = await db.booking.findUniqueOrThrow({ where: { id: booking.id } });
+    expect(updated.totalPriceCents).toBe(8500); // le prix suit la nouvelle presta
+    expect(updated.depositCents).toBe(0); // acompte fantôme réparé, pas de recalcul
+  });
+
   it("notifie la cliente avec l'acompte réellement encaissé, pas le recalcul", async () => {
     // Ceinture-bretelles de la régression : l'email de modification doit porter
     // le montant réellement payé (34,50 €), jamais l'acompte recalculé (30 €).

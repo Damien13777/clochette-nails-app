@@ -484,7 +484,18 @@ export async function forceConfirmBooking(
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: { status: true },
+    select: {
+      status: true,
+      clientFirstName: true,
+      clientLastName: true,
+      clientEmail: true,
+      clientPhone: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      depositCents: true,
+      service: { select: { title: true } },
+    },
   });
   if (!booking) return { ok: false, error: "Booking introuvable" };
   if (booking.status !== "AWAITING_DEPOSIT") {
@@ -504,10 +515,28 @@ export async function forceConfirmBooking(
     },
   });
   await audit(admin.id, bookingId, "booking.force_confirmed");
-  await emitOutboundEvent("booking.confirmed", {
-    bookingId,
-    paidVia: "out_of_band",
-  });
+  // Émission ENRICHIE : un RDV admin SEND_LINK n'a émis AUCUN booking.created
+  // (pas de phantom tant qu'impayé) → ce booking.confirmed est le 1er event que
+  // l'ERP voit pour ce RDV. Il doit porter l'identité + les détails pour que l'ERP
+  // ÉTABLISSE la fiche (sinon il reste « en attente » d'un created qui ne viendra
+  // jamais). Fail-open.
+  try {
+    await emitOutboundEvent("booking.confirmed", {
+      bookingId,
+      paidVia: "out_of_band",
+      clientFirstName: booking.clientFirstName,
+      clientLastName: booking.clientLastName,
+      clientEmail: booking.clientEmail,
+      clientPhone: booking.clientPhone,
+      serviceTitle: booking.service.title,
+      date: booking.date.toISOString().slice(0, 10),
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      depositCents: booking.depositCents,
+    });
+  } catch (err) {
+    console.error(`[forceConfirmBooking] émission booking.confirmed échouée pour ${bookingId}:`, err);
+  }
 
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Réservation confirmée manuellement (paiement out-of-band)." };
@@ -858,6 +887,9 @@ export async function rescheduleBookingAdmin(
     newDate,
     newStartTime,
     by: "admin",
+    date: newDate,
+    startTime: newStartTime,
+    endTime: newEndTime,
   });
 
   // Notification in-app admin (trace dans la cloche)
@@ -1321,6 +1353,28 @@ export async function createBookingAdmin(
         : 0,
   });
 
+  // Outbound event — une résa admin confirmée directement (payée en personne /
+  // sans acompte) n'a pas de webhook Stripe pour l'émettre. On émet ici avec
+  // l'identité cliente pour que l'ERP (CRM + agrégation) la capte. Fail-open.
+  try {
+    await emitOutboundEvent("booking.confirmed", {
+      bookingId: booking.id,
+      paidVia: data.paymentMode === "PAID_IN_PERSON" ? "in_person" : "none",
+      clientFirstName: data.client.firstName,
+      clientLastName: data.client.lastName,
+      clientEmail: data.client.email,
+      clientPhone: data.client.phone,
+      serviceId: data.serviceId,
+      serviceTitle: service.title,
+      date: data.date,
+      startTime: data.startTime,
+      endTime,
+      depositCents: effectiveDepositCents,
+    });
+  } catch (err) {
+    console.error(`[booking-admin] émission booking.confirmed échouée pour ${booking.id}:`, err);
+  }
+
   // Notification in-app admin (trace)
   await prisma.notification.create({
     data: {
@@ -1673,14 +1727,21 @@ export async function updateBookingDetails(
     options.reduce((sum, o) => sum + o.addedDurationMinutes, 0);
   const totalPriceCents =
     service.priceCents + options.reduce((sum, o) => sum + o.addedPriceCents, 0);
-  // L'acompte n'est recalculé que si RIEN n'a encore été encaissé. Dès qu'un
-  // acompte a été perçu (paidAt non nul), le montant figé au paiement est
-  // immuable : le réécrire fausserait le montant affiché comme payé, le
-  // remboursement proposé et le CA dans /admin/finances (qui lisent tous
-  // depositCents comme "acompte réellement encaissé").
-  const depositCents = booking.paidAt
-    ? booking.depositCents
-    : computeDepositCents(totalPriceCents, settings);
+  // Détermination de l'acompte à l'édition, dans l'ordre :
+  //  - paymentMethod "none" : RDV créé SANS demande d'acompte (mode NO_DEPOSIT) →
+  //    l'acompte est TOUJOURS 0 (0 est sa valeur par définition). On force 0 : ça
+  //    empêche un acompte fantôme recalculé ET répare un éventuel montant déjà
+  //    corrompu par l'ancien bug (sinon on l'afficherait / le pousserait à l'ERP
+  //    alors que le bloc paiement dit "aucun acompte demandé").
+  //  - paidAt non nul : un acompte a été perçu → montant immuable (le réécrire
+  //    fausserait le montant affiché comme payé, le remboursement et le CA /finances).
+  //  - sinon (en attente d'acompte) : recalcul normal sur le nouveau prix.
+  const depositCents =
+    booking.paymentMethod === "none"
+      ? 0
+      : booking.paidAt
+        ? booking.depositCents
+        : computeDepositCents(totalPriceCents, settings);
   const endTime = addMinutesToTime(booking.startTime, totalDurationMinutes);
 
   // Overlap : exclut le booking lui-même. Bornes strictes → les créneaux qui se
@@ -1766,6 +1827,25 @@ export async function updateBookingDetails(
   }
 
   revalidatePath("/admin", "layout");
+  // Outbound event — l'ERP (CRM) doit refléter la modif ; sinon sa fiche reste
+  // figée sur les valeurs d'origine. Fail-open.
+  try {
+    await emitOutboundEvent("booking.updated", {
+      bookingId,
+      clientFirstName: data.client.firstName,
+      clientLastName: data.client.lastName,
+      clientEmail: data.client.email,
+      clientPhone: data.client.phone,
+      serviceTitle: service.title,
+      date: booking.date.toISOString().slice(0, 10),
+      startTime: booking.startTime,
+      endTime,
+      depositCents,
+    });
+  } catch (err) {
+    console.error(`[updateBookingDetails] émission booking.updated échouée pour ${bookingId}:`, err);
+  }
+
   return {
     ok: true,
     message:
