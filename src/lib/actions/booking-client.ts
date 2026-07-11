@@ -581,6 +581,9 @@ export async function rescheduleBookingByClient(
     newDate,
     newStartTime,
     by: "client",
+    date: newDate,
+    startTime: newStartTime,
+    endTime: newEndTime,
   });
 
   // Notification in-app admin

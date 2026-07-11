@@ -858,6 +858,9 @@ export async function rescheduleBookingAdmin(
     newDate,
     newStartTime,
     by: "admin",
+    date: newDate,
+    startTime: newStartTime,
+    endTime: newEndTime,
   });
 
   // Notification in-app admin (trace dans la cloche)
