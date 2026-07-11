@@ -484,7 +484,18 @@ export async function forceConfirmBooking(
 
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: { status: true },
+    select: {
+      status: true,
+      clientFirstName: true,
+      clientLastName: true,
+      clientEmail: true,
+      clientPhone: true,
+      date: true,
+      startTime: true,
+      endTime: true,
+      depositCents: true,
+      service: { select: { title: true } },
+    },
   });
   if (!booking) return { ok: false, error: "Booking introuvable" };
   if (booking.status !== "AWAITING_DEPOSIT") {
@@ -504,10 +515,28 @@ export async function forceConfirmBooking(
     },
   });
   await audit(admin.id, bookingId, "booking.force_confirmed");
-  await emitOutboundEvent("booking.confirmed", {
-    bookingId,
-    paidVia: "out_of_band",
-  });
+  // Émission ENRICHIE : un RDV admin SEND_LINK n'a émis AUCUN booking.created
+  // (pas de phantom tant qu'impayé) → ce booking.confirmed est le 1er event que
+  // l'ERP voit pour ce RDV. Il doit porter l'identité + les détails pour que l'ERP
+  // ÉTABLISSE la fiche (sinon il reste « en attente » d'un created qui ne viendra
+  // jamais). Fail-open.
+  try {
+    await emitOutboundEvent("booking.confirmed", {
+      bookingId,
+      paidVia: "out_of_band",
+      clientFirstName: booking.clientFirstName,
+      clientLastName: booking.clientLastName,
+      clientEmail: booking.clientEmail,
+      clientPhone: booking.clientPhone,
+      serviceTitle: booking.service.title,
+      date: booking.date.toISOString().slice(0, 10),
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      depositCents: booking.depositCents,
+    });
+  } catch (err) {
+    console.error(`[forceConfirmBooking] émission booking.confirmed échouée pour ${bookingId}:`, err);
+  }
 
   revalidatePath("/admin", "layout");
   return { ok: true, message: "Réservation confirmée manuellement (paiement out-of-band)." };
