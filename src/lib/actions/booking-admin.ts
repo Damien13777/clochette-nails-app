@@ -350,6 +350,19 @@ export async function updateBookingRevenue(
     completionPaymentMethod: resolvedMethod,
   });
 
+  // Outbound event — correction du CA d'un RDV honoré : l'ERP (fiche CRM ET ledger
+  // compta) doit se corriger, sinon la fiche et le CA pilotage restent figés sur
+  // l'ancien montant. Fail-open.
+  try {
+    await emitOutboundEvent("booking.revenue_updated", {
+      bookingId,
+      revenueCents,
+      completionPaymentMethod: resolvedMethod,
+    });
+  } catch (err) {
+    console.error(`[updateBookingRevenue] émission booking.revenue_updated échouée pour ${bookingId}:`, err);
+  }
+
   revalidatePath("/admin", "layout");
 
   const existingInvoice = await prisma.invoice.findFirst({
