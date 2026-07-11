@@ -351,6 +351,7 @@ export async function createBookingAction(
         serviceTitle: service.title,
         date: data.date,
         startTime: data.startTime,
+        endTime,
       });
       await notifyAdmin(booking.id, service.title, data.client.email);
 

@@ -1339,6 +1339,7 @@ export async function createBookingAdmin(
       serviceTitle: service.title,
       date: data.date,
       startTime: data.startTime,
+      endTime,
       depositCents: effectiveDepositCents,
     });
   } catch (err) {
@@ -1800,6 +1801,10 @@ export async function updateBookingDetails(
       clientEmail: data.client.email,
       clientPhone: data.client.phone,
       serviceTitle: service.title,
+      date: booking.date.toISOString().slice(0, 10),
+      startTime: booking.startTime,
+      endTime,
+      depositCents,
     });
   } catch (err) {
     console.error(`[updateBookingDetails] émission booking.updated échouée pour ${bookingId}:`, err);
