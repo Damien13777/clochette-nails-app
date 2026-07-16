@@ -472,6 +472,9 @@ model Booking {
   /// Mode de paiement utilisé pour le complément encaissé au markCompleted.
   /// "cash" | "card_terminal" | "transfer" | "check" | null (si 100% gift card)
   completionPaymentMethod String?
+  /// Durée réelle (minutes) saisie « à chaud » au markCompleted, pré-remplie avec
+  /// la durée prévue et ajustable. Émise vers l'ERP (taux horaire réel §7).
+  realDurationMinutes Int?
 
   // Message + uploads client
   clientMessage String?       @db.Text

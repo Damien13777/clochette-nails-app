@@ -57,6 +57,8 @@ type Props = {
   clientPhone: string;
   clientMessage: string;
   googleReviewUrl: string | null;
+  /** Durée prévue (min) — pré-remplit et sert de fallback à la durée réelle. */
+  plannedDurationMinutes: number;
 };
 
 type Feedback = { kind: "success" | "error"; text: string } | null;
@@ -85,6 +87,7 @@ export function BookingActions({
   clientPhone,
   clientMessage,
   googleReviewUrl,
+  plannedDurationMinutes,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -334,6 +337,7 @@ export function BookingActions({
           paymentMethod={paymentMethod}
           isDepositReceived={isDepositReceived}
           googleReviewUrl={googleReviewUrl}
+          plannedDurationMinutes={plannedDurationMinutes}
           disabled={isPending}
           onCancel={() => setShowRevenue(false)}
           onConfirm={(payload) => {
@@ -763,6 +767,7 @@ function MarkCompletedDialog({
   paymentMethod,
   isDepositReceived,
   googleReviewUrl,
+  plannedDurationMinutes,
   disabled,
   onCancel,
   onConfirm,
@@ -774,6 +779,7 @@ function MarkCompletedDialog({
   paymentMethod: string | null;
   isDepositReceived: boolean;
   googleReviewUrl: string | null;
+  plannedDurationMinutes: number;
   disabled?: boolean;
   onCancel: () => void;
   onConfirm: (payload: MarkCompletedInput) => void;
@@ -797,6 +803,10 @@ function MarkCompletedDialog({
   const [lookupPending, startLookup] = useTransition();
   const [sendInvoice, setSendInvoice] = useState(false);
   const [requestReview, setRequestReview] = useState<boolean>(!!googleReviewUrl);
+  const [realDuration, setRealDuration] = useState<string>(String(plannedDurationMinutes));
+
+  const parsedDuration = Number.parseInt(realDuration, 10);
+  const durationValid = Number.isInteger(parsedDuration) && parsedDuration > 0 && parsedDuration <= 1440;
 
   const parsedCash = Number.parseFloat(completionAmount.replace(",", "."));
   const cashValid =
@@ -819,6 +829,7 @@ function MarkCompletedDialog({
     cashValid &&
     totalEntered > 0 &&
     gcReady &&
+    durationValid &&
     (cashCents === 0 || true); // method always valid (default cash)
 
   function checkCode() {
@@ -860,6 +871,7 @@ function MarkCompletedDialog({
           : undefined,
       sendInvoiceByEmail: sendInvoice,
       requestReview,
+      realDurationMinutes: parsedDuration,
     };
     onConfirm(payload);
   }
@@ -1101,6 +1113,38 @@ function MarkCompletedDialog({
             >
               Seule cette portion (hors carte cadeau) entre dans le CA mensuel.
             </p>
+          </div>
+
+          {/* Durée réelle de la prestation (taux horaire réel) */}
+          <div className="space-y-2">
+            <label
+              htmlFor="real-duration"
+              className="block text-xs uppercase tracking-[0.14em] text-[var(--color-ink-700)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Durée réelle (min)
+            </label>
+            <input
+              id="real-duration"
+              type="number"
+              inputMode="numeric"
+              min="1"
+              max="1440"
+              step="5"
+              value={realDuration}
+              onChange={(e) => setRealDuration(e.target.value)}
+              disabled={disabled}
+              className="w-full px-4 py-3 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-sm)] text-base sm:text-sm focus:outline-none focus:border-[var(--color-violet-600)] focus:shadow-[var(--shadow-focus)] transition-all"
+              style={{ fontFamily: "var(--font-ui)" }}
+            />
+            <p className="text-[11px] text-[var(--color-ink-500)]" style={{ fontFamily: "var(--font-ui)" }}>
+              Pré-remplie avec la durée prévue ({plannedDurationMinutes} min). Ajuste si besoin — sert au calcul du taux horaire réel.
+            </p>
+            {!durationValid && (
+              <p className="text-[11px] text-red-600" style={{ fontFamily: "var(--font-ui)" }}>
+                Durée attendue entre 1 et 1440 minutes.
+              </p>
+            )}
           </div>
 
           {/* Résumé total */}

@@ -562,6 +562,7 @@ export default async function BookingDetailPage({
               clientPhone={booking.clientPhone}
               clientMessage={booking.clientMessage ?? ""}
               googleReviewUrl={reviewSettings?.googleReviewUrl ?? null}
+              plannedDurationMinutes={booking.totalDurationMinutes}
             />
           </div>
         </aside>

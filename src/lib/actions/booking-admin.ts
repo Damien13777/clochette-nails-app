@@ -77,6 +77,9 @@ export type MarkCompletedInput = {
   sendInvoiceByEmail?: boolean;
   /** Envoyer une demande d'avis Google à la cliente (opt-in, coché par défaut côté UI). */
   requestReview?: boolean;
+  /** Durée réelle de la prestation en minutes (pré-remplie avec la durée prévue,
+   *  ajustable). Absente/invalide → on retombe sur la durée prévue. Émise vers l'ERP. */
+  realDurationMinutes?: number;
 };
 
 const COMPLETION_METHODS = ["cash", "card_terminal", "transfer", "check"] as const;
@@ -129,6 +132,7 @@ export async function markBookingCompleted(
       status: true,
       clientEmail: true,
       clientFirstName: true,
+      totalDurationMinutes: true,
       service: { select: { title: true } },
     },
   });
@@ -185,6 +189,13 @@ export async function markBookingCompleted(
     }
   }
 
+  // Durée réelle : saisie valide (1..1440 min) sinon on retombe sur la durée prévue.
+  const rawDuration = input.realDurationMinutes;
+  const realDurationMinutes =
+    typeof rawDuration === "number" && Number.isInteger(rawDuration) && rawDuration > 0 && rawDuration <= 1440
+      ? rawDuration
+      : booking.totalDurationMinutes;
+
   await prisma.booking.update({
     where: { id: bookingId },
     data: {
@@ -192,18 +203,22 @@ export async function markBookingCompleted(
       completedAt: new Date(),
       revenueCents,
       completionPaymentMethod: revenueCents > 0 ? completionPaymentMethod : null,
+      realDurationMinutes,
     },
   });
   await audit(admin.id, bookingId, "booking.completed", {
     revenueCents,
     completionPaymentMethod,
     giftCardAmountCents: giftCard?.amountCents ?? 0,
+    realDurationMinutes,
   });
   await emitOutboundEvent("booking.completed", {
     bookingId,
     revenueCents,
     completionPaymentMethod: revenueCents > 0 ? completionPaymentMethod : null,
     giftCardAmountCents: giftCard?.amountCents ?? 0,
+    realDurationMinutes,
+    plannedDurationMinutes: booking.totalDurationMinutes,
   });
 
   let invoiceNote = "";
