@@ -98,19 +98,22 @@ export function BookingActions({
   const [showReschedule, setShowReschedule] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showRevenue, setShowRevenue] = useState<false | "create" | "edit">(false);
+  const [loyaltyAlert, setLoyaltyAlert] = useState<{ message: string; count: number } | null>(null);
   const router = useRouter();
 
   function runAction(
     fn: () => Promise<
-      | { ok: true; message?: string }
+      | { ok: true; message?: string; loyalty?: { message: string; count: number } }
       | { ok: false; error: string }
     >,
   ) {
     setFeedback(null);
+    setLoyaltyAlert(null);
     startTransition(async () => {
       const result = await fn();
       if (result.ok) {
         setFeedback({ kind: "success", text: result.message ?? "Action effectuée." });
+        if (result.loyalty) setLoyaltyAlert(result.loyalty);
         router.refresh();
       } else {
         setFeedback({ kind: "error", text: result.error });
@@ -146,6 +149,20 @@ export function BookingActions({
           style={{ fontFamily: "var(--font-ui)" }}
         >
           {feedback.text}
+        </div>
+      )}
+
+      {loyaltyAlert && (
+        <div
+          role="status"
+          className="flex items-start gap-2 text-sm p-3 rounded-[var(--radius-sm)] bg-[var(--color-violet-50)] text-[var(--color-violet-700)] border border-[var(--color-violet-600)]/30"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          <span aria-hidden="true">🎁</span>
+          <span>
+            <span className="font-semibold">Fidélité — {loyaltyAlert.count} RDV honorés.</span>{" "}
+            {loyaltyAlert.message}
+          </span>
         </div>
       )}
 
