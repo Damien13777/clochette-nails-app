@@ -32,6 +32,7 @@ export type AdminIconName =
   | "wallet"
   | "settings"
   | "scroll"
+  | "users"
   | "zap";
 
 export const ADMIN_NAV: readonly AdminNavGroup[] = [
@@ -46,6 +47,7 @@ export const ADMIN_NAV: readonly AdminNavGroup[] = [
         icon: "calendar-check",
         badgeKey: "bookings",
       },
+      { href: "/admin/clientes", label: "Clientèle", icon: "users" },
     ],
   },
   {
