@@ -44,7 +44,7 @@ import { sendInvoiceEmail } from "@/lib/invoice/invoice-email";
 import { shouldSendReviewRequest } from "@/lib/review-request-guard";
 
 type ActionResult =
-  | { ok: true; message?: string; loyalty?: { message: string; count: number } }
+  | { ok: true; message?: string }
   | { ok: false; error: string };
 
 
@@ -132,7 +132,6 @@ export async function markBookingCompleted(
     select: {
       status: true,
       clientEmail: true,
-      clientPhone: true,
       clientFirstName: true,
       totalDurationMinutes: true,
       service: { select: { title: true } },
@@ -301,21 +300,31 @@ export async function markBookingCompleted(
     console.error("[review] envoi demande d'avis échoué:", err);
   }
 
-  // Fidélité (T5, canal 2) — fail-open : un ERP injoignable ne bloque jamais l'honoré.
-  let loyalty: { message: string; count: number } | undefined;
-  try {
-    const r = await getErpLoyalty(booking.clientEmail, booking.clientPhone);
-    if (r?.rewardDue && r.message) loyalty = { message: r.message, count: r.effectiveCount };
-  } catch {
-    // silencieux : le RDV est déjà honoré, le message fidélité n'est qu'un bonus.
-  }
-
   revalidatePath("/admin", "layout");
-  return {
-    ok: true,
-    message: `Réservation marquée comme honorée.${invoiceNote}${reviewNote}`,
-    loyalty,
-  };
+  return { ok: true, message: `Réservation marquée comme honorée.${invoiceNote}${reviewNote}` };
+}
+
+/**
+ * Fidélité (T5) — prévisualisée à l'OUVERTURE de la modale « marquer honoré »,
+ * PAS après : Chloé doit voir la récompense pendant qu'elle saisit le paiement,
+ * pour l'appliquer sur CE RDV (celui qui complète la carte). `pending=1` = ce RDV.
+ * Fail-soft : null si pas CONFIRMED, ERP injoignable, ou pas de récompense due.
+ */
+export async function previewBookingLoyalty(
+  bookingId: string,
+): Promise<{ message: string; count: number } | null> {
+  const admin = await requireAdmin();
+  if (!admin) return null;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { status: true, clientEmail: true, clientPhone: true },
+  });
+  if (!booking || booking.status !== "CONFIRMED") return null;
+
+  const r = await getErpLoyalty(booking.clientEmail, booking.clientPhone);
+  if (r?.rewardDue && r.message) return { message: r.message, count: r.effectiveCount };
+  return null;
 }
 
 /**

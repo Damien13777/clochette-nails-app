@@ -5,7 +5,7 @@
  * Affiche les boutons pertinents selon le status courant.
  */
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { BookingStatus } from "@prisma/client";
 import {
@@ -13,6 +13,7 @@ import {
   forceConfirmBooking,
   markBookingCompleted,
   markBookingNoShow,
+  previewBookingLoyalty,
   refundBookingFull,
   resendBookingPaymentLink,
   updateBookingRevenue,
@@ -98,22 +99,19 @@ export function BookingActions({
   const [showReschedule, setShowReschedule] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showRevenue, setShowRevenue] = useState<false | "create" | "edit">(false);
-  const [loyaltyAlert, setLoyaltyAlert] = useState<{ message: string; count: number } | null>(null);
   const router = useRouter();
 
   function runAction(
     fn: () => Promise<
-      | { ok: true; message?: string; loyalty?: { message: string; count: number } }
+      | { ok: true; message?: string }
       | { ok: false; error: string }
     >,
   ) {
     setFeedback(null);
-    setLoyaltyAlert(null);
     startTransition(async () => {
       const result = await fn();
       if (result.ok) {
         setFeedback({ kind: "success", text: result.message ?? "Action effectuée." });
-        if (result.loyalty) setLoyaltyAlert(result.loyalty);
         router.refresh();
       } else {
         setFeedback({ kind: "error", text: result.error });
@@ -149,20 +147,6 @@ export function BookingActions({
           style={{ fontFamily: "var(--font-ui)" }}
         >
           {feedback.text}
-        </div>
-      )}
-
-      {loyaltyAlert && (
-        <div
-          role="status"
-          className="flex items-start gap-2 text-sm p-3 rounded-[var(--radius-sm)] bg-[var(--color-violet-50)] text-[var(--color-violet-700)] border border-[var(--color-violet-600)]/30"
-          style={{ fontFamily: "var(--font-ui)" }}
-        >
-          <span aria-hidden="true">🎁</span>
-          <span>
-            <span className="font-semibold">Fidélité — {loyaltyAlert.count} RDV honorés.</span>{" "}
-            {loyaltyAlert.message}
-          </span>
         </div>
       )}
 
@@ -348,6 +332,7 @@ export function BookingActions({
       {/* Modale "Marquer honoré" (création) */}
       {showRevenue === "create" && (
         <MarkCompletedDialog
+          bookingId={bookingId}
           totalPriceCents={totalPriceCents}
           depositCents={depositCents}
           giftCardAmountCents={giftCardAmountCents}
@@ -778,6 +763,7 @@ type LookupState =
   | { status: "error"; message: string };
 
 function MarkCompletedDialog({
+  bookingId,
   totalPriceCents,
   depositCents,
   giftCardAmountCents,
@@ -789,6 +775,7 @@ function MarkCompletedDialog({
   onCancel,
   onConfirm,
 }: {
+  bookingId: string;
   totalPriceCents: number;
   depositCents: number;
   /** Portion d'acompte déjà payée en carte cadeau (BOOKING_DEPOSIT). */
@@ -801,6 +788,20 @@ function MarkCompletedDialog({
   onCancel: () => void;
   onConfirm: (payload: MarkCompletedInput) => void;
 }) {
+  // Fidélité (T5) — interrogée à l'OUVERTURE : si ce RDV complète la carte, on
+  // prévient Chloé pendant qu'elle saisit le paiement (pour appliquer la remise
+  // sur CE RDV). Fail-soft : null si ERP injoignable ou pas de récompense due.
+  const [loyalty, setLoyalty] = useState<{ message: string; count: number } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    previewBookingLoyalty(bookingId).then((res) => {
+      if (!cancelled) setLoyalty(res);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookingId]);
+
   // Reste à percevoir par défaut = prix total − ce qui a déjà été encaissé
   const alreadyReceived =
     (isDepositReceived ? depositCents - giftCardAmountCents : 0) +
@@ -914,6 +915,24 @@ function MarkCompletedDialog({
           <h3 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
             Marquer comme honorée
           </h3>
+
+          {/* Fidélité — ce RDV complète la carte : appliquer la récompense MAINTENANT */}
+          {loyalty && (
+            <div
+              role="status"
+              className="flex items-start gap-2.5 p-3 rounded-[var(--radius-sm)] bg-[var(--color-violet-50)] text-[var(--color-violet-700)] border border-[var(--color-violet-600)]/40 text-sm"
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              <span aria-hidden="true" className="text-base leading-none">🎁</span>
+              <span>
+                <span className="font-semibold">
+                  Ce RDV complète la carte de fidélité ({loyalty.count} RDV honorés).
+                </span>{" "}
+                {loyalty.message}{" "}
+                <span className="font-medium">Pense à appliquer la récompense sur ce paiement.</span>
+              </span>
+            </div>
+          )}
 
           {/* Rappel contextuel */}
           <dl
