@@ -382,6 +382,11 @@ export async function createBookingAction(
         photoUrls: absolutePhotoUrls,
       });
 
+      // Photos de résa → ERP (CRM T3), idempotent côté ERP.
+      if (absolutePhotoUrls.length > 0) {
+        await emitOutboundEvent("booking.photos", { bookingId: booking.id, urls: absolutePhotoUrls });
+      }
+
       return {
         ok: true,
         confirmed: true,
@@ -450,6 +455,10 @@ export async function createBookingAction(
         clientPhone: data.client.phone,
       });
 
+      // NB : les photos de résa ne sont PAS émises ici (RDV pas encore payé) — elles
+      // partent à la CONFIRMATION (webhook Stripe), pour ne pas polluer l'ERP avec
+      // un RDV abandonné. Les chemins carte cadeau / dev émettent déjà à la confirmation.
+
       return { ok: true, checkoutUrl: session.url! };
     }
 
@@ -483,6 +492,17 @@ export async function createBookingAction(
       bookingId: booking.id,
       paidVia: devPaidVia,
       depositCents: booking.depositCents,
+      // Identité complète (comme 6a/6b) → l'ERP ÉTABLIT le RDV, sinon les
+      // booking.photos de ce chemin resteraient différées.
+      clientFirstName: data.client.firstName,
+      clientLastName: data.client.lastName,
+      clientEmail: data.client.email,
+      clientPhone: data.client.phone,
+      serviceId: data.serviceId,
+      serviceTitle: service.title,
+      date: data.date,
+      startTime: data.startTime,
+      endTime,
     });
 
     await notifyAdmin(booking.id, service.title, data.client.email);
@@ -512,6 +532,11 @@ export async function createBookingAction(
       clientActionToken: devClientActionToken,
       photoUrls: absolutePhotoUrlsDev,
     });
+
+    // Photos de résa → ERP (CRM T3), idempotent côté ERP.
+    if (absolutePhotoUrlsDev.length > 0) {
+      await emitOutboundEvent("booking.photos", { bookingId: booking.id, urls: absolutePhotoUrlsDev });
+    }
 
     return {
       ok: true,
