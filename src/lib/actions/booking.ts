@@ -498,6 +498,17 @@ export async function createBookingAction(
       bookingId: booking.id,
       paidVia: devPaidVia,
       depositCents: booking.depositCents,
+      // Identité complète (comme 6a/6b) → l'ERP ÉTABLIT le RDV, sinon les
+      // booking.photos de ce chemin resteraient différées.
+      clientFirstName: data.client.firstName,
+      clientLastName: data.client.lastName,
+      clientEmail: data.client.email,
+      clientPhone: data.client.phone,
+      serviceId: data.serviceId,
+      serviceTitle: service.title,
+      date: data.date,
+      startTime: data.startTime,
+      endTime,
     });
 
     await notifyAdmin(booking.id, service.title, data.client.email);
