@@ -9,7 +9,7 @@
  */
 
 import "server-only";
-import type { ErpClientDetail, ErpSearchOutcome } from "./erp-client-types";
+import type { ErpClientDetail, ErpLoyaltyResult, ErpSearchOutcome } from "./erp-client-types";
 
 const ERP_URL = process.env.ERP_QUERY_URL;
 const ERP_SECRET = process.env.ERP_QUERY_SECRET;
@@ -19,13 +19,14 @@ export function isErpConfigured(): boolean {
   return Boolean(ERP_URL && ERP_SECRET);
 }
 
-async function erpFetch(path: string): Promise<Response | null> {
+async function erpFetch(path: string, init?: RequestInit): Promise<Response | null> {
   if (!ERP_URL || !ERP_SECRET) return null;
   try {
     return await fetch(`${ERP_URL}${path}`, {
-      headers: { authorization: `Bearer ${ERP_SECRET}` },
       cache: "no-store",
       signal: AbortSignal.timeout(TIMEOUT_MS),
+      ...init,
+      headers: { authorization: `Bearer ${ERP_SECRET}`, ...(init?.headers ?? {}) },
     });
   } catch {
     return null; // réseau / timeout → fail-soft
@@ -50,6 +51,26 @@ export async function getErpClient(id: string): Promise<ErpClientDetail | null> 
   if (!res || !res.ok) return null;
   try {
     return (await res.json()) as ErpClientDetail;
+  } catch {
+    return null;
+  }
+}
+
+/** Interroge la fidélité de la cliente au « marquer honoré » (canal 2, T5).
+ *  `pending: 1` = le RDV en cours d'honoré (pas encore projeté dans l'ERP).
+ *  Fail-soft : null si ERP injoignable/non configuré → l'honoré passe sans message. */
+export async function getErpLoyalty(
+  email: string | null,
+  phone: string | null,
+): Promise<ErpLoyaltyResult | null> {
+  const res = await erpFetch(`/api/v2/clients/loyalty`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, phone, pending: 1 }),
+  });
+  if (!res || !res.ok) return null;
+  try {
+    return (await res.json()) as ErpLoyaltyResult;
   } catch {
     return null;
   }

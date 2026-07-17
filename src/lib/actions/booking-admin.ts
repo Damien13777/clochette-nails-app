@@ -37,6 +37,7 @@ import { buildBookingNotifAdminEmail } from "@/lib/email/templates/booking-notif
 import { computeAvailableSlots } from "@/lib/availability";
 import { computeDepositCents } from "@/lib/deposit";
 import { emitOutboundEvent } from "@/lib/outbound-events";
+import { getErpLoyalty } from "@/lib/erp-client";
 import { reverseGiftCardRedemption } from "@/lib/gift-card-redeem";
 import { createInvoiceForBooking, InvoiceError } from "@/lib/invoice/create-invoice";
 import { sendInvoiceEmail } from "@/lib/invoice/invoice-email";
@@ -301,6 +302,29 @@ export async function markBookingCompleted(
 
   revalidatePath("/admin", "layout");
   return { ok: true, message: `Réservation marquée comme honorée.${invoiceNote}${reviewNote}` };
+}
+
+/**
+ * Fidélité (T5) — prévisualisée à l'OUVERTURE de la modale « marquer honoré »,
+ * PAS après : Chloé doit voir la récompense pendant qu'elle saisit le paiement,
+ * pour l'appliquer sur CE RDV (celui qui complète la carte). `pending=1` = ce RDV.
+ * Fail-soft : null si pas CONFIRMED, ERP injoignable, ou pas de récompense due.
+ */
+export async function previewBookingLoyalty(
+  bookingId: string,
+): Promise<{ message: string; count: number } | null> {
+  const admin = await requireAdmin();
+  if (!admin) return null;
+
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { status: true, clientEmail: true, clientPhone: true },
+  });
+  if (!booking || booking.status !== "CONFIRMED") return null;
+
+  const r = await getErpLoyalty(booking.clientEmail, booking.clientPhone);
+  if (r?.rewardDue && r.message) return { message: r.message, count: r.effectiveCount };
+  return null;
 }
 
 /**

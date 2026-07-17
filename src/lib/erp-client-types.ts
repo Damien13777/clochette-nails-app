@@ -43,3 +43,13 @@ export type ErpSearchOutcome = { reachable: boolean; clients: ErpClientMatch[] }
 export type ErpSearchResult =
   | { ok: true; configured: boolean; reachable: boolean; clients: ErpClientMatch[] }
   | { ok: false; error: string };
+
+/** Réponse du canal 2 fidélité (T5), interrogée au « marquer honoré ». */
+export type ErpLoyaltyResult = {
+  matched: boolean;
+  effectiveCount: number;
+  threshold: number;
+  rewardDue: boolean;
+  untilNext: number;
+  message: string | null;
+};
