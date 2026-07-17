@@ -13,9 +13,11 @@
  * Au succès : router.refresh() + close modal.
  */
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createBookingAdmin } from "@/lib/actions/booking-admin";
+import { searchErpClientsAction } from "@/lib/actions/erp-clients";
+import type { ErpClientMatch } from "@/lib/erp-client-types";
 
 type Service = {
   id: string;
@@ -93,6 +95,18 @@ export function BookingAdminForm({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+
+  // Cliente liée à une fiche ERP (via autocomplétion canal 2)
+  const [linkedClient, setLinkedClient] = useState<ErpClientMatch | null>(null);
+
+  function handleSelectErpClient(c: ErpClientMatch) {
+    setFirstName(c.firstName ?? "");
+    setLastName(c.lastName ?? "");
+    setEmail(c.email ?? "");
+    setPhone(c.phone ?? "");
+    setLinkedClient(c);
+    setFieldErrors({});
+  }
 
   // Prestation
   const [serviceId, setServiceId] = useState<string>(services[0]?.id ?? "");
@@ -235,6 +249,42 @@ export function BookingAdminForm({
     <div className="space-y-5">
       {/* ── Cliente ───────────────────────────────────── */}
       <Section title="Cliente">
+        <ClientAutocomplete disabled={pending} onSelect={handleSelectErpClient} />
+
+        {linkedClient && (
+          <div
+            className="rounded-[var(--radius-sm)] border border-[var(--color-violet-600)]/25 bg-[var(--color-violet-50)] px-3 py-2.5 text-sm"
+            style={{ fontFamily: "var(--font-ui)" }}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="text-[var(--color-violet-700)] font-medium">
+                Fiche ERP liée · {linkedClient.bookingCount} RDV
+              </span>
+              <button
+                type="button"
+                onClick={() => setLinkedClient(null)}
+                className="text-[11px] uppercase tracking-[0.06em] text-[var(--color-ink-500)] hover:text-[var(--color-ink-900)] transition-colors"
+              >
+                Détacher
+              </button>
+            </div>
+            {(linkedClient.allergies || linkedClient.preferences) && (
+              <div className="mt-1.5 space-y-0.5 text-[13px]">
+                {linkedClient.allergies && (
+                  <p className="text-[var(--color-danger)]">
+                    ⚠ Allergies · {linkedClient.allergies}
+                  </p>
+                )}
+                {linkedClient.preferences && (
+                  <p className="text-[var(--color-ink-700)]">
+                    Préférences · {linkedClient.preferences}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field
             label="Prénom"
@@ -652,6 +702,127 @@ function Textarea({
         className="mt-1.5 block w-full min-w-0 max-w-full box-border px-3 py-2 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-sm)] text-sm focus:outline-none focus:border-[var(--color-violet-600)] focus:shadow-[var(--shadow-focus)] transition-all resize-y"
         style={{ fontFamily: "var(--font-ui)" }}
       />
+    </div>
+  );
+}
+
+function ClientAutocomplete({
+  disabled,
+  onSelect,
+}: {
+  disabled?: boolean;
+  onSelect: (c: ErpClientMatch) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<ErpClientMatch[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [unavailable, setUnavailable] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const latestQuery = useRef("");
+
+  useEffect(() => {
+    const q = query.trim();
+    latestQuery.current = q;
+
+    // En dessous de 2 caractères : on remet à zéro (de façon asynchrone pour
+    // ne pas déclencher un setState synchrone dans le corps de l'effet).
+    if (q.length < 2) {
+      const t = setTimeout(() => {
+        if (latestQuery.current !== q) return;
+        setResults([]);
+        setSearched(false);
+        setLoading(false);
+      }, 0);
+      return () => clearTimeout(t);
+    }
+
+    const t = setTimeout(async () => {
+      if (latestQuery.current !== q) return;
+      setLoading(true);
+      const res = await searchErpClientsAction(q);
+      // Garde anti-race : ignore une réponse qui n'est plus la requête courante
+      if (latestQuery.current !== q) return;
+      setLoading(false);
+      setSearched(true);
+      if (res.ok) {
+        // Indisponible = ERP non configuré OU panne runtime (fetch KO/timeout).
+        setUnavailable(!res.configured || !res.reachable);
+        setResults(res.clients);
+        setOpen(true);
+      } else {
+        setResults([]);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  function pick(c: ErpClientMatch) {
+    onSelect(c);
+    setQuery("");
+    setResults([]);
+    setOpen(false);
+    setSearched(false);
+  }
+
+  return (
+    <div className="relative">
+      <Label>Rechercher une cliente existante</Label>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => results.length > 0 && setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        disabled={disabled}
+        placeholder="Nom, email ou téléphone…"
+        autoComplete="off"
+        className="mt-1.5 block w-full min-w-0 max-w-full box-border px-3 py-2 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-sm)] text-sm focus:outline-none focus:border-[var(--color-violet-600)] focus:shadow-[var(--shadow-focus)] transition-all"
+        style={{ fontFamily: "var(--font-ui)", WebkitAppearance: "none", appearance: "none" }}
+      />
+      <p className="mt-1 text-[11px] text-[var(--color-ink-500)]" style={{ fontFamily: "var(--font-ui)" }}>
+        {loading
+          ? "Recherche…"
+          : unavailable
+            ? "Connexion ERP indisponible — saisie manuelle ci-dessous."
+            : "Auto-remplit les coordonnées depuis la fiche cliente."}
+      </p>
+
+      {open && results.length > 0 && (
+        <ul
+          className="absolute z-10 mt-1 w-full max-h-64 overflow-y-auto rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-paper)] shadow-lg"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          {results.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(c)}
+                className="w-full text-left px-3 py-2 hover:bg-[var(--color-violet-50)] transition-colors border-b border-[var(--color-line)] last:border-0"
+              >
+                <span className="block text-sm text-[var(--color-ink-900)]">
+                  {[c.firstName, c.lastName].filter(Boolean).join(" ") || "Sans nom"}
+                  {c.allergies && <span className="ml-1.5 text-[var(--color-danger)]">⚠</span>}
+                </span>
+                <span className="block text-[11px] text-[var(--color-ink-500)]">
+                  {[c.email, c.phone].filter(Boolean).join(" · ")}
+                  {c.bookingCount > 0 && ` · ${c.bookingCount} RDV`}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {open && searched && !loading && results.length === 0 && !unavailable && (
+        <p
+          className="absolute z-10 mt-1 w-full rounded-[var(--radius-sm)] border border-[var(--color-line)] bg-[var(--color-paper)] px-3 py-2 text-[13px] text-[var(--color-ink-500)] shadow-lg"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          Aucune cliente trouvée. Renseignez les coordonnées ci-dessous.
+        </p>
+      )}
     </div>
   );
 }
