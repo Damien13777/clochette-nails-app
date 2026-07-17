@@ -382,6 +382,11 @@ export async function createBookingAction(
         photoUrls: absolutePhotoUrls,
       });
 
+      // Photos de résa → ERP (CRM T3), idempotent côté ERP.
+      if (absolutePhotoUrls.length > 0) {
+        await emitOutboundEvent("booking.photos", { bookingId: booking.id, urls: absolutePhotoUrls });
+      }
+
       return {
         ok: true,
         confirmed: true,
@@ -450,6 +455,16 @@ export async function createBookingAction(
         clientPhone: data.client.phone,
       });
 
+      // Photos d'inspiration jointes à la résa → ERP (CRM T3). URLs absolues des
+      // WebP publiques ; l'ERP les fetch. Additif, fail-open.
+      if (data.photoUrls.length > 0) {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.clochette-nails.fr";
+        await emitOutboundEvent("booking.photos", {
+          bookingId: booking.id,
+          urls: data.photoUrls.map((p) => `${siteUrl}${p.url}`),
+        });
+      }
+
       return { ok: true, checkoutUrl: session.url! };
     }
 
@@ -512,6 +527,11 @@ export async function createBookingAction(
       clientActionToken: devClientActionToken,
       photoUrls: absolutePhotoUrlsDev,
     });
+
+    // Photos de résa → ERP (CRM T3), idempotent côté ERP.
+    if (absolutePhotoUrlsDev.length > 0) {
+      await emitOutboundEvent("booking.photos", { bookingId: booking.id, urls: absolutePhotoUrlsDev });
+    }
 
     return {
       ok: true,
