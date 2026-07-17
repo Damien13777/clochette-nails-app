@@ -455,15 +455,9 @@ export async function createBookingAction(
         clientPhone: data.client.phone,
       });
 
-      // Photos d'inspiration jointes à la résa → ERP (CRM T3). URLs absolues des
-      // WebP publiques ; l'ERP les fetch. Additif, fail-open.
-      if (data.photoUrls.length > 0) {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.clochette-nails.fr";
-        await emitOutboundEvent("booking.photos", {
-          bookingId: booking.id,
-          urls: data.photoUrls.map((p) => `${siteUrl}${p.url}`),
-        });
-      }
+      // NB : les photos de résa ne sont PAS émises ici (RDV pas encore payé) — elles
+      // partent à la CONFIRMATION (webhook Stripe), pour ne pas polluer l'ERP avec
+      // un RDV abandonné. Les chemins carte cadeau / dev émettent déjà à la confirmation.
 
       return { ok: true, checkoutUrl: session.url! };
     }

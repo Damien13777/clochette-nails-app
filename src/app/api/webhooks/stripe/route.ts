@@ -659,6 +659,21 @@ async function confirmBookingFromSession(
     endTime: booking.endTime,
   });
 
+  // Photos de résa → ERP (CRM T3) : émises SEULEMENT à la confirmation (paiement
+  // reçu) pour ne pas polluer l'ERP avec un RDV abandonné. URLs absolues des WebP
+  // publiques ; l'ERP les fetch. Additif, fail-open ; consommateur ERP idempotent.
+  const bookingFiles = await prisma.bookingFile.findMany({
+    where: { bookingId: booking.id },
+    select: { url: true },
+  });
+  if (bookingFiles.length > 0) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.clochette-nails.fr";
+    await emitOutboundEvent("booking.photos", {
+      bookingId: booking.id,
+      urls: bookingFiles.map((f) => `${siteUrl}${f.url}`),
+    });
+  }
+
   // Notification admin in-app (cloche)
   await notifyAdmin(
     booking.id,
