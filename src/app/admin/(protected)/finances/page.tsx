@@ -20,6 +20,7 @@ import {
   type DailySeriesPoint,
   type FinanceResult,
 } from "@/lib/finances";
+import { parisWallClockToUtc, isoDateParis } from "@/lib/paris-day";
 import { BreakdownCards } from "./breakdown-cards";
 import { FinancesChart } from "./finances-chart";
 import { KpiCards } from "./kpi-cards";
@@ -45,19 +46,19 @@ function isValidIsoDate(s: string | undefined): s is string {
 }
 
 function parseIso(s: string): Date {
-  return new Date(`${s}T00:00:00.000Z`);
-}
-
-function isoDateOnly(d: Date): string {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  // Minuit HEURE DE PARIS (DST-aware) → instant UTC : le groupement mensuel colle au
+  // calendrier réel (un encaissement du 1er juillet 00h30 Paris = juillet, pas juin).
+  return parisWallClockToUtc(s, "00:00");
 }
 
 function defaultRange(now: Date): { from: string; to: string } {
-  const y = now.getFullYear();
-  const m = now.getMonth();
+  // Mois courant en heure de Paris (bornes = 1er du mois → 1er du mois suivant).
+  const [y, m] = isoDateParis(now).split("-").map(Number);
+  const ny = m === 12 ? y + 1 : y;
+  const nm = m === 12 ? 1 : m + 1;
   return {
-    from: isoDateOnly(new Date(Date.UTC(y, m, 1))),
-    to: isoDateOnly(new Date(Date.UTC(y, m + 1, 1))),
+    from: `${y}-${String(m).padStart(2, "0")}-01`,
+    to: `${ny}-${String(nm).padStart(2, "0")}-01`,
   };
 }
 

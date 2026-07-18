@@ -197,11 +197,12 @@ export async function markBookingCompleted(
       ? rawDuration
       : booking.totalDurationMinutes;
 
+  const completedAt = new Date();
   await prisma.booking.update({
     where: { id: bookingId },
     data: {
       status: "COMPLETED",
-      completedAt: new Date(),
+      completedAt,
       revenueCents,
       completionPaymentMethod: revenueCents > 0 ? completionPaymentMethod : null,
       realDurationMinutes,
@@ -220,6 +221,7 @@ export async function markBookingCompleted(
     giftCardAmountCents: giftCard?.amountCents ?? 0,
     realDurationMinutes,
     plannedDurationMinutes: booking.totalDurationMinutes,
+    completedAt: completedAt.toISOString(),
   });
 
   let invoiceNote = "";
@@ -546,7 +548,7 @@ export async function forceConfirmBooking(
       startTime: true,
       endTime: true,
       depositCents: true,
-      service: { select: { title: true } },
+      service: { select: { title: true, slug: true } },
     },
   });
   if (!booking) return { ok: false, error: "Booking introuvable" };
@@ -576,10 +578,12 @@ export async function forceConfirmBooking(
     await emitOutboundEvent("booking.confirmed", {
       bookingId,
       paidVia: "out_of_band",
+      confirmedAt: now.toISOString(),
       clientFirstName: booking.clientFirstName,
       clientLastName: booking.clientLastName,
       clientEmail: booking.clientEmail,
       clientPhone: booking.clientPhone,
+      serviceSlug: booking.service.slug,
       serviceTitle: booking.service.title,
       date: booking.date.toISOString().slice(0, 10),
       startTime: booking.startTime,
@@ -700,11 +704,12 @@ export async function refundBookingFull(
   const totalRefundedCents = stripeRefundedCents + gcRefundedCents;
 
   // Update booking
+  const refundedAt = new Date();
   await prisma.booking.update({
     where: { id: bookingId },
     data: {
       status: "CANCELLED_BY_ADMIN",
-      cancelledAt: new Date(),
+      cancelledAt: refundedAt,
       cancellationReason: reason || "Remboursement administratif",
       ...(stripeRefundedCents > 0
         ? {
@@ -725,6 +730,7 @@ export async function refundBookingFull(
     bookingId,
     stripeRefundedCents,
     gcRefundedCents,
+    refundedAt: refundedAt.toISOString(),
     reason,
   });
 
@@ -1138,6 +1144,7 @@ export async function createBookingAdmin(
       select: {
         id: true,
         title: true,
+        slug: true,
         durationMinutes: true,
         priceCents: true,
       },
@@ -1412,11 +1419,13 @@ export async function createBookingAdmin(
     await emitOutboundEvent("booking.confirmed", {
       bookingId: booking.id,
       paidVia: data.paymentMode === "PAID_IN_PERSON" ? "in_person" : "none",
+      confirmedAt: now.toISOString(),
       clientFirstName: data.client.firstName,
       clientLastName: data.client.lastName,
       clientEmail: data.client.email,
       clientPhone: data.client.phone,
       serviceId: data.serviceId,
+      serviceSlug: service.slug,
       serviceTitle: service.title,
       date: data.date,
       startTime: data.startTime,

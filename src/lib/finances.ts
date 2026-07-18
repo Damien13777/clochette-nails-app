@@ -18,6 +18,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { sumTotals } from "@/lib/finances-totals";
+import { isoDateParis, nextIsoDate } from "@/lib/paris-day";
 
 export type TransactionType = "booking" | "gift_card" | "ebook";
 
@@ -107,12 +108,15 @@ async function loadBookingTransactions(
 ): Promise<FinanceTransaction[]> {
   const bookings = await prisma.booking.findMany({
     where: {
-      status: "COMPLETED",
-      // RDV où soit l'acompte (confirmedAt) soit le complément (completedAt)
-      // tombe dans la période
+      // Compta d'ENCAISSEMENT : un RDV contribue si son acompte (confirmedAt), son
+      // solde (completedAt) OU son remboursement (cancelledAt) tombe dans la période.
+      // PAS de filtre de statut : l'acompte est du CA dès qu'il est encaissé, quel que
+      // soit le devenir du RDV (à venir / honoré / no-show / annulé) — sauf refund
+      // (ligne « − » séparée à sa date).
       OR: [
         { confirmedAt: { gte: from, lt: to } },
         { completedAt: { gte: from, lt: to } },
+        { AND: [{ refundedAmount: { gt: 0 } }, { cancelledAt: { gte: from, lt: to } }] },
       ],
     },
     select: {
@@ -128,6 +132,7 @@ async function loadBookingTransactions(
       clientEmail: true,
       confirmedAt: true,
       completedAt: true,
+      cancelledAt: true,
       service: { select: { title: true } },
       giftCardRedemptions: {
         where: { reversedAt: null },
@@ -150,12 +155,13 @@ async function loadBookingTransactions(
       .filter((r) => r.type === "BOOKING_SERVICE")
       .reduce((s, r) => s + r.amountUsedCents, 0);
 
-    // ─── Ligne 1 : ACOMPTE ────────────────────────────
+    // ─── Ligne 1 : ACOMPTE (encaissé à la confirmation, TOUT RDV confirmé) ───
     if (b.confirmedAt && b.confirmedAt >= from && b.confirmedAt < to) {
       const depositGross = b.depositCents;
       const fee = b.stripeFeeCents ?? 0;
-      const refunded = b.refundedAmount ?? 0;
-      const netAcompte = Math.max(0, depositGross - gcDeposit - fee - refunded);
+      // Le remboursement N'EST PLUS soustrait ici : c'est une ligne « − » séparée à
+      // sa propre date (compta d'encaissement/décaissement — une entrée, une sortie).
+      const netAcompte = Math.max(0, depositGross - gcDeposit - fee);
       // Mode acompte : si toute la portion non-GC reste à payer Stripe = "stripe",
       // sinon si totalement couvert par GC = "gift_card_full"
       const stripePortion = Math.max(0, depositGross - gcDeposit);
@@ -172,7 +178,7 @@ async function loadBookingTransactions(
         grossCents: depositGross,
         giftCardUsedCents: gcDeposit,
         stripeFeeCents: fee,
-        refundedCents: refunded,
+        refundedCents: 0,
         netCents: netAcompte,
       });
     }
@@ -209,6 +215,28 @@ async function loadBookingTransactions(
         stripeFeeCents: 0,
         refundedCents: 0,
         netCents: revenueCash,
+      });
+    }
+
+    // ─── Ligne 3 : REMBOURSEMENT (−) à la date réelle du refund ─────
+    // Décaissement : ligne négative à sa propre date, l'acompte encaissé d'origine
+    // reste intact (append-only). refundedAmount = remboursement Stripe (cf. booking-admin).
+    const refunded = b.refundedAmount ?? 0;
+    if (refunded > 0 && b.cancelledAt && b.cancelledAt >= from && b.cancelledAt < to) {
+      out.push({
+        id: `booking-refund:${b.id}`,
+        type: "booking",
+        dateIso: b.cancelledAt.toISOString(),
+        ref: `${refShort} · remboursement`,
+        detailUrl,
+        clientName,
+        clientEmail: b.clientEmail,
+        paymentMethod: "stripe",
+        grossCents: -refunded,
+        giftCardUsedCents: 0,
+        stripeFeeCents: 0,
+        refundedCents: refunded,
+        netCents: -refunded,
       });
     }
   }
@@ -337,16 +365,14 @@ export async function computeDailySeries(
   const { transactions } = await computeFinances(from, to);
   const map = new Map<string, DailySeriesPoint>();
 
-  // Initialise tous les jours à 0
-  const cur = new Date(from);
-  while (cur < to) {
-    const key = isoDateOnly(cur);
+  // Initialise tous les jours (calendrier PARIS, DST-aware) à 0.
+  const toKey = isoDateParis(to); // borne exclusive
+  for (let key = isoDateParis(from); key < toKey; key = nextIsoDate(key)) {
     map.set(key, { dateIso: key, netCents: 0, grossCents: 0, count: 0 });
-    cur.setUTCDate(cur.getUTCDate() + 1);
   }
 
   for (const tx of transactions) {
-    const key = isoDateOnly(new Date(tx.dateIso));
+    const key = isoDateParis(new Date(tx.dateIso)); // jour PARIS de l'encaissement
     const p = map.get(key);
     if (!p) continue;
     p.netCents += tx.netCents;
@@ -357,10 +383,6 @@ export async function computeDailySeries(
   return Array.from(map.values()).sort((a, b) =>
     a.dateIso.localeCompare(b.dateIso),
   );
-}
-
-function isoDateOnly(d: Date): string {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
 // ─── Export CSV ────────────────────────────────────────────
