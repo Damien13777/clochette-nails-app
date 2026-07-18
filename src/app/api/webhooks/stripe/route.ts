@@ -767,22 +767,48 @@ async function handleChargeUpdated(
       ? charge.payment_intent
       : charge.payment_intent.id;
 
-  // Met à jour la ressource correspondante au PaymentIntent. Un seul
-  // des 3 sera matché (les 3 tables ont stripePaymentId distinct).
-  await Promise.all([
-    prisma.booking.updateMany({
-      where: { stripePaymentId: paymentIntentId },
-      data: { stripeFeeCents: balanceTx.fee },
-    }),
-    prisma.giftCard.updateMany({
-      where: { stripePaymentId: paymentIntentId },
-      data: { stripeFeeCents: balanceTx.fee },
-    }),
-    prisma.ebookPurchase.updateMany({
-      where: { stripePaymentId: paymentIntentId },
-      data: { stripeFeeCents: balanceTx.fee },
-    }),
+  const fee = balanceTx.fee;
+  // Trouve la ressource payée par ce PaymentIntent (une seule des 3 matche : les
+  // stripePaymentId sont distincts). Le frais réel Stripe n'est jamais connu avant
+  // charge.updated → on le capte ici pour l'affichage local ET pour l'ERP.
+  const [booking, giftCard, ebook] = await Promise.all([
+    prisma.booking.findFirst({ where: { stripePaymentId: paymentIntentId }, select: { id: true, stripeFeeCents: true } }),
+    prisma.giftCard.findFirst({ where: { stripePaymentId: paymentIntentId }, select: { id: true, stripeFeeCents: true } }),
+    prisma.ebookPurchase.findFirst({ where: { stripePaymentId: paymentIntentId }, select: { id: true, stripeFeeCents: true } }),
   ]);
+  const matched:
+    | { sourceType: "BOOKING" | "GIFT_CARD" | "EBOOK"; id: string; current: number | null }
+    | null = booking
+    ? { sourceType: "BOOKING", id: booking.id, current: booking.stripeFeeCents }
+    : giftCard
+      ? { sourceType: "GIFT_CARD", id: giftCard.id, current: giftCard.stripeFeeCents }
+      : ebook
+        ? { sourceType: "EBOOK", id: ebook.id, current: ebook.stripeFeeCents }
+        : null;
+  if (!matched) return;
+  // charge.updated peut se rejouer plusieurs fois → n'agir que si le frais change
+  // (sinon on empilerait des events de correction identiques dans la queue ERP).
+  if (matched.current === fee) return;
+
+  if (matched.sourceType === "BOOKING") {
+    await prisma.booking.update({ where: { id: matched.id }, data: { stripeFeeCents: fee } });
+  } else if (matched.sourceType === "GIFT_CARD") {
+    await prisma.giftCard.update({ where: { id: matched.id }, data: { stripeFeeCents: fee } });
+  } else {
+    await prisma.ebookPurchase.update({ where: { id: matched.id }, data: { stripeFeeCents: fee } });
+  }
+
+  // Outbound → l'ERP affine le net (feeCents) de la ligne de CA déjà écrite, sans
+  // toucher au brut. Fail-open (le frais est un raffinement, pas le CA lui-même).
+  try {
+    await emitOutboundEvent("payment.fee_captured", {
+      sourceType: matched.sourceType,
+      sourceId: matched.id,
+      stripeFeeCents: fee,
+    });
+  } catch (err) {
+    console.error(`[charge.updated] émission payment.fee_captured échouée (${matched.sourceType} ${matched.id}):`, err);
+  }
 }
 
 async function handlePaymentFailed(
