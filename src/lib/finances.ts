@@ -18,6 +18,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { sumTotals } from "@/lib/finances-totals";
+import { isoDateParis, nextIsoDate } from "@/lib/paris-day";
 
 export type TransactionType = "booking" | "gift_card" | "ebook";
 
@@ -364,16 +365,14 @@ export async function computeDailySeries(
   const { transactions } = await computeFinances(from, to);
   const map = new Map<string, DailySeriesPoint>();
 
-  // Initialise tous les jours à 0
-  const cur = new Date(from);
-  while (cur < to) {
-    const key = isoDateOnly(cur);
+  // Initialise tous les jours (calendrier PARIS, DST-aware) à 0.
+  const toKey = isoDateParis(to); // borne exclusive
+  for (let key = isoDateParis(from); key < toKey; key = nextIsoDate(key)) {
     map.set(key, { dateIso: key, netCents: 0, grossCents: 0, count: 0 });
-    cur.setUTCDate(cur.getUTCDate() + 1);
   }
 
   for (const tx of transactions) {
-    const key = isoDateOnly(new Date(tx.dateIso));
+    const key = isoDateParis(new Date(tx.dateIso)); // jour PARIS de l'encaissement
     const p = map.get(key);
     if (!p) continue;
     p.netCents += tx.netCents;
@@ -384,10 +383,6 @@ export async function computeDailySeries(
   return Array.from(map.values()).sort((a, b) =>
     a.dateIso.localeCompare(b.dateIso),
   );
-}
-
-function isoDateOnly(d: Date): string {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
 // ─── Export CSV ────────────────────────────────────────────
