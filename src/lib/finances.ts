@@ -403,8 +403,8 @@ export function buildTransactionsCsv(txs: FinanceTransaction[]): string {
   ].join(";");
 
   const lines = txs.map((t) => {
-    const d = new Date(t.dateIso);
-    const dateStr = `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()}`;
+    const [y, mo, day] = isoDateParis(new Date(t.dateIso)).split("-");
+    const dateStr = `${day}/${mo}/${y}`;
     return [
       dateStr,
       labelType(t.type),
@@ -639,8 +639,9 @@ function computeWeekdayDistribution(
   ];
   for (const c of cards) {
     if (!c.paidAt) continue;
-    // getDay() : 0=dim, 1=lun … 6=sam. On convertit en ISO (1=lun … 7=dim).
-    const isoWeekday = c.paidAt.getUTCDay() === 0 ? 7 : c.paidAt.getUTCDay();
+    // Jour de la semaine en heure de Paris (0=dim…6=sam → ISO 1=lun…7=dim).
+    const dow = new Date(`${isoDateParis(c.paidAt)}T12:00:00Z`).getUTCDay();
+    const isoWeekday = dow === 0 ? 7 : dow;
     const slot = days[isoWeekday - 1];
     if (!slot) continue;
     slot.count += 1;
@@ -664,7 +665,7 @@ function computeMonthlyDistribution(
   }));
   for (const c of cards) {
     if (!c.paidAt) continue;
-    const idx = c.paidAt.getUTCMonth(); // 0-11
+    const idx = Number(isoDateParis(c.paidAt).slice(5, 7)) - 1; // mois Paris 0-11
     const slot = months[idx];
     if (!slot) continue;
     slot.count += 1;
@@ -697,7 +698,7 @@ function computeSeasonalDistribution(
   }
   for (const c of cards) {
     if (!c.paidAt) continue;
-    const m = c.paidAt.getUTCMonth() + 1; // 1-12
+    const m = Number(isoDateParis(c.paidAt).slice(5, 7)); // mois Paris 1-12
     const slot = seasons[seasonIndexFromMonth(m)];
     if (!slot) continue;
     slot.count += 1;

@@ -24,7 +24,12 @@ import {
   pastBookingsWhere,
   upcomingBookingsWhere,
 } from "@/lib/booking-where";
-import { mondayIsoForTodayParis, todayIsoParis } from "@/lib/paris-day";
+import { computeFinances } from "@/lib/finances";
+import {
+  mondayIsoForTodayParis,
+  parisWallClockToUtc,
+  todayIsoParis,
+} from "@/lib/paris-day";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +43,6 @@ export default async function AdminDashboard() {
   const userName = session?.user.name ?? "Chloé";
 
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const thirtyDaysAhead = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
 
@@ -50,11 +53,15 @@ export default async function AdminDashboard() {
   const [parisYear, parisMonth] = todayIsoParis().split("-").map(Number);
   const monthStartDate = new Date(Date.UTC(parisYear, parisMonth - 1, 1));
   const nextMonthStartDate = new Date(Date.UTC(parisYear, parisMonth, 1));
+  // Bornes du mois courant en MINUIT PARIS (DST) pour le CA — modèle
+  // d'encaissement identique à /admin/finances (instants timestamp, pas @db.Date).
+  const nextParisMonth = parisMonth === 12 ? 1 : parisMonth + 1;
+  const nextParisYear = parisMonth === 12 ? parisYear + 1 : parisYear;
+  const monthFromParis = parisWallClockToUtc(`${parisYear}-${String(parisMonth).padStart(2, "0")}-01`, "00:00");
+  const monthToParis = parisWallClockToUtc(`${nextParisYear}-${String(nextParisMonth).padStart(2, "0")}-01`, "00:00");
 
   const [
-    bookingsForRevenue,
-    giftCardSalesAgg,
-    ebookSalesRaw,
+    monthFinances,
     bookingsThisWeek,
     bookingsThisMonth,
     upcomingBookingsCount,
@@ -65,51 +72,10 @@ export default async function AdminDashboard() {
     awaitingBookings,
     pendingCompletion,
   ] = await Promise.all([
-    // RDV honorés du mois — on ramène les champs nécessaires pour calculer
-    // le vrai CA (acompte Stripe net + complément cash), pas juste
-    // revenueCents qui ne couvre que la portion cash du complément.
-    prisma.booking.findMany({
-      where: {
-        status: "COMPLETED",
-        completedAt: { gte: monthStart, lt: nextMonthStart },
-      },
-      select: {
-        depositCents: true,
-        revenueCents: true,
-        stripeFeeCents: true,
-        refundedAmount: true,
-        giftCardRedemptions: {
-          where: { reversedAt: null },
-          select: { amountUsedCents: true, type: true },
-        },
-      },
-    }),
-    // Ventes de cartes cadeau du mois (achats site OU vente en salon).
-    // ADMIN_GIFT (geste commercial) exclu volontairement.
-    prisma.giftCard.aggregate({
-      _sum: { initialAmountCents: true },
-      where: {
-        creationMode: { in: ["PUBLIC", "ADMIN_SALE"] },
-        paymentStatus: "PAID",
-        paidAt: { gte: monthStart, lt: nextMonthStart },
-      },
-    }),
-    // Ventes ebook du mois — on ne compte que la portion STRIPE
-    // (la portion carte cadeau est déjà comptée à la vente de la carte,
-    // sinon double-comptage). Refunds déduits.
-    prisma.ebookPurchase.findMany({
-      where: {
-        paymentStatus: "PAID",
-        paidAt: { gte: monthStart, lt: nextMonthStart },
-      },
-      select: {
-        amount: true,
-        refundedAmount: true,
-        giftCardRedemption: {
-          select: { amountUsedCents: true, reversedAt: true },
-        },
-      },
-    }),
+    // CA du mois en cours — MÊME source de vérité que /admin/finances (modèle
+    // d'encaissement, mois civil Paris, acomptes de tous les RDV confirmés +
+    // ventes GC/ebook − remboursements) → le KPI colle exactement à la page finances.
+    computeFinances(monthFromParis, monthToParis),
     // RDV de la semaine en cours (lundi→dimanche, Paris)
     prisma.booking.count({
       where: {
@@ -205,40 +171,10 @@ export default async function AdminDashboard() {
     }),
   ]);
 
-  // CA mois = revenus RDV honorés + ventes de cartes cadeau (PUBLIC + ADMIN_SALE)
-  // + ventes ebooks (portion Stripe uniquement, refunds déduits).
-  // Les cadeaux offerts par l'admin (ADMIN_GIFT) ne sont pas comptés.
-  // Pour les ebooks, la portion carte cadeau est exclue car déjà comptée
-  // à la vente de la carte (sinon double-comptage).
-  //
-  // Pour les bookings, on additionne :
-  //  - Net acompte    = depositCents − gcDeposit − stripeFee − refunded
-  //                     (la portion GC ne re-compte pas, elle a déjà été comptée
-  //                      à la vente initiale de la carte cadeau)
-  //  - Net complément = revenueCents
-  //                     (par définition, c'est déjà la portion cash/CB hors GC)
-  const bookingsRevenueCents = bookingsForRevenue.reduce((sum, b) => {
-    const gcDeposit = b.giftCardRedemptions
-      .filter((r) => r.type === "BOOKING_DEPOSIT")
-      .reduce((s, r) => s + r.amountUsedCents, 0);
-    const fee = b.stripeFeeCents ?? 0;
-    const refunded = b.refundedAmount ?? 0;
-    const netAcompte = Math.max(0, b.depositCents - gcDeposit - fee - refunded);
-    const netComplement = b.revenueCents ?? 0;
-    return sum + netAcompte + netComplement;
-  }, 0);
-  const giftCardSalesCents = giftCardSalesAgg._sum.initialAmountCents ?? 0;
-  const ebookRevenueCents = ebookSalesRaw.reduce((sum, p) => {
-    const gc =
-      p.giftCardRedemption && !p.giftCardRedemption.reversedAt
-        ? p.giftCardRedemption.amountUsedCents
-        : 0;
-    const stripePortion = Math.max(0, p.amount - gc);
-    const refunded = p.refundedAmount ?? 0;
-    return sum + Math.max(0, stripePortion - refunded);
-  }, 0);
-  const revenueCents =
-    bookingsRevenueCents + giftCardSalesCents + ebookRevenueCents;
+  // CA du mois = CA BRUT d'encaissement du mois civil Paris, tel qu'affiché par
+  // /admin/finances (acomptes de tous les RDV confirmés + soldes + ventes GC/ebook
+  // − remboursements). Source unique = computeFinances → aucune divergence possible.
+  const revenueCents = monthFinances.totals.grossCents;
 
   const alerts: AlertItem[] = [
     ...expiringGiftCards.map((g) => ({
@@ -298,7 +234,7 @@ export default async function AdminDashboard() {
         <Kpi
           label="CA du mois"
           value={<CountUp value={revenueCents} format="currency" />}
-          sub={revenueCents === 0 ? "Aucun RDV honoré ce mois" : undefined}
+          sub={revenueCents === 0 ? "Aucun encaissement ce mois" : undefined}
         />
         <Kpi
           label="RDV cette semaine"
