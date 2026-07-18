@@ -546,7 +546,7 @@ async function confirmBookingFromSession(
       depositCents: true,
       pendingGiftCardId: true,
       pendingGiftCardAmountCents: true,
-      service: { select: { title: true } },
+      service: { select: { title: true, slug: true } },
       options: {
         select: { serviceOption: { select: { title: true } } },
       },
@@ -648,11 +648,17 @@ async function confirmBookingFromSession(
     paidVia,
     stripeSessionId: session.id,
     amountTotalCents: session.amount_total,
+    // ACOMPTE (compta ERP) : montant BRUT de l'acompte, hors part carte cadeau que
+    // l'ERP déduit lui-même via giftCardAmountUsed. Sans lui, l'ERP calculait 0 et
+    // ne créait AUCUNE ligne d'acompte (frais Stripe posé plus tard par charge.updated).
+    depositCents: booking.depositCents,
     giftCardAmountUsed: booking.pendingGiftCardAmountCents ?? 0,
+    confirmedAt: now.toISOString(),
     clientFirstName: booking.clientFirstName,
     clientLastName: booking.clientLastName,
     clientEmail: booking.clientEmail,
     clientPhone: booking.clientPhone,
+    serviceSlug: booking.service.slug,
     serviceTitle: booking.service.title,
     date: booking.date.toISOString().slice(0, 10),
     startTime: booking.startTime,

@@ -134,6 +134,7 @@ export async function createBookingAction(
         select: {
           id: true,
           title: true,
+          slug: true,
           durationMinutes: true,
           priceCents: true,
         },
@@ -341,6 +342,7 @@ export async function createBookingAction(
       await emitOutboundEvent("booking.confirmed", {
         bookingId: booking.id,
         paidVia: "gift_card_full",
+        confirmedAt: now.toISOString(),
         depositCents: booking.depositCents,
         giftCardAmountUsed: giftCardAmountToUse,
         clientFirstName: data.client.firstName,
@@ -348,6 +350,7 @@ export async function createBookingAction(
         clientEmail: data.client.email,
         clientPhone: data.client.phone,
         serviceId: data.serviceId,
+        serviceSlug: service.slug,
         serviceTitle: service.title,
         date: data.date,
         startTime: data.startTime,
@@ -443,9 +446,11 @@ export async function createBookingAction(
       await emitOutboundEvent("booking.created", {
         bookingId: booking.id,
         serviceId: data.serviceId,
+        serviceSlug: service.slug,
         serviceTitle: service.title,
         date: data.date,
         startTime: data.startTime,
+        endTime,
         depositCents: booking.depositCents,
         adjustedDepositCents,
         giftCardAmountUsed: giftCardAmountToUse,
@@ -491,7 +496,9 @@ export async function createBookingAction(
     await emitOutboundEvent("booking.confirmed", {
       bookingId: booking.id,
       paidVia: devPaidVia,
+      confirmedAt: new Date().toISOString(),
       depositCents: booking.depositCents,
+      giftCardAmountUsed: giftCardId ? giftCardAmountToUse : 0,
       // Identité complète (comme 6a/6b) → l'ERP ÉTABLIT le RDV, sinon les
       // booking.photos de ce chemin resteraient différées.
       clientFirstName: data.client.firstName,
@@ -499,6 +506,7 @@ export async function createBookingAction(
       clientEmail: data.client.email,
       clientPhone: data.client.phone,
       serviceId: data.serviceId,
+      serviceSlug: service.slug,
       serviceTitle: service.title,
       date: data.date,
       startTime: data.startTime,
