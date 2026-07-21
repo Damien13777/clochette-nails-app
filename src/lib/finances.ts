@@ -480,6 +480,7 @@ export function buildTransactionsCsv(txs: FinanceTransaction[]): string {
     "Carte cadeau (€)",
     "Frais Stripe (€)",
     "Remboursé (€)",
+    "Remboursé hors brut (€)",
     "Net (€)",
   ].join(";");
 
@@ -497,6 +498,7 @@ export function buildTransactionsCsv(txs: FinanceTransaction[]): string {
       euroNumber(t.giftCardUsedCents),
       euroNumber(t.stripeFeeCents),
       euroNumber(t.refundedCents),
+      euroNumber(t.refundedCents - t.refundedInGrossCents),
       euroNumber(t.netCents),
     ].join(";");
   });
