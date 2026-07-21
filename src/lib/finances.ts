@@ -36,6 +36,17 @@ export type FinanceTransaction = {
   giftCardUsedCents: number; // portion couverte par carte cadeau
   stripeFeeCents: number; // frais Stripe (peut être null → 0)
   refundedCents: number; // remboursé
+  /**
+   * Part du remboursement DÉJÀ portée par grossCents. Vaut refundedCents sur la
+   * ligne de remboursement d'un RDV (grossCents y est négatif : le décaissement
+   * est daté du jour du refund), et 0 pour les cartes cadeau et ebooks, dont le
+   * remboursement est déduit du net sans ligne datée (ni GiftCard ni
+   * EbookPurchase n'a de champ refundedAt au schéma).
+   *
+   * Sans cette distinction, l'équation « Net = Brut − GC − Frais − Remboursé »
+   * affichée à l'admin déduit deux fois les remboursements de RDV.
+   */
+  refundedInGrossCents: number;
   netCents: number; // ce qui rentre vraiment au CA (gross − giftCardUsed − refunded − stripeFee)
 };
 
@@ -44,6 +55,7 @@ export type FinanceTotals = {
   giftCardUsedCents: number;
   stripeFeeCents: number;
   refundedCents: number;
+  refundedInGrossCents: number;
   netCents: number;
   count: number;
   averageGrossCents: number;
@@ -237,6 +249,7 @@ async function loadBookingTransactions(
         giftCardUsedCents: gcDeposit,
         stripeFeeCents: fee,
         refundedCents: 0,
+        refundedInGrossCents: 0,
         netCents: netAcompte,
       });
     }
@@ -272,6 +285,7 @@ async function loadBookingTransactions(
         giftCardUsedCents: gcService,
         stripeFeeCents: 0,
         refundedCents: 0,
+        refundedInGrossCents: 0,
         netCents: revenueCash,
       });
     }
@@ -294,6 +308,7 @@ async function loadBookingTransactions(
         giftCardUsedCents: 0,
         stripeFeeCents: 0,
         refundedCents: refunded,
+        refundedInGrossCents: refunded,
         netCents: -refunded,
       });
     }
@@ -345,6 +360,7 @@ async function loadGiftCardTransactions(
       giftCardUsedCents: 0,
       stripeFeeCents: fee,
       refundedCents: refunded,
+      refundedInGrossCents: 0,
       netCents: Math.max(0, gross - fee - refunded),
     };
   });
@@ -398,6 +414,7 @@ async function loadEbookTransactions(
       giftCardUsedCents: gcUsed,
       stripeFeeCents: fee,
       refundedCents: refunded,
+      refundedInGrossCents: 0,
       netCents: net,
     };
   });

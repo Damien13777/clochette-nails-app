@@ -45,6 +45,7 @@ export function sumTotals(
       giftCardUsedCents: acc.giftCardUsedCents + x.giftCardUsedCents,
       stripeFeeCents: acc.stripeFeeCents + x.stripeFeeCents,
       refundedCents: acc.refundedCents + x.refundedCents,
+      refundedInGrossCents: acc.refundedInGrossCents + x.refundedInGrossCents,
       netCents: acc.netCents + x.netCents,
     }),
     {
@@ -52,6 +53,7 @@ export function sumTotals(
       giftCardUsedCents: 0,
       stripeFeeCents: 0,
       refundedCents: 0,
+      refundedInGrossCents: 0,
       netCents: 0,
     },
   );

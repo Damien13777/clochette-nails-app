@@ -25,6 +25,7 @@ function tx(grossCents: number): FinanceTransaction {
     giftCardUsedCents: 0,
     stripeFeeCents: 0,
     refundedCents: 0,
+    refundedInGrossCents: 0,
     netCents: grossCents,
   };
 }
@@ -32,6 +33,66 @@ function tx(grossCents: number): FinanceTransaction {
 function sale(id: string, amountCents: number): FinanceSale {
   return { id, type: "booking", amountCents };
 }
+
+/** L'équation telle que la modale « Détail du Net » la donne à lire. */
+function netSelonLignesAffichees(t: {
+  grossCents: number;
+  giftCardUsedCents: number;
+  stripeFeeCents: number;
+  refundedCents: number;
+  refundedInGrossCents: number;
+}): number {
+  return (
+    t.grossCents -
+    t.giftCardUsedCents -
+    t.stripeFeeCents -
+    (t.refundedCents - t.refundedInGrossCents)
+  );
+}
+
+describe("sumTotals — les lignes affichées doivent retomber sur le Net", () => {
+  it("ne déduit pas deux fois un remboursement de RDV, déjà porté par le brut", () => {
+    // Acompte de 60 € (frais 0,50 €) puis remboursement de 20 € : la ligne de
+    // refund porte grossCents négatif ET refundedCents positif.
+    const acompte: FinanceTransaction = {
+      ...tx(6000),
+      stripeFeeCents: 50,
+      netCents: 5950,
+    };
+    const refund: FinanceTransaction = {
+      ...tx(-2000),
+      refundedCents: 2000,
+      refundedInGrossCents: 2000,
+      netCents: -2000,
+    };
+
+    const t = sumTotals([acompte, refund], [sale("rdv-1", 6000)]);
+
+    expect(t.grossCents).toBe(4000);
+    expect(t.refundedCents).toBe(2000); // information conservée
+    expect(t.refundedInGrossCents).toBe(2000); // dont 20 € déjà dans le brut
+    expect(t.netCents).toBe(3950);
+    expect(netSelonLignesAffichees(t)).toBe(t.netCents);
+  });
+
+  it("déduit bien un remboursement de carte cadeau, absent du brut", () => {
+    // Une carte cadeau remboursée n'a pas de ligne négative datée (pas de champ
+    // refundedAt au schéma) : son refund n'est PAS dans le brut.
+    const carte: FinanceTransaction = {
+      ...tx(15000),
+      type: "gift_card",
+      stripeFeeCents: 100,
+      refundedCents: 5000,
+      refundedInGrossCents: 0,
+      netCents: 9900,
+    };
+
+    const t = sumTotals([carte], [{ id: "gc-1", type: "gift_card", amountCents: 15000 }]);
+
+    expect(t.netCents).toBe(9900);
+    expect(netSelonLignesAffichees(t)).toBe(t.netCents);
+  });
+});
 
 describe("sumTotals — ticket moyen par VENTE", () => {
   it("recolle acompte et complément d'un même RDV en un seul ticket, même si l'acompte est encaissé sur une autre période", () => {

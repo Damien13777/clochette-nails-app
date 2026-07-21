@@ -246,9 +246,11 @@ export default async function FinancesPage({
           className="mt-4 text-xs text-[var(--color-ink-500)]"
           style={{ fontFamily: "var(--font-ui)" }}
         >
-          Net = Brut − carte cadeau − frais Stripe − remboursements. Les cartes
-          cadeau offertes en geste commercial (ADMIN_GIFT) sont exclues du
-          chiffre d&apos;affaires.
+          Net = Brut − carte cadeau − frais Stripe − remboursements de cartes
+          cadeau et d&apos;ebooks. Les remboursements de RDV portent leur propre
+          ligne négative à leur date et sont donc déjà déduits du brut. Les
+          cartes cadeau offertes en geste commercial (ADMIN_GIFT) sont exclues
+          du chiffre d&apos;affaires.
         </p>
       </section>
     </div>

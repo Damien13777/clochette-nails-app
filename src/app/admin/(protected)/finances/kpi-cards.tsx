@@ -239,7 +239,11 @@ function NetDetailContent({
     { label: "Brut", value: (t) => t.grossCents, sign: "+" },
     { label: "Carte cadeau utilisée", value: (t) => t.giftCardUsedCents, sign: "−" },
     { label: "Frais Stripe", value: (t) => t.stripeFeeCents, sign: "−" },
-    { label: "Remboursé", value: (t) => t.refundedCents, sign: "−" },
+    {
+      label: "Remboursé (cartes cadeau, ebooks)",
+      value: (t) => t.refundedCents - t.refundedInGrossCents,
+      sign: "−",
+    },
   ];
 
   return (
@@ -248,7 +252,8 @@ function NetDetailContent({
         className="text-xs text-[var(--color-ink-500)]"
         style={{ fontFamily: "var(--font-ui)" }}
       >
-        Calcul : Net = Brut − GC utilisée − Frais Stripe − Remboursé
+        Calcul : Net = Brut − GC utilisée − Frais Stripe − Remboursé (cartes
+        cadeau, ebooks)
       </p>
 
       <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-line)]">
@@ -316,6 +321,18 @@ function NetDetailContent({
           </tbody>
         </table>
       </div>
+
+      {current.refundedInGrossCents > 0 && (
+        <p
+          className="text-xs text-[var(--color-ink-500)]"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          {formatEuro(current.refundedInGrossCents)} ont par ailleurs été
+          remboursés sur des RDV. Ces remboursements portent leur propre ligne
+          négative à leur date : ils sont déjà déduits du brut ci-dessus, et ne
+          sont donc pas retranchés une seconde fois.
+        </p>
+      )}
     </div>
   );
 }
