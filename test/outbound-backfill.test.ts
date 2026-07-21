@@ -207,6 +207,15 @@ describe("backfillOutbound", () => {
     expect(purchased.payload).toMatchObject({ amountPaidCents: 0 });
   });
 
+  it("refuse de tourner sans date de cutover explicite", async () => {
+    // Sans `before`, la garde de cutover (`occurredAt >= before`) retombait sur
+    // « maintenant » et ne protégeait plus rien : un re-run reconstruisait les
+    // faits POSTÉRIEURS à la bascule avec des eventId `backfill:*` que rien ne
+    // rapproche des events live → double comptage côté ERP. La route admin
+    // appelait justement backfillOutbound() sans argument.
+    await expect(backfillOutbound({ db })).rejects.toThrow(/cutover/i);
+  });
+
   it("cutover PAR EVENT : acompte pré-bascule reconstruit, solde post-bascule ignoré", async () => {
     await makeBooking({ confirmedAt: new Date("2026-06-10T09:00:00Z"), completedAt: new Date("2026-07-15T14:00:00Z") });
     const r = await backfillOutbound({ db, before: BEFORE });

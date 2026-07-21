@@ -48,7 +48,17 @@ function sumRedemptions(reds: RedemptionLite[], type: string): number {
 
 export async function backfillOutbound(deps: BackfillDeps = {}) {
   const db = deps.db ?? prisma;
-  const before = deps.before ?? new Date();
+  const beforeInput = deps.before;
+  // Garde dure : sans date de cutover explicite, le filtre `occurredAt >= before`
+  // retombait sur « maintenant » et ne protégeait plus rien. Un re-run
+  // reconstruisait alors les faits POSTÉRIEURS à la bascule avec des eventId
+  // `backfill:*` que rien ne rapproche des eventId live → double comptage ERP.
+  if (!beforeInput || Number.isNaN(beforeInput.getTime())) {
+    throw new Error(
+      "backfillOutbound : date de cutover obligatoire (deps.before). Sans elle, un re-run double-compterait tout fait postérieur à la bascule côté ERP.",
+    );
+  }
+  const before: Date = beforeInput;
   const targetUrl = process.env.MANAGEMENT_API_URL ?? "";
   if (!targetUrl) {
     return { seeded: 0, skipped: 0, reason: "MANAGEMENT_API_URL non configuré" };
