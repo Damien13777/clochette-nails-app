@@ -17,7 +17,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { sumTotals } from "@/lib/finances-totals";
+import { sumTotals, type FinanceSale } from "@/lib/finances-totals";
 import { isoDateParis, nextIsoDate } from "@/lib/paris-day";
 
 export type TransactionType = "booking" | "gift_card" | "ebook";
@@ -67,24 +67,82 @@ export async function computeFinances(
   from: Date,
   to: Date,
 ): Promise<FinanceResult> {
-  const [bookingTxs, giftCardTxs, ebookTxs] = await Promise.all([
+  const [bookingTxs, giftCardTxs, ebookTxs, bookingSales] = await Promise.all([
     loadBookingTransactions(from, to),
     loadGiftCardTransactions(from, to),
     loadEbookTransactions(from, to),
+    loadBookingSales(from, to),
   ]);
 
   const all = [...bookingTxs, ...giftCardTxs, ...ebookTxs].sort((a, b) =>
     b.dateIso.localeCompare(a.dateIso),
   );
 
-  const totals = sumTotals(all);
+  // Une carte cadeau vendue et un ebook vendu sont chacun une vente unitaire :
+  // leur ligne d'encaissement et leur vente coïncident. Seul le RDV se règle en
+  // plusieurs fois, d'où son loader dédié.
+  const giftCardSales = toUnitSales(giftCardTxs);
+  const ebookSales = toUnitSales(ebookTxs);
+  const allSales = [...bookingSales, ...giftCardSales, ...ebookSales];
+
+  const totals = sumTotals(all, allSales);
   const breakdown: FinanceBreakdown = {
-    bookings: sumTotals(bookingTxs),
-    giftCards: sumTotals(giftCardTxs),
-    ebooks: sumTotals(ebookTxs),
+    bookings: sumTotals(bookingTxs, bookingSales),
+    giftCards: sumTotals(giftCardTxs, giftCardSales),
+    ebooks: sumTotals(ebookTxs, ebookSales),
   };
 
   return { totals, breakdown, transactions: all };
+}
+
+function toUnitSales(txs: FinanceTransaction[]): FinanceSale[] {
+  return txs.map((t) => ({
+    id: t.id,
+    type: t.type,
+    amountCents: t.grossCents,
+  }));
+}
+
+/**
+ * Ventes issues des RDV : une prestation RÉELLEMENT RÉALISÉE, à son montant
+ * entier, rattachée au jour où elle a été honorée.
+ *
+ * Volontairement décorrélé de loadBookingTransactions : on ne repart pas des
+ * lignes d'encaissement de la période, car l'acompte d'un RDV honoré en juillet
+ * a pu être encaissé en juin et n'y figure donc pas. On repart du RDV lui-même
+ * et on additionne tout ce que la cliente a réglé, quelle qu'en soit la date.
+ *
+ * Les RDV annulés (acompte conservé) et les no-show sont exclus : l'argent
+ * encaissé reste bien du CA, mais aucune prestation n'a été vendue.
+ */
+async function loadBookingSales(
+  from: Date,
+  to: Date,
+): Promise<FinanceSale[]> {
+  const bookings = await prisma.booking.findMany({
+    where: {
+      status: "COMPLETED",
+      completedAt: { gte: from, lt: to },
+    },
+    select: {
+      id: true,
+      depositCents: true,
+      revenueCents: true,
+      giftCardRedemptions: {
+        where: { reversedAt: null, type: "BOOKING_SERVICE" },
+        select: { amountUsedCents: true },
+      },
+    },
+  });
+
+  return bookings.map((b) => ({
+    id: `booking:${b.id}`,
+    type: "booking" as TransactionType,
+    amountCents:
+      b.depositCents +
+      (b.revenueCents ?? 0) +
+      b.giftCardRedemptions.reduce((s, r) => s + r.amountUsedCents, 0),
+  }));
 }
 
 // ─── Loaders par source ────────────────────────────────────
