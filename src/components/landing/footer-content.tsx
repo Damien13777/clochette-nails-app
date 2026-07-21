@@ -204,6 +204,9 @@ export function FooterContent({
             <Link href="/mentions-legales" className="hover:text-[var(--color-ink-900)] transition-colors">
               Mentions légales
             </Link>
+            <Link href="/cgv" className="hover:text-[var(--color-ink-900)] transition-colors">
+              CGV
+            </Link>
             <Link href="/confidentialite" className="hover:text-[var(--color-ink-900)] transition-colors">
               Confidentialité
             </Link>
