@@ -10,6 +10,16 @@
  *
  * Tout est TTC (Chloé en franchise de TVA).
  *
+ * ⚠️ NE JAMAIS filtrer les redemptions de carte cadeau sur `reversedAt: null`
+ * dans ce fichier. Une redemption est un ÉVÉNEMENT DATÉ (`redeemedAt`), pas un
+ * état courant : filtrer dessus revient à traiter l'annulation comme une gomme,
+ * et fait remonter rétroactivement le net d'un mois déjà arrêté. Restituer une
+ * carte cadeau n'est d'ailleurs pas une sortie d'argent — c'est un re-crédit de
+ * dette, et la vente de la carte a déjà été comptée au CA à sa date.
+ * Le filtre reste LÉGITIME ailleurs : dans les actions de remboursement (ne pas
+ * rembourser deux fois), à l'émission des factures (snapshot) et dans les pages
+ * admin (état courant).
+ *
  * Fonctions exportées :
  *  - computeFinances(from, to) : agrégats + liste transactions sur la période
  *  - computeDailySeries(from, to) : série quotidienne pour graphique
@@ -141,7 +151,7 @@ async function loadBookingSales(
       depositCents: true,
       revenueCents: true,
       giftCardRedemptions: {
-        where: { reversedAt: null, type: "BOOKING_SERVICE" },
+        where: { type: "BOOKING_SERVICE" },
         select: { amountUsedCents: true },
       },
     },
@@ -205,7 +215,6 @@ async function loadBookingTransactions(
       cancelledAt: true,
       service: { select: { title: true } },
       giftCardRedemptions: {
-        where: { reversedAt: null },
         select: { amountUsedCents: true, type: true },
       },
     },
@@ -385,17 +394,14 @@ async function loadEbookTransactions(
       clientEmail: true,
       ebook: { select: { slug: true, title: true } },
       giftCardRedemption: {
-        select: { amountUsedCents: true, reversedAt: true },
+        select: { amountUsedCents: true },
       },
     },
   });
 
   return purchases.map((p) => {
     const gross = p.amount;
-    const gcUsed =
-      p.giftCardRedemption && !p.giftCardRedemption.reversedAt
-        ? p.giftCardRedemption.amountUsedCents
-        : 0;
+    const gcUsed = p.giftCardRedemption?.amountUsedCents ?? 0;
     const fee = p.stripeFeeCents ?? 0;
     const refunded = p.refundedAmount ?? 0;
     // Net = portion Stripe nette (la portion GC est exclue du CA pour éviter
@@ -594,7 +600,6 @@ async function loadTopServices(from: Date, to: Date): Promise<TopItem[]> {
       refundedAmount: true,
       service: { select: { title: true, slug: true } },
       giftCardRedemptions: {
-        where: { reversedAt: null },
         select: { amountUsedCents: true, type: true },
       },
     },
@@ -653,7 +658,7 @@ async function loadTopEbooks(from: Date, to: Date): Promise<TopItem[]> {
       stripeFeeCents: true,
       ebook: { select: { title: true, slug: true } },
       giftCardRedemption: {
-        select: { amountUsedCents: true, reversedAt: true },
+        select: { amountUsedCents: true },
       },
     },
   });
@@ -668,10 +673,7 @@ async function loadTopEbooks(from: Date, to: Date): Promise<TopItem[]> {
       netCents: 0,
       grossCents: 0,
     };
-    const gcUsed =
-      p.giftCardRedemption && !p.giftCardRedemption.reversedAt
-        ? p.giftCardRedemption.amountUsedCents
-        : 0;
+    const gcUsed = p.giftCardRedemption?.amountUsedCents ?? 0;
     const fee = p.stripeFeeCents ?? 0;
     const refunded = p.refundedAmount ?? 0;
     existing.count += 1;

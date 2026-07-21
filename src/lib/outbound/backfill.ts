@@ -3,6 +3,14 @@
  * seede dans `OutboundEvent` (le worker les livre ensuite). Nécessaire car la
  * queue était log-only avant l'activation de l'ERP → sans ça l'ERP démarre vide.
  *
+ * ⚠️ Miroir EXACT de finances.ts, y compris sur les redemptions de carte cadeau :
+ * on ne filtre PAS sur `reversedAt` (une redemption est un événement daté, pas un
+ * état courant — cf. l'en-tête de finances.ts). Toute divergence entre ce fichier
+ * et finances.ts se traduirait par un écart entre le site et l'ERP.
+ * ⚠️ Ce backfill a été exécuté et réconcilié au centime le 18/07. Le RELANCER
+ * exige la procédure de purge complète de ce jour-là (purge outbound + incoming,
+ * re-dispatch, re-projection) — sinon double comptage côté ERP.
+ *
  * Modèle : compta d'ENCAISSEMENT, miroir EXACT de finances.ts (page corrigée) +
  * cycle de vie CRM complet. Un RDV génère jusqu'à 4 events (acompte, solde,
  * terminal, remboursement), chacun daté à SA date métier.
@@ -30,11 +38,11 @@ import { prisma } from "@/lib/prisma";
 
 export type BackfillDeps = { db?: PrismaClient; before?: Date };
 
-type RedemptionLite = { type: string; amountUsedCents: number; reversedAt: Date | null };
+type RedemptionLite = { type: string; amountUsedCents: number };
 
 function sumRedemptions(reds: RedemptionLite[], type: string): number {
   return reds
-    .filter((r) => r.type === type && r.reversedAt === null)
+    .filter((r) => r.type === type)
     .reduce((acc, r) => acc + r.amountUsedCents, 0);
 }
 
@@ -94,7 +102,7 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       clientEmail: true,
       clientPhone: true,
       service: { select: { slug: true, title: true } },
-      giftCardRedemptions: { select: { type: true, amountUsedCents: true, reversedAt: true } },
+      giftCardRedemptions: { select: { type: true, amountUsedCents: true } },
     },
   });
 
@@ -183,11 +191,11 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       amount: true,
       stripeFeeCents: true,
       paidAt: true,
-      giftCardRedemption: { select: { amountUsedCents: true, reversedAt: true } },
+      giftCardRedemption: { select: { amountUsedCents: true } },
     },
   });
   for (const p of ebooks) {
-    const gcUsed = p.giftCardRedemption && !p.giftCardRedemption.reversedAt ? p.giftCardRedemption.amountUsedCents : 0;
+    const gcUsed = p.giftCardRedemption?.amountUsedCents ?? 0;
     await seed("ebook.purchased", p.id, p.paidAt!, {
       purchaseId: p.id,
       amountPaidCents: Math.max(0, p.amount - gcUsed),
