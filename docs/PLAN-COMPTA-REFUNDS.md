@@ -435,3 +435,48 @@ Les seules étapes capables de déplacer un chiffre réel aujourd'hui sont la **
 
 Avant et après **chaque** étape déployée : rejouer la requête SQL de contrôle sur
 la prod et vérifier que **juin = 2 264,00 € brut**. Toute dérive = rollback immédiat.
+
+---
+
+## 8. Journal d'avancement
+
+### 21/07/2026 — branche `fix/compta-refunds` (4 commits, NON poussée)
+
+| Commit | Objet | État |
+|---|---|---|
+| `0578719` | **Étape 1** — les lecteurs comptables ne filtrent plus `reversedAt` | ✅ |
+| `f5519b5` | Filet anti-régression, **score de mutation 7/7** (mesuré site par site) | ✅ |
+| `dfa5d15` | **Correctif A** — date de cutover du backfill obligatoire (garde réelle, plus un commentaire) | ✅ |
+| `6463b31` | **Correctif B** — CSV + tableau : plus de double déduction du remboursement | ✅ |
+
+**Vérifications** : 122 tests verts (23 fichiers) · `tsc` 0 erreur · `lint` clean.
+
+**Revue adversariale complète** (48 agents, 0 erreur) : **aucune régression de
+calcul introduite**. Elle a mesuré le filet de tests à 1/7 avant renforcement,
+porté à **7/7** ensuite.
+
+### ⏳ Reste à traiter — reprise
+
+**Prioritaire, atteignable aujourd'hui :**
+1. **`booking.refunded` non émis sur annulation CLIENTE** (`booking-client.ts:215`
+   n'émet que `booking.cancelled_by_client`, type sans handler ERP). Clochette
+   écrit sa ligne négative, l'ERP n'écrit rien. **Divergence latente, pas encore
+   matérialisée** : le seul remboursement en base (`cmqt90md`, 22,50 €, annulé le
+   09/07) est couvert par le backfill du 18/07. C'est la PROCHAINE annulation
+   cliente remboursée qui divergera. → se referme avec l'étape 8.
+2. **Docs ERP à corriger** : `erp-clochette/docs/REMEDIATION-COMPTA-CRM.md` et
+   `RUNBOOK-DEPLOY-RESET.md` spécifient encore `reversedAt IS NULL` dans la
+   requête de réconciliation → elle remonterait un **écart fantôme** contre le
+   nouveau backfill.
+3. **Test doublon à nettoyer** : le cas « reversal PARTIEL » de
+   `test/finances-reversal-append-only.test.ts` est un doublon strict du test
+   précédent (mêmes fixtures, aucun point de mutation en plus).
+   `reversedAmountCents` n'est lu par aucun lecteur comptable.
+
+**Puis, dans l'ordre du plan** : étape 9 (`charge.refunded`) → étape 2 (garde sur
+RDV honoré, **couplée à la 9**) → étape 3 (`cancelGiftCard`).
+Étapes 4 à 7 : différées, à livrer **avec** les handlers ERP (risque R1).
+
+**Déploiement** : rien n'est poussé. Aucun changement de schéma dans ces
+4 commits → `git pull` · `pnpm build` · `pm2 restart` · health check, en une
+seule connexion SSH.
