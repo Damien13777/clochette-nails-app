@@ -99,6 +99,114 @@ describe("backfillOutbound", () => {
     expect(await db.outboundEvent.count()).toBe(2);
   });
 
+  it("une redemption de carte cadeau REVERSÉE reste comptée dans le payload d'acompte", async () => {
+    // Garde anti-régression : `giftCardAmountUsed: 0` du test précédent est vrai
+    // par vacuité (ce booking-là n'a aucune carte cadeau). Ici la carte existe et
+    // a été annulée — le backfill doit rester le miroir exact de finances.ts, qui
+    // ne filtre plus sur `reversedAt`. Sinon le site et l'ERP divergent.
+    const b = await makeBooking({ depositCents: 1350, revenueCents: 0, completedAt: null, status: "CONFIRMED" });
+    const card = await db.giftCard.create({
+      data: {
+        code: `GC-${randomUUID().slice(0, 8)}`,
+        codeHash: `hash-${randomUUID()}`,
+        prefix: "AB12",
+        initialAmountCents: 1350,
+        remainingAmountCents: 1350,
+        amount: 1350,
+        deliveryMode: "EMAIL_TO_BUYER",
+        buyerName: "Marraine",
+        buyerEmail: "marraine@test.local",
+        creationMode: "ADMIN_GIFT",
+        paymentStatus: "PAID",
+        status: "ACTIVE",
+        expiresAt: new Date("2027-07-01T00:00:00Z"),
+      },
+    });
+    await db.giftCardRedemption.create({
+      data: {
+        giftCardId: card.id,
+        bookingId: b.id,
+        type: "BOOKING_DEPOSIT",
+        amountUsedCents: 1350,
+        redeemedByEmail: "cliente@test.local",
+        redeemedAt: new Date("2026-06-01T09:00:00Z"),
+        reversedAt: new Date("2026-06-20T10:00:00Z"),
+        reversedAmountCents: 1350,
+      },
+    });
+
+    await backfillOutbound({ db, before: BEFORE });
+
+    const confirmed = await db.outboundEvent.findFirstOrThrow({
+      where: { type: "booking.confirmed" },
+    });
+    // Sans le correctif : 0 → l'ERP compterait 13,50 € de net là où le site en
+    // compte 0, et la réconciliation au centime sauterait.
+    expect(confirmed.payload).toMatchObject({ giftCardAmountUsed: 1350 });
+  });
+
+  it("ebook réglé en carte cadeau puis reversé : la part carte cadeau reste déduite", async () => {
+    const ebook = await db.ebook.create({
+      data: {
+        slug: `ebook-${randomUUID().slice(0, 8)}`,
+        title: "Guide",
+        shortDesc: "d",
+        description: "d",
+        priceCents: 1900,
+        status: "PUBLISHED",
+      },
+    });
+    const purchase = await db.ebookPurchase.create({
+      data: {
+        ebookId: ebook.id,
+        clientEmail: `cliente-${randomUUID().slice(0, 8)}@test.local`,
+        amount: 1900,
+        paymentStatus: "PAID",
+        paidAt: new Date("2026-06-10T10:00:00Z"),
+        downloadToken: randomUUID().replace(/-/g, ""),
+        tokenExpiresAt: new Date("2026-07-10T10:00:00Z"),
+      },
+    });
+    const card = await db.giftCard.create({
+      data: {
+        code: `GC-${randomUUID().slice(0, 8)}`,
+        codeHash: `hash-${randomUUID()}`,
+        prefix: "CD34",
+        initialAmountCents: 1900,
+        remainingAmountCents: 1900,
+        amount: 1900,
+        deliveryMode: "EMAIL_TO_BUYER",
+        buyerName: "Marraine",
+        buyerEmail: "marraine@test.local",
+        creationMode: "ADMIN_GIFT",
+        paymentStatus: "PAID",
+        status: "ACTIVE",
+        expiresAt: new Date("2027-07-01T00:00:00Z"),
+      },
+    });
+    await db.giftCardRedemption.create({
+      data: {
+        giftCardId: card.id,
+        ebookPurchaseId: purchase.id,
+        type: "EBOOK",
+        amountUsedCents: 1900,
+        redeemedByEmail: "cliente@test.local",
+        redeemedAt: new Date("2026-06-10T10:00:00Z"),
+        reversedAt: new Date("2026-06-25T10:00:00Z"),
+        reversedAmountCents: 1900,
+      },
+    });
+
+    await backfillOutbound({ db, before: BEFORE });
+
+    const purchased = await db.outboundEvent.findFirstOrThrow({
+      where: { type: "ebook.purchased" },
+    });
+    // Sans le correctif : 1900 → l'ERP compterait 19,00 € encaissés alors que la
+    // vente a été intégralement réglée en carte cadeau (déjà comptée à sa vente).
+    expect(purchased.payload).toMatchObject({ amountPaidCents: 0 });
+  });
+
   it("cutover PAR EVENT : acompte pré-bascule reconstruit, solde post-bascule ignoré", async () => {
     await makeBooking({ confirmedAt: new Date("2026-06-10T09:00:00Z"), completedAt: new Date("2026-07-15T14:00:00Z") });
     const r = await backfillOutbound({ db, before: BEFORE });

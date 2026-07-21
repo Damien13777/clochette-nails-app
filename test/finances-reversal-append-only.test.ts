@@ -19,7 +19,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { db, truncateAll } from "../e2e/db";
-import { computeFinances } from "@/lib/finances";
+import { computeFinanceAnalytics, computeFinances } from "@/lib/finances";
 
 const JUILLET = {
   from: new Date("2026-06-30T22:00:00.000Z"),
@@ -138,5 +138,133 @@ describe("append-only — un reversal de carte cadeau ne réécrit pas le passé
     const apres = await computeFinances(JUILLET.from, JUILLET.to);
     expect(apres.totals.giftCardUsedCents).toBe(4000);
     expect(apres.totals.netCents).toBe(0);
+  });
+
+  it("laisse le complément d'un RDV honoré intact quand la carte cadeau du SERVICE est reversée", async () => {
+    // Cas métier le plus probable : Chloé encaisse la carte cadeau au moment du
+    // « marquer honoré », puis rembourse le RDV plus tard.
+    const service = await db.service.create({
+      data: {
+        slug: `svc-${randomUUID().slice(0, 8)}`,
+        title: "Pose gel",
+        shortDesc: "d",
+        description: "d",
+        category: "SOIN_MAINS",
+        durationMinutes: 90,
+        priceCents: 6500,
+        displayOrder: 1,
+        status: "PUBLISHED",
+      },
+    });
+    const booking = await db.booking.create({
+      data: {
+        date: new Date("2026-07-10"),
+        startTime: "10:00",
+        endTime: "11:30",
+        serviceId: service.id,
+        clientFirstName: "Jean",
+        clientLastName: "Dupont",
+        clientEmail: `jean-${randomUUID().slice(0, 8)}@test.local`,
+        clientPhone: "0600000000",
+        totalDurationMinutes: 90,
+        totalPriceCents: 6500,
+        depositCents: 3500,
+        revenueCents: 0,
+        status: "COMPLETED",
+        confirmedAt: new Date("2026-07-02T09:00:00.000Z"),
+        completedAt: new Date("2026-07-10T14:00:00.000Z"),
+      },
+    });
+    const card = await makeCard(3000);
+    const redemption = await db.giftCardRedemption.create({
+      data: {
+        giftCardId: card.id,
+        bookingId: booking.id,
+        type: "BOOKING_SERVICE",
+        amountUsedCents: 3000,
+        redeemedByEmail: "cliente@test.local",
+        redeemedAt: new Date("2026-07-10T14:00:00.000Z"),
+      },
+    });
+
+    const avant = await computeFinances(JUILLET.from, JUILLET.to);
+    expect(avant.totals.grossCents).toBe(6500); // acompte 35 € + complément 30 €
+    expect(avant.totals.count).toBe(1); // 1 RDV honoré
+    expect(avant.totals.averageGrossCents).toBe(6500);
+
+    await db.giftCardRedemption.update({
+      where: { id: redemption.id },
+      data: {
+        reversedAt: new Date("2026-09-05T10:00:00.000Z"),
+        reversedAmountCents: 3000,
+      },
+    });
+
+    const apres = await computeFinances(JUILLET.from, JUILLET.to);
+    // Sans le correctif : la ligne de complément disparaîtrait entièrement
+    // (30 € de brut évaporés) et le ticket moyen tomberait à 35 €.
+    expect(apres.totals.grossCents).toBe(6500);
+    expect(apres.totals.count).toBe(1);
+    expect(apres.totals.averageGrossCents).toBe(6500);
+
+    // Le « Top prestations » de la modale d'analyse lit une requête distincte :
+    // il doit rester figé lui aussi, sinon deux écrans se contredisent.
+    const analytics = await computeFinanceAnalytics(JUILLET.from, JUILLET.to);
+    expect(analytics.topServices[0]?.grossCents).toBe(6500);
+  });
+
+  it("laisse le net d'un ebook réglé 100 % en carte cadeau à 0 après reversal", async () => {
+    const ebook = await db.ebook.create({
+      data: {
+        slug: `ebook-${randomUUID().slice(0, 8)}`,
+        title: "Guide nail art",
+        shortDesc: "d",
+        description: "d",
+        priceCents: 1900,
+        status: "PUBLISHED",
+      },
+    });
+    const purchase = await db.ebookPurchase.create({
+      data: {
+        ebookId: ebook.id,
+        clientEmail: `cliente-${randomUUID().slice(0, 8)}@test.local`,
+        amount: 1900,
+        paymentStatus: "PAID",
+        paidAt: new Date("2026-07-06T10:00:00.000Z"),
+        downloadToken: randomUUID().replace(/-/g, ""),
+        tokenExpiresAt: new Date("2026-08-06T10:00:00.000Z"),
+      },
+    });
+    const card = await makeCard(1900);
+    const redemption = await db.giftCardRedemption.create({
+      data: {
+        giftCardId: card.id,
+        ebookPurchaseId: purchase.id,
+        type: "EBOOK",
+        amountUsedCents: 1900,
+        redeemedByEmail: "cliente@test.local",
+        redeemedAt: new Date("2026-07-06T10:00:00.000Z"),
+      },
+    });
+
+    const avant = await computeFinances(JUILLET.from, JUILLET.to);
+    expect(avant.totals.netCents).toBe(0); // déjà compté au CA à la vente de la carte
+
+    await db.giftCardRedemption.update({
+      where: { id: redemption.id },
+      data: {
+        reversedAt: new Date("2026-07-20T10:00:00.000Z"),
+        reversedAmountCents: 1900,
+      },
+    });
+
+    const apres = await computeFinances(JUILLET.from, JUILLET.to);
+    // Sans le correctif : juillet gagnerait 19,00 € de net sorti de nulle part
+    // (aucun refund Stripe possible : la vente n'a jamais eu de paiement Stripe).
+    expect(apres.totals.netCents).toBe(0);
+
+    // Le « Top ebooks » de la modale d'analyse lit sa propre requête.
+    const analytics = await computeFinanceAnalytics(JUILLET.from, JUILLET.to);
+    expect(analytics.topEbooks[0]?.netCents).toBe(0);
   });
 });
