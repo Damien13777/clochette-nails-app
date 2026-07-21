@@ -68,6 +68,7 @@ export function BreakdownCards({
           accent="violet"
           netCents={breakdown.bookings.netCents}
           count={breakdown.bookings.count}
+          unit={["RDV honoré", "RDV honorés"]}
           share={percentOf(breakdown.bookings.netCents, totalNet)}
         />
       </ExpandableCard>
@@ -90,6 +91,7 @@ export function BreakdownCards({
           accent="gold"
           netCents={breakdown.giftCards.netCents}
           count={breakdown.giftCards.count}
+          unit={["carte vendue", "cartes vendues"]}
           share={percentOf(breakdown.giftCards.netCents, totalNet)}
         />
       </ExpandableCard>
@@ -113,6 +115,7 @@ export function BreakdownCards({
           accent="bone"
           netCents={breakdown.ebooks.netCents}
           count={breakdown.ebooks.count}
+          unit={["ebook vendu", "ebooks vendus"]}
           share={percentOf(breakdown.ebooks.netCents, totalNet)}
         />
       </ExpandableCard>
@@ -125,12 +128,14 @@ function Card({
   accent,
   netCents,
   count,
+  unit,
   share,
 }: {
   title: string;
   accent: "violet" | "gold" | "bone";
   netCents: number;
   count: number;
+  unit: [string, string];
   share: string;
 }) {
   const dotCls =
@@ -165,7 +170,7 @@ function Card({
         style={{ fontFamily: "var(--font-ui)" }}
       >
         <span>
-          {count} transaction{count > 1 ? "s" : ""}
+          {count} {unit[count > 1 ? 1 : 0]}
         </span>
         <span>{share} du net</span>
       </div>

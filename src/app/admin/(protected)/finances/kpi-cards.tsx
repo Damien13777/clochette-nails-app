@@ -4,8 +4,13 @@
  * KpiCards — Client Component (les cards Net et Ticket moyen sont cliquables
  * et ouvrent une modale détaillée).
  *
- * 4 cards : CA brut, Net (encadré violet + expandable), Nb transactions,
+ * 4 cards : CA brut, Net (encadré violet + expandable), RDV honorés,
  * Ticket moyen (expandable).
+ *
+ * Les deux premières cards raisonnent en ENCAISSEMENT (argent rentré sur la
+ * période), les deux dernières en VENTES (prestations réalisées). Un RDV réglé
+ * en acompte puis complément produit deux mouvements de caisse mais une seule
+ * vente — d'où la dissociation. Cf. src/lib/finances-totals.ts.
  * Si une période de comparaison est fournie, affiche la variation en % sous
  * chaque valeur (vert si positif, rouge si négatif).
  */
@@ -138,13 +143,13 @@ export function KpiCards({
       </ExpandableCard>
 
       <Card
-        label="Transactions"
-        value={formatInt(current.count)}
+        label="RDV honorés"
+        value={formatInt(breakdown.bookings.count)}
         badge={
-          comparison ? (
+          comparisonBreakdown ? (
             <VariationBadge
-              current={current.count}
-              previous={comparison.count}
+              current={breakdown.bookings.count}
+              previous={comparisonBreakdown.bookings.count}
             />
           ) : null
         }
@@ -234,7 +239,11 @@ function NetDetailContent({
     { label: "Brut", value: (t) => t.grossCents, sign: "+" },
     { label: "Carte cadeau utilisée", value: (t) => t.giftCardUsedCents, sign: "−" },
     { label: "Frais Stripe", value: (t) => t.stripeFeeCents, sign: "−" },
-    { label: "Remboursé", value: (t) => t.refundedCents, sign: "−" },
+    {
+      label: "Remboursé (cartes cadeau, ebooks)",
+      value: (t) => t.refundedCents - t.refundedInGrossCents,
+      sign: "−",
+    },
   ];
 
   return (
@@ -243,7 +252,8 @@ function NetDetailContent({
         className="text-xs text-[var(--color-ink-500)]"
         style={{ fontFamily: "var(--font-ui)" }}
       >
-        Calcul : Net = Brut − GC utilisée − Frais Stripe − Remboursé
+        Calcul : Net = Brut − GC utilisée − Frais Stripe − Remboursé (cartes
+        cadeau, ebooks)
       </p>
 
       <div className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-line)]">
@@ -311,6 +321,18 @@ function NetDetailContent({
           </tbody>
         </table>
       </div>
+
+      {current.refundedInGrossCents > 0 && (
+        <p
+          className="text-xs text-[var(--color-ink-500)]"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          {formatEuro(current.refundedInGrossCents)} ont par ailleurs été
+          remboursés sur des RDV. Ces remboursements portent leur propre ligne
+          négative à leur date : ils sont déjà déduits du brut ci-dessus, et ne
+          sont donc pas retranchés une seconde fois.
+        </p>
+      )}
     </div>
   );
 }
@@ -326,24 +348,28 @@ function AverageTicketContent({
 }) {
   const sources: {
     label: string;
+    unit: [string, string];
     accent: "violet" | "gold" | "bone";
     totals: FinanceTotals;
     compare: FinanceTotals | null;
   }[] = [
     {
-      label: "Bookings",
+      label: "RDV honorés",
+      unit: ["RDV honoré", "RDV honorés"],
       accent: "violet",
       totals: breakdown.bookings,
       compare: comparisonBreakdown?.bookings ?? null,
     },
     {
       label: "Cartes cadeau",
+      unit: ["carte vendue", "cartes vendues"],
       accent: "gold",
       totals: breakdown.giftCards,
       compare: comparisonBreakdown?.giftCards ?? null,
     },
     {
       label: "Ebooks",
+      unit: ["ebook vendu", "ebooks vendus"],
       accent: "bone",
       totals: breakdown.ebooks,
       compare: comparisonBreakdown?.ebooks ?? null,
@@ -363,7 +389,11 @@ function AverageTicketContent({
         className="text-xs text-[var(--color-ink-500)]"
         style={{ fontFamily: "var(--font-ui)" }}
       >
-        Ticket moyen = brut total / nombre de transactions encaissées (hors 0 €), pour chaque source.
+        Ticket moyen = montant moyen d&apos;une vente, pour chaque source. Un RDV
+        honoré compte pour une seule vente, à son montant entier (acompte +
+        complément réglé au salon), rattachée au jour où il a été honoré. Les
+        RDV annulés et les no-show en sont exclus, et les prestations
+        intégralement offertes ne pèsent pas sur la moyenne.
       </p>
 
       <ul className="divide-y divide-[var(--color-line)] border border-[var(--color-line)] rounded-[var(--radius-md)] overflow-hidden">
@@ -388,7 +418,7 @@ function AverageTicketContent({
                   className="text-[11px] text-[var(--color-ink-500)]"
                   style={{ fontFamily: "var(--font-ui)" }}
                 >
-                  {s.totals.count} transaction{s.totals.count > 1 ? "s" : ""}
+                  {s.totals.count} {s.unit[s.totals.count > 1 ? 1 : 0]}
                   {s.compare && comparisonLabel
                     ? ` · ${s.compare.count} en ${comparisonLabel}`
                     : ""}
