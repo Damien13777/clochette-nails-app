@@ -179,7 +179,7 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
   const cards = await db.giftCard.findMany({
     where: { creationMode: { in: ["PUBLIC", "ADMIN_SALE"] }, paymentStatus: "PAID", paidAt: { not: null } },
     orderBy: { paidAt: "asc" },
-    select: { id: true, initialAmountCents: true, stripeFeeCents: true, paidAt: true, creationMode: true },
+    select: { id: true, initialAmountCents: true, stripeFeeCents: true, paidAt: true, creationMode: true, refundedAmount: true, refundedAt: true, updatedAt: true },
   });
   for (const c of cards) {
     await seed("gift_card.purchased", c.id, c.paidAt!, {
@@ -190,6 +190,15 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       channel: c.creationMode === "PUBLIC" ? "public" : "admin_sale",
       paidAt: c.paidAt!.toISOString(),
     });
+    // Remboursement (décaissement daté) — miroir de la ligne « − » de finances.ts.
+    if ((c.refundedAmount ?? 0) > 0) {
+      const refundedAt = c.refundedAt ?? c.updatedAt;
+      await seed("gift_card.refunded", c.id, refundedAt, {
+        giftCardId: c.id,
+        refundedAmountCents: c.refundedAmount ?? 0,
+        refundedAt: refundedAt.toISOString(),
+      });
+    }
   }
 
   // ── 3. EBOOKS VENDUS (part Stripe hors GC ; la part GC est comptée à la vente de la carte).
@@ -201,6 +210,9 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       amount: true,
       stripeFeeCents: true,
       paidAt: true,
+      refundedAmount: true,
+      refundedAt: true,
+      updatedAt: true,
       giftCardRedemption: { select: { amountUsedCents: true } },
     },
   });
@@ -212,6 +224,15 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       stripeFeeCents: p.stripeFeeCents ?? 0,
       paidAt: p.paidAt!.toISOString(),
     });
+    // Remboursement de la portion CB (décaissement daté) — miroir de finances.ts.
+    if ((p.refundedAmount ?? 0) > 0) {
+      const refundedAt = p.refundedAt ?? p.updatedAt;
+      await seed("ebook.refunded", p.id, refundedAt, {
+        purchaseId: p.id,
+        stripeRefundedCents: p.refundedAmount ?? 0,
+        refundedAt: refundedAt.toISOString(),
+      });
+    }
   }
 
   // ── 4. FACTURES ÉMISES (registre documentaire, HORS CA).

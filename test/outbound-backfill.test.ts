@@ -207,6 +207,63 @@ describe("backfillOutbound", () => {
     expect(purchased.payload).toMatchObject({ amountPaidCents: 0 });
   });
 
+  it("carte cadeau remboursée avant cutover → seed gift_card.refunded daté", async () => {
+    await db.giftCard.create({
+      data: {
+        code: `GC-${randomUUID().slice(0, 8)}`,
+        codeHash: `hash-${randomUUID()}`,
+        prefix: "AB12",
+        initialAmountCents: 5000,
+        remainingAmountCents: 0,
+        amount: 5000,
+        deliveryMode: "EMAIL_TO_BUYER",
+        buyerName: "Acheteuse",
+        buyerEmail: "acheteuse@test.local",
+        creationMode: "PUBLIC",
+        paymentStatus: "PAID",
+        status: "REFUNDED",
+        stripeFeeCents: 100,
+        paidAt: new Date("2026-06-01T10:00:00Z"),
+        refundedAmount: 5000,
+        refundedAt: new Date("2026-06-20T10:00:00Z"),
+        expiresAt: new Date("2027-06-01T10:00:00Z"),
+      },
+    });
+
+    await backfillOutbound({ db, before: BEFORE });
+
+    const refund = await db.outboundEvent.findFirst({ where: { type: "gift_card.refunded" } });
+    expect(refund).not.toBeNull();
+    expect(refund!.createdAt.toISOString()).toBe("2026-06-20T10:00:00.000Z");
+    expect(refund!.payload).toMatchObject({ refundedAmountCents: 5000, refundedAt: "2026-06-20T10:00:00.000Z" });
+  });
+
+  it("ebook remboursé (portion CB) avant cutover → seed ebook.refunded daté", async () => {
+    const ebook = await db.ebook.create({
+      data: { slug: `eb-${randomUUID().slice(0, 8)}`, title: "G", shortDesc: "d", description: "d", priceCents: 1500, status: "PUBLISHED" },
+    });
+    await db.ebookPurchase.create({
+      data: {
+        ebookId: ebook.id,
+        clientEmail: `c-${randomUUID().slice(0, 8)}@test.local`,
+        amount: 1500,
+        paymentStatus: "REFUNDED",
+        stripeFeeCents: 30,
+        paidAt: new Date("2026-06-05T10:00:00Z"),
+        refundedAmount: 1500,
+        refundedAt: new Date("2026-06-22T10:00:00Z"),
+        downloadToken: randomUUID().replace(/-/g, ""),
+        tokenExpiresAt: new Date("2026-06-22T10:00:00Z"),
+      },
+    });
+
+    await backfillOutbound({ db, before: BEFORE });
+
+    const refund = await db.outboundEvent.findFirst({ where: { type: "ebook.refunded" } });
+    expect(refund).not.toBeNull();
+    expect(refund!.payload).toMatchObject({ stripeRefundedCents: 1500, refundedAt: "2026-06-22T10:00:00.000Z" });
+  });
+
   it("refuse de tourner sans date de cutover explicite", async () => {
     // Sans `before`, la garde de cutover (`occurredAt >= before`) retombait sur
     // « maintenant » et ne protégeait plus rien : un re-run reconstruisait les
