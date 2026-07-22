@@ -323,7 +323,11 @@ export default async function EbookSaleDetailPage({
                 purchase.refundedAmount != null &&
                 purchase.refundedAmount > 0 && (
                   <BreakdownRow
-                    label="Total remboursé (Stripe)"
+                    label={
+                      purchase.refundedAt
+                        ? `Total remboursé (Stripe) · le ${formatDateTime(purchase.refundedAt)}`
+                        : "Total remboursé (Stripe)"
+                    }
                     value={`− ${formatCents(purchase.refundedAmount)}`}
                     valueClass="text-[var(--color-warning)]"
                   />
