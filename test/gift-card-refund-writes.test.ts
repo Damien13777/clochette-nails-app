@@ -34,13 +34,38 @@ vi.mock("@/lib/stripe", () => ({ stripe: { refunds: { create: (...a: unknown[]) 
 
 import { requireAdmin } from "@/lib/auth-guards";
 import { emitOutboundEvent } from "@/lib/outbound-events";
-import { refundGiftCardStripe } from "@/lib/actions/gift-card-admin";
+import {
+  refundGiftCardOffline,
+  refundGiftCardStripe,
+} from "@/lib/actions/gift-card-admin";
 
 async function makeAdmin() {
   const rand = randomUUID().slice(0, 8);
   const admin = await db.user.create({ data: { email: `admin-${rand}@test.local`, role: "ADMIN" } });
   vi.mocked(requireAdmin).mockResolvedValue({ id: admin.id, email: admin.email });
   return admin;
+}
+
+async function makeSalonCard(amountCents: number, used = 0) {
+  return db.giftCard.create({
+    data: {
+      code: `GC-${randomUUID().slice(0, 8)}`,
+      codeHash: `hash-${randomUUID()}`,
+      prefix: "SA12",
+      initialAmountCents: amountCents,
+      remainingAmountCents: amountCents - used,
+      amount: amountCents,
+      deliveryMode: "EMAIL_TO_BUYER",
+      buyerName: "Cliente Salon",
+      buyerEmail: "salon@test.local",
+      creationMode: "ADMIN_SALE", // vendue au comptoir, aucun paiement Stripe
+      paymentStatus: "PAID",
+      paymentMethod: "cash",
+      status: used > 0 ? "PARTIALLY_USED" : "ACTIVE",
+      paidAt: new Date("2026-05-02T10:00:00.000Z"),
+      expiresAt: new Date("2027-05-02T10:00:00.000Z"),
+    },
+  });
 }
 
 async function makePublicCard(amountCents: number) {
@@ -109,5 +134,51 @@ describe("refundGiftCardStripe", () => {
     expect(updated.refundedAt).toBeNull();
     expect(updated.status).toBe("ACTIVE");
     expect(vi.mocked(emitOutboundEvent).mock.calls.find(([t]) => t === "gift_card.refunded")).toBeUndefined();
+  });
+});
+
+describe("refundGiftCardOffline (carte vendue au comptoir)", () => {
+  it("rembourse une carte ADMIN_SALE non entamée, pose refundMethod + refundedAt, émet le payload daté", async () => {
+    await makeAdmin();
+    const card = await makeSalonCard(5000);
+
+    const res = await refundGiftCardOffline(card.id, "cash");
+    expect(res.ok).toBe(true);
+
+    const updated = await db.giftCard.findUniqueOrThrow({ where: { id: card.id } });
+    expect(updated.status).toBe("REFUNDED");
+    expect(updated.paymentStatus).toBe("PAID"); // invariant D5
+    expect(updated.refundedAmount).toBe(5000);
+    expect(updated.refundedAt).not.toBeNull();
+    expect(updated.refundMethod).toBe("cash");
+    expect(updated.remainingAmountCents).toBe(0);
+
+    const call = vi.mocked(emitOutboundEvent).mock.calls.find(([t]) => t === "gift_card.refunded");
+    expect(call).toBeDefined();
+    expect(call![1]).toMatchObject({ giftCardId: card.id, refundedAmountCents: 5000 });
+    expect(typeof (call![1] as Record<string, unknown>).refundedAt).toBe("string");
+  });
+
+  it("refuse une carte déjà entamée (sans reliquat, D2)", async () => {
+    await makeAdmin();
+    const card = await makeSalonCard(5000, 2000); // 20 € déjà consommés
+
+    const res = await refundGiftCardOffline(card.id, "cash");
+    expect(res.ok).toBe(false);
+
+    const updated = await db.giftCard.findUniqueOrThrow({ where: { id: card.id } });
+    expect(updated.refundedAt).toBeNull();
+    expect(updated.status).toBe("PARTIALLY_USED");
+  });
+
+  it("refuse une carte payée par Stripe (doit passer par le remboursement Stripe)", async () => {
+    await makeAdmin();
+    const card = await makePublicCard(5000); // a un stripePaymentId
+
+    const res = await refundGiftCardOffline(card.id, "cash");
+    expect(res.ok).toBe(false);
+
+    const updated = await db.giftCard.findUniqueOrThrow({ where: { id: card.id } });
+    expect(updated.refundedAt).toBeNull();
   });
 });

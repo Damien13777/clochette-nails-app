@@ -517,6 +517,98 @@ export async function refundGiftCardStripe(
   return { ok: true, message: "Carte remboursée via Stripe." };
 }
 
+/**
+ * Remboursement HORS Stripe d'une carte vendue au comptoir (ADMIN_SALE) :
+ * l'argent est rendu en espèces / virement / chèque, aucun refund Stripe à
+ * déclencher. Sans ce chemin, une carte comptoir est structurellement
+ * irremboursable en compta. Sans reliquat (D2) : carte entamée refusée.
+ */
+export async function refundGiftCardOffline(
+  id: string,
+  method: "cash" | "transfer" | "check",
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Non autorisé" };
+
+  if (!["cash", "transfer", "check"].includes(method)) {
+    return { ok: false, error: "Moyen de remboursement invalide." };
+  }
+
+  const card = await prisma.giftCard.findUnique({
+    where: { id },
+    select: {
+      status: true,
+      stripePaymentId: true,
+      initialAmountCents: true,
+      remainingAmountCents: true,
+      creationMode: true,
+    },
+  });
+  if (!card) return { ok: false, error: "Carte introuvable" };
+  if (card.stripePaymentId) {
+    return {
+      ok: false,
+      error: "Cette carte a été payée en ligne : utilisez le remboursement Stripe.",
+    };
+  }
+  if (card.status === "REFUNDED" || card.status === "CANCELLED") {
+    return { ok: false, error: "Cette carte est déjà remboursée ou annulée." };
+  }
+  if (card.remainingAmountCents < card.initialAmountCents) {
+    return {
+      ok: false,
+      error: "Cette carte a déjà été utilisée. Remboursement impossible.",
+    };
+  }
+
+  const refundedAt = new Date();
+  await prisma.giftCard.update({
+    where: { id },
+    data: {
+      status: "REFUNDED",
+      refundedAmount: card.initialAmountCents,
+      refundedAt,
+      refundMethod: method,
+      remainingAmountCents: 0,
+    },
+  });
+  await emitOutboundEvent("gift_card.refunded", {
+    giftCardId: id,
+    refundedAmountCents: card.initialAmountCents,
+    refundedAt: refundedAt.toISOString(),
+  });
+  await audit(admin.id, id, "gift_card.refunded_offline", {
+    refundAmountCents: card.initialAmountCents,
+    method,
+  });
+
+  // Avoir automatique si une facture avait été émise pour cette vente
+  try {
+    const parentInvoice = await prisma.invoice.findFirst({
+      where: { giftCardId: id, docType: "INVOICE", status: "ISSUED" },
+      select: { id: true },
+    });
+    if (parentInvoice) {
+      const creditNote = await createCreditNote({
+        parentInvoiceId: parentInvoice.id,
+        amountCents: card.initialAmountCents,
+        reason: "Remboursement carte cadeau (hors Stripe)",
+        createdById: admin.id,
+      });
+      await audit(admin.id, id, "invoice.credit_note_created", {
+        number: creditNote.number,
+        amountCents: card.initialAmountCents,
+      });
+    }
+  } catch (err) {
+    if (!(err instanceof InvoiceError)) console.error("[gift-card-admin] avoir refund offline échec:", err);
+    else console.warn("[gift-card-admin] avoir refund offline refusé:", err.message);
+  }
+
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: "Carte remboursée (hors Stripe)." };
+}
+
 // ─── Validation d'un code par l'admin (sans rate limit) ────
 
 export type AdminGiftCardLookupResult =
