@@ -106,11 +106,9 @@ export function BlogForm({
     if (!slugTouched) update("slug", autoSlug(title));
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setFeedback(null);
-
+  // Construit le FormData depuis l'état courant du formulaire — source unique pour
+  // « Enregistrer » ET pour « Publier » (qui doit sauver avant de changer le statut).
+  function buildFormData(): FormData {
     const formData = new FormData();
     formData.set("title", values.title);
     formData.set("slug", values.slug);
@@ -121,12 +119,19 @@ export function BlogForm({
     formData.set("metaTitle", values.metaTitle);
     formData.set("metaDesc", values.metaDesc);
     formData.set("coverImageAlt", values.coverImageAlt);
+    return formData;
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setFeedback(null);
 
     startTransition(async () => {
       const result =
         mode === "create"
-          ? await createBlogPost(formData)
-          : await updateBlogPost(postId!, formData);
+          ? await createBlogPost(buildFormData())
+          : await updateBlogPost(postId!, buildFormData());
 
       if (result.ok) {
         if (mode === "create" && result.id) {
@@ -138,6 +143,39 @@ export function BlogForm({
       } else {
         setError(result.error);
         setFieldErrors(result.fieldErrors ?? {});
+      }
+    });
+  }
+
+  // Publier (ou programmer) en SAUVANT d'abord les édits en cours. Sinon
+  // `changeBlogPostStatus` publierait la dernière version enregistrée et les modifs
+  // non sauvées seraient perdues (bug data-loss au « Publier maintenant »).
+  function handleSaveThenPublish(publishedAtIso?: string) {
+    if (!postId) return;
+    setError(null);
+    setFeedback(null);
+    startTransition(async () => {
+      const saved = await updateBlogPost(postId, buildFormData());
+      if (!saved.ok) {
+        setError(saved.error);
+        setFieldErrors(saved.fieldErrors ?? {});
+        return;
+      }
+      const published = await changeBlogPostStatus(postId, "PUBLISHED", publishedAtIso);
+      if (published.ok) {
+        setFeedback(
+          publishedAtIso
+            ? `Modifications enregistrées · publication programmée pour le ${new Date(publishedAtIso).toLocaleString("fr-FR")}.`
+            : "Modifications enregistrées et article publié.",
+        );
+        setValues((v) => ({
+          ...v,
+          status: "PUBLISHED",
+          publishedAt: publishedAtIso ?? v.publishedAt ?? null,
+        }));
+        router.refresh();
+      } else {
+        setError(published.error);
       }
     });
   }
@@ -181,7 +219,7 @@ export function BlogForm({
       setError("La date doit être dans le futur (sinon utilise « Publier maintenant »).");
       return;
     }
-    handleStatusChange("PUBLISHED", d.toISOString());
+    handleSaveThenPublish(d.toISOString());
   }
 
   function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -403,7 +441,7 @@ export function BlogForm({
           <input
             id="cover-upload"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            accept="image/jpeg,image/png,image/webp"
             onChange={handleCoverUpload}
             disabled={coverPending}
             className="sr-only"
@@ -556,7 +594,7 @@ export function BlogForm({
               <button
                 type="button"
                 onClick={() =>
-                  handleStatusChange("PUBLISHED", new Date().toISOString())
+                  handleSaveThenPublish(new Date().toISOString())
                 }
                 disabled={isPending}
                 className="inline-flex items-center px-4 py-2 rounded-full bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/30 text-xs uppercase tracking-[0.06em] hover:bg-[var(--color-success)]/20 disabled:opacity-50 transition-colors"
@@ -614,7 +652,7 @@ export function BlogForm({
             {currentStatus !== "PUBLISHED" && (
               <button
                 type="button"
-                onClick={() => handleStatusChange("PUBLISHED")}
+                onClick={() => handleSaveThenPublish()}
                 disabled={isPending}
                 className="inline-flex items-center px-4 py-2 rounded-full bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/30 text-xs uppercase tracking-[0.06em] hover:bg-[var(--color-success)]/20 disabled:opacity-50 transition-colors"
                 style={{ fontFamily: "var(--font-display)" }}

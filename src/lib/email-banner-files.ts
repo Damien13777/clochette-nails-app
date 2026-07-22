@@ -33,8 +33,6 @@ const ACCEPTED_MIME_TYPES = new Set([
   "image/jpg",
   "image/png",
   "image/webp",
-  "image/heic",
-  "image/heif",
 ]);
 
 export type ProcessedBannerFile = {
@@ -63,7 +61,7 @@ export async function processEmailBannerUpload(
   if (!ACCEPTED_MIME_TYPES.has(mime)) {
     return {
       ok: false,
-      error: `Format non accepté (${mime || "inconnu"}). Utilisez JPG, PNG, WebP ou HEIC.`,
+      error: `Format non accepté (${mime || "inconnu"}). Utilisez JPG, PNG, WebP. Les photos iPhone HEIC ne sont pas prises en charge : convertis en JPG ou passe ton iPhone sur « Le plus compatible » (Réglages → Appareil photo → Formats).`,
     };
   }
 

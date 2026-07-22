@@ -26,7 +26,9 @@ type Slot =
 
 const MAX_FILES = 5;
 const MAX_BYTES = 5 * 1024 * 1024;
-const ACCEPT = "image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif";
+// Pas de heic/heif : iOS transcode alors automatiquement les photos iPhone en JPEG
+// à l'upload (libvips du VPS ne décode pas le HEVC/HEIC → sinon « image illisible »).
+const ACCEPT = "image/jpeg,image/jpg,image/png,image/webp";
 
 type Props = {
   /** URLs déjà uploadées (montrées en done). */

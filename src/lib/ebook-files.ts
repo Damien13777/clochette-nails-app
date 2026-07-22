@@ -37,8 +37,6 @@ const COVER_MIME_TYPES = new Set([
   "image/jpg",
   "image/png",
   "image/webp",
-  "image/heic",
-  "image/heif",
 ]);
 
 export type ProcessedCoverFile = { url: string; sizeBytes: number };
@@ -60,7 +58,7 @@ export async function processEbookCoverUpload(file: File): Promise<CoverResult> 
   if (!COVER_MIME_TYPES.has(mime)) {
     return {
       ok: false,
-      error: `Format image non accepté (${mime || "inconnu"}). JPG, PNG, WebP ou HEIC.`,
+      error: `Format image non accepté (${mime || "inconnu"}). JPG, PNG, WebP. Les photos iPhone HEIC ne sont pas prises en charge : convertis en JPG ou passe ton iPhone sur « Le plus compatible » (Réglages → Appareil photo → Formats).`,
     };
   }
 
@@ -144,7 +142,7 @@ export async function processEbookInlineUpload(
   if (!COVER_MIME_TYPES.has(mime)) {
     return {
       ok: false,
-      error: `Format image non accepté (${mime || "inconnu"}). JPG, PNG, WebP ou HEIC.`,
+      error: `Format image non accepté (${mime || "inconnu"}). JPG, PNG, WebP. Les photos iPhone HEIC ne sont pas prises en charge : convertis en JPG ou passe ton iPhone sur « Le plus compatible » (Réglages → Appareil photo → Formats).`,
     };
   }
 

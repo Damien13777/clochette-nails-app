@@ -124,7 +124,7 @@ export function EmailBannerField({ slot, label, hint, currentUrl }: Props) {
       <input
         id={inputId}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        accept="image/jpeg,image/png,image/webp"
         onChange={handleFile}
         disabled={pending}
         className="sr-only"

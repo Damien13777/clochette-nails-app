@@ -529,7 +529,7 @@ export function EbookForm({
           <input
             id="cover-upload"
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            accept="image/jpeg,image/png,image/webp"
             onChange={handleCoverUpload}
             disabled={coverPending}
             className="sr-only"

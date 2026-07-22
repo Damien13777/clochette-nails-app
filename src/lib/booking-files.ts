@@ -5,7 +5,8 @@
  * Stratégie :
  *  - Stockage local /public/uploads/booking-files/{uuid}.webp
  *  - Sharp compresse en WebP qualité 82, largeur max 1500px
- *  - HEIC → décodé par sharp via libheif si dispo (sinon erreur claire)
+ *  - HEIC/HEIF NON accepté (libvips du VPS n'a pas le décodeur HEVC) → rejet avec
+ *    message clair ; `accept` sans heic → iOS transcode en JPEG à l'upload.
  *  - Fichiers nommés UUID v4 (impossibles à deviner)
  *  - Pas d'auth côté API : la cliente upload AVANT de soumettre le form,
  *    on associe ensuite les URLs à la booking créée. Les fichiers orphelins
@@ -13,7 +14,7 @@
  *
  * Limites enforced (côté serveur, source de vérité) :
  *  - Taille brute max : 5 Mo par fichier
- *  - Type MIME accepté : JPEG, PNG, WebP, HEIC/HEIF
+ *  - Type MIME accepté : JPEG, PNG, WebP (HEIC exclu, cf. ci-dessus)
  */
 
 import { randomUUID } from "node:crypto";
@@ -39,8 +40,6 @@ const ACCEPTED_MIME_TYPES = new Set([
   "image/jpg",
   "image/png",
   "image/webp",
-  "image/heic",
-  "image/heif",
 ]);
 
 export type ProcessedBookingFile = {
@@ -90,7 +89,7 @@ export async function processBookingFileUpload(
   if (!ACCEPTED_MIME_TYPES.has(mime)) {
     return {
       ok: false,
-      error: `Format non accepté (${mime || "inconnu"}). Utilisez JPG, PNG, WebP ou HEIC.`,
+      error: `Format non accepté (${mime || "inconnu"}). Utilisez JPG, PNG, WebP. Les photos iPhone HEIC ne sont pas prises en charge : convertis en JPG ou passe ton iPhone sur « Le plus compatible » (Réglages → Appareil photo → Formats).`,
     };
   }
 
