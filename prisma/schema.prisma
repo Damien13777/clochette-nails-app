@@ -622,6 +622,9 @@ model EbookPurchase {
   paymentStatus   PaymentStatus @default(PENDING)
   amount          Int
   refundedAmount  Int?
+  /// Date du remboursement (jour du décaissement). Date la ligne négative en
+  /// compta au bon mois — sans elle, le refund serait imputé au mois de la vente.
+  refundedAt      DateTime?
   stripeSessionId String?       @unique
   stripePaymentId String?
   stripeFeeCents  Int?
@@ -1030,12 +1033,24 @@ model GiftCard {
 
   // Paiement de l'achat
   amount          Int
+  /// INVARIANT : reste PAID sur une carte remboursée OU annulée. finances.ts filtre
+  /// le CA dessus → le muter sortirait la vente du CA brut de son mois et casserait
+  /// la réconciliation ERP. Le remboursement se matérialise par refundedAmount +
+  /// refundedAt (ligne négative), l'annulation par status=CANCELLED (argent gardé).
   paymentStatus   PaymentStatus @default(PENDING)
   stripeSessionId String?       @unique
   stripePaymentId String?
   stripeFeeCents  Int?
   paidAt          DateTime?
   refundedAmount  Int?
+  /// Date du remboursement (jour du décaissement). Sert à dater la ligne
+  /// négative en compta au bon mois — SANS elle, le refund serait imputé au mois
+  /// de la vente. Le paymentStatus reste PAID sur une carte remboursée (invariant :
+  /// le CA brut de la vente ne bouge pas, cf. finances.ts).
+  refundedAt      DateTime?
+  /// Moyen du remboursement pour un refund HORS Stripe (carte vendue au comptoir) :
+  /// "cash" | "transfer" | "check". null pour un refund Stripe.
+  refundMethod    String?
 
   /// Origine de la carte. Détermine si elle compte au CA (PUBLIC/ADMIN_SALE)
   /// ou non (ADMIN_GIFT = geste commercial).
