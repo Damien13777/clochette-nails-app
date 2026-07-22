@@ -117,12 +117,18 @@ export async function computeFinances(
   return { totals, breakdown, transactions: all };
 }
 
+// Une carte cadeau vendue / un ebook vendu = UNE vente à son montant. On exclut
+// les lignes de remboursement (grossCents < 0) : une sortie d'argent n'est pas une
+// vente et gonflerait le compteur + fausserait le ticket moyen (une "vente" de −X).
+// Une vente réelle a toujours un montant strictement positif.
 function toUnitSales(txs: FinanceTransaction[]): FinanceSale[] {
-  return txs.map((t) => ({
-    id: t.id,
-    type: t.type,
-    amountCents: t.grossCents,
-  }));
+  return txs
+    .filter((t) => t.grossCents > 0)
+    .map((t) => ({
+      id: t.id,
+      type: t.type,
+      amountCents: t.grossCents,
+    }));
 }
 
 /**
@@ -329,11 +335,17 @@ async function loadGiftCardTransactions(
   from: Date,
   to: Date,
 ): Promise<FinanceTransaction[]> {
+  // Compta d'ENCAISSEMENT : une carte contribue si sa vente (paidAt) OU son
+  // remboursement (refundedAt) tombe dans la période. Deux lignes distinctes,
+  // datées chacune à sa propre date — miroir des RDV.
   const cards = await prisma.giftCard.findMany({
     where: {
       creationMode: { in: ["PUBLIC", "ADMIN_SALE"] },
       paymentStatus: "PAID",
-      paidAt: { gte: from, lt: to },
+      OR: [
+        { paidAt: { gte: from, lt: to } },
+        { AND: [{ refundedAmount: { gt: 0 } }, { refundedAt: { gte: from, lt: to } }] },
+      ],
     },
     select: {
       id: true,
@@ -341,6 +353,8 @@ async function loadGiftCardTransactions(
       initialAmountCents: true,
       stripeFeeCents: true,
       refundedAmount: true,
+      refundedAt: true,
+      refundMethod: true,
       buyerName: true,
       buyerEmail: true,
       paidAt: true,
@@ -348,31 +362,56 @@ async function loadGiftCardTransactions(
     },
   });
 
-  return cards.map((c) => {
-    const gross = c.initialAmountCents;
+  const out: FinanceTransaction[] = [];
+  for (const c of cards) {
+    const detailUrl = `/admin/cartes-cadeau/${c.id}`;
     // Vente en salon (ADMIN_SALE) = paiement physique, pas de frais Stripe.
     // Vente publique (PUBLIC) = Stripe Checkout, frais réels via webhook.
     const fee = c.creationMode === "PUBLIC" ? (c.stripeFeeCents ?? 0) : 0;
-    // Remboursement (refundGiftCardStripe pose status=REFUNDED + refundedAmount,
-    // mais garde paymentStatus=PAID → la carte reste comptée ici, on déduit le refund).
+
+    // ─── Ligne de VENTE (au paidAt) ───
+    if (c.paidAt && c.paidAt >= from && c.paidAt < to) {
+      out.push({
+        id: `giftcard:${c.id}`,
+        type: "gift_card",
+        dateIso: c.paidAt.toISOString(),
+        ref: `•${c.prefix}`,
+        detailUrl,
+        clientName: c.buyerName,
+        clientEmail: c.buyerEmail,
+        paymentMethod: c.creationMode === "ADMIN_SALE" ? "salon" : "stripe",
+        grossCents: c.initialAmountCents,
+        giftCardUsedCents: 0,
+        stripeFeeCents: fee,
+        refundedCents: 0,
+        refundedInGrossCents: 0,
+        netCents: Math.max(0, c.initialAmountCents - fee),
+      });
+    }
+
+    // ─── Ligne de REMBOURSEMENT (−) à la date réelle du refund ───
+    // Append-only : la vente reste intacte, le décaissement est une ligne à part.
     const refunded = c.refundedAmount ?? 0;
-    return {
-      id: `giftcard:${c.id}`,
-      type: "gift_card" as TransactionType,
-      dateIso: (c.paidAt ?? new Date()).toISOString(),
-      ref: `•${c.prefix}`,
-      detailUrl: `/admin/cartes-cadeau/${c.id}`,
-      clientName: c.buyerName,
-      clientEmail: c.buyerEmail,
-      paymentMethod: c.creationMode === "ADMIN_SALE" ? "salon" : "stripe",
-      grossCents: gross,
-      giftCardUsedCents: 0,
-      stripeFeeCents: fee,
-      refundedCents: refunded,
-      refundedInGrossCents: 0,
-      netCents: Math.max(0, gross - fee - refunded),
-    };
-  });
+    if (refunded > 0 && c.refundedAt && c.refundedAt >= from && c.refundedAt < to) {
+      out.push({
+        id: `giftcard-refund:${c.id}`,
+        type: "gift_card",
+        dateIso: c.refundedAt.toISOString(),
+        ref: `•${c.prefix} · remboursement`,
+        detailUrl,
+        clientName: c.buyerName,
+        clientEmail: c.buyerEmail,
+        paymentMethod: c.refundMethod ?? "stripe",
+        grossCents: -refunded,
+        giftCardUsedCents: 0,
+        stripeFeeCents: 0,
+        refundedCents: refunded,
+        refundedInGrossCents: refunded,
+        netCents: -refunded,
+      });
+    }
+  }
+  return out;
 }
 
 async function loadEbookTransactions(
@@ -382,12 +421,16 @@ async function loadEbookTransactions(
   const purchases = await prisma.ebookPurchase.findMany({
     where: {
       paymentStatus: { in: ["PAID", "REFUNDED"] },
-      paidAt: { gte: from, lt: to },
+      OR: [
+        { paidAt: { gte: from, lt: to } },
+        { AND: [{ refundedAmount: { gt: 0 } }, { refundedAt: { gte: from, lt: to } }] },
+      ],
     },
     select: {
       id: true,
       amount: true,
       refundedAmount: true,
+      refundedAt: true,
       stripeFeeCents: true,
       paidAt: true,
       clientName: true,
@@ -399,31 +442,59 @@ async function loadEbookTransactions(
     },
   });
 
-  return purchases.map((p) => {
+  const out: FinanceTransaction[] = [];
+  for (const p of purchases) {
     const gross = p.amount;
     const gcUsed = p.giftCardRedemption?.amountUsedCents ?? 0;
     const fee = p.stripeFeeCents ?? 0;
+    const detailUrl = `/admin/ebooks/ventes/${p.id}`;
+    const clientName = p.clientName ?? p.clientEmail;
+
+    // ─── Ligne de VENTE (au paidAt) — net = portion Stripe nette (la portion GC
+    // est exclue du CA, déjà comptée à la vente de la carte). Le remboursement
+    // n'est PLUS déduit ici : c'est une ligne à part datée du refund.
+    if (p.paidAt && p.paidAt >= from && p.paidAt < to) {
+      out.push({
+        id: `ebook:${p.id}`,
+        type: "ebook",
+        dateIso: p.paidAt.toISOString(),
+        ref: p.ebook.slug,
+        detailUrl,
+        clientName,
+        clientEmail: p.clientEmail,
+        paymentMethod: gcUsed >= gross ? "gift_card_full" : "stripe",
+        grossCents: gross,
+        giftCardUsedCents: gcUsed,
+        stripeFeeCents: fee,
+        refundedCents: 0,
+        refundedInGrossCents: 0,
+        netCents: Math.max(0, gross - gcUsed - fee),
+      });
+    }
+
+    // ─── Ligne de REMBOURSEMENT (−) : portion CB rendue, datée du refund.
+    // La part carte cadeau est re-créditée sur la carte, jamais un décaissement.
     const refunded = p.refundedAmount ?? 0;
-    // Net = portion Stripe nette (la portion GC est exclue du CA pour éviter
-    // double-comptage avec la vente initiale de la carte)
-    const net = Math.max(0, gross - gcUsed - refunded - fee);
-    return {
-      id: `ebook:${p.id}`,
-      type: "ebook" as TransactionType,
-      dateIso: (p.paidAt ?? new Date()).toISOString(),
-      ref: p.ebook.slug,
-      detailUrl: `/admin/ebooks/ventes/${p.id}`,
-      clientName: p.clientName ?? p.clientEmail,
-      clientEmail: p.clientEmail,
-      paymentMethod: gcUsed >= gross ? "gift_card_full" : "stripe",
-      grossCents: gross,
-      giftCardUsedCents: gcUsed,
-      stripeFeeCents: fee,
-      refundedCents: refunded,
-      refundedInGrossCents: 0,
-      netCents: net,
-    };
-  });
+    if (refunded > 0 && p.refundedAt && p.refundedAt >= from && p.refundedAt < to) {
+      out.push({
+        id: `ebook-refund:${p.id}`,
+        type: "ebook",
+        dateIso: p.refundedAt.toISOString(),
+        ref: `${p.ebook.slug} · remboursement`,
+        detailUrl,
+        clientName,
+        clientEmail: p.clientEmail,
+        paymentMethod: "stripe",
+        grossCents: -refunded,
+        giftCardUsedCents: 0,
+        stripeFeeCents: 0,
+        refundedCents: refunded,
+        refundedInGrossCents: refunded,
+        netCents: -refunded,
+      });
+    }
+  }
+  return out;
 }
 
 // ─── Série temporelle pour graphique ───────────────────────
