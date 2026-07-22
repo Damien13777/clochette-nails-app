@@ -460,18 +460,30 @@ export async function refundGiftCardStripe(
     const msg = err instanceof Error ? err.message : "Erreur Stripe";
     return { ok: false, error: `Échec du remboursement Stripe : ${msg}` };
   }
+  // Garde refund.status : ne rien écrire tant que l'argent n'est pas parti. Un
+  // refund `pending`/`failed`/`canceled` ne doit pas produire de ligne négative
+  // en compta pour un décaissement qui n'a pas (encore) eu lieu.
+  if (refund.status !== "succeeded") {
+    return {
+      ok: false,
+      error: `Remboursement Stripe non finalisé (statut : ${refund.status ?? "inconnu"}). Réessayez plus tard.`,
+    };
+  }
 
+  const refundedAt = new Date();
   await prisma.giftCard.update({
     where: { id },
     data: {
       status: "REFUNDED",
       refundedAmount: refund.amount,
+      refundedAt,
       remainingAmountCents: 0,
     },
   });
   await emitOutboundEvent("gift_card.refunded", {
     giftCardId: id,
     refundedAmountCents: refund.amount,
+    refundedAt: refundedAt.toISOString(),
   });
   await audit(admin.id, id, "gift_card.refunded_stripe", {
     refundId: refund.id,
