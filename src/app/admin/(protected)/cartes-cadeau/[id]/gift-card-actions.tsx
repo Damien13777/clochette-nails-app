@@ -16,15 +16,20 @@ import type { GiftCardStatus } from "@prisma/client";
 import {
   cancelGiftCard,
   extendGiftCardExpiration,
+  refundGiftCardOffline,
   refundGiftCardStripe,
   resendGiftCardEmail,
 } from "@/lib/actions/gift-card-admin";
+
+type RefundMethod = "cash" | "transfer" | "check";
 
 type Props = {
   id: string;
   status: GiftCardStatus;
   expiresAtIso: string;
   hasStripePayment: boolean;
+  /** True si la carte a été vendue au comptoir (ADMIN_SALE) → remboursement hors Stripe. */
+  isSalonSale: boolean;
   isIntact: boolean;
   /** True si la carte a une adresse email valide à laquelle renvoyer. */
   canResendEmail: boolean;
@@ -37,6 +42,7 @@ export function GiftCardActions({
   status,
   expiresAtIso,
   hasStripePayment,
+  isSalonSale,
   isIntact,
   canResendEmail,
 }: Props) {
@@ -45,6 +51,7 @@ export function GiftCardActions({
   const [showExtend, setShowExtend] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
   const [showRefund, setShowRefund] = useState(false);
+  const [showRefundOffline, setShowRefundOffline] = useState(false);
   const router = useRouter();
 
   function runAction(
@@ -139,6 +146,16 @@ export function GiftCardActions({
         />
       )}
 
+      {!noActionsAvailable && isIntact && !hasStripePayment && isSalonSale && (
+        <ActionButton
+          label="Rembourser (hors Stripe)"
+          description="Carte vendue au comptoir : espèces, virement ou chèque"
+          variant="ghost-danger"
+          disabled={isPending}
+          onClick={() => setShowRefundOffline(true)}
+        />
+      )}
+
       {noActionsAvailable && !canResendNow && (
         <p
           className="text-xs text-[var(--color-ink-500)]"
@@ -188,6 +205,110 @@ export function GiftCardActions({
           disabled={isPending}
         />
       )}
+
+      {showRefundOffline && (
+        <RefundMethodDialog
+          onCancel={() => setShowRefundOffline(false)}
+          onConfirm={(method) => {
+            setShowRefundOffline(false);
+            runAction(() => refundGiftCardOffline(id, method));
+          }}
+          disabled={isPending}
+        />
+      )}
+    </div>
+  );
+}
+
+function RefundMethodDialog({
+  onCancel,
+  onConfirm,
+  disabled,
+}: {
+  onCancel: () => void;
+  onConfirm: (method: RefundMethod) => void;
+  disabled?: boolean;
+}) {
+  const [method, setMethod] = useState<RefundMethod>("cash");
+  const options: { value: RefundMethod; label: string }[] = [
+    { value: "cash", label: "Espèces" },
+    { value: "transfer", label: "Virement" },
+    { value: "check", label: "Chèque" },
+  ];
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Rembourser hors Stripe"
+      className="fixed inset-0 z-50 bg-black/40 grid place-items-center px-4"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[var(--radius-md)] max-w-md w-full p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg" style={{ fontFamily: "var(--font-serif)" }}>
+          Rembourser cette carte (hors Stripe)
+        </h3>
+        <p
+          className="text-xs p-3 rounded-[var(--radius-sm)] bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/30"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          ⚠ Carte vendue au comptoir : rendez le montant à la cliente par le moyen
+          choisi, puis confirmez. La carte passe en REFUNDED et un avoir est généré
+          si une facture existait. Action irréversible.
+        </p>
+        <fieldset className="space-y-2">
+          <legend
+            className="text-xs uppercase tracking-[0.14em] text-[var(--color-ink-700)] mb-1"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Moyen de remboursement
+          </legend>
+          {options.map((o) => (
+            <label
+              key={o.value}
+              className={`flex items-center gap-3 px-4 py-3 rounded-[var(--radius-sm)] border cursor-pointer transition-colors ${
+                method === o.value
+                  ? "border-[var(--color-violet-600)] bg-[var(--color-violet-50)]/50"
+                  : "border-[var(--color-line)] hover:bg-[var(--color-bone)]"
+              }`}
+              style={{ fontFamily: "var(--font-ui)" }}
+            >
+              <input
+                type="radio"
+                name="refund-method"
+                value={o.value}
+                checked={method === o.value}
+                onChange={() => setMethod(o.value)}
+                className="accent-[var(--color-violet-600)]"
+              />
+              <span className="text-sm text-[var(--color-ink-900)]">{o.label}</span>
+            </label>
+          ))}
+        </fieldset>
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={disabled}
+            className="px-4 py-2 rounded-full text-xs uppercase tracking-[0.06em] border border-[var(--color-line)] text-[var(--color-ink-700)] hover:bg-[var(--color-bone)] disabled:opacity-50 transition-colors"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={() => onConfirm(method)}
+            disabled={disabled}
+            className="px-4 py-2 rounded-full text-xs uppercase tracking-[0.06em] disabled:opacity-50 disabled:cursor-not-allowed transition-colors bg-[var(--color-danger)] text-white hover:opacity-90"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Confirmer le remboursement
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

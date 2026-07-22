@@ -62,6 +62,12 @@ const STATUS_META: Record<GiftCardStatus, { label: string; cls: string }> = {
   },
 };
 
+const REFUND_METHOD_LABEL: Record<string, string> = {
+  cash: "Espèces",
+  transfer: "Virement",
+  check: "Chèque",
+};
+
 function formatCents(cents: number): string {
   return (cents / 100).toFixed(2).replace(".", ",") + " €";
 }
@@ -329,7 +335,16 @@ export default async function GiftCardDetailPage({
               {card.refundedAmount !== null && card.refundedAmount > 0 && (
                 <Row
                   label="Remboursé"
-                  value={formatCents(card.refundedAmount)}
+                  value={
+                    <span className="inline-flex flex-col items-start gap-0.5">
+                      <span>{`− ${formatCents(card.refundedAmount)}`}</span>
+                      <span className="text-[11px] text-[var(--color-ink-500)]">
+                        {card.refundedAt ? `le ${formatDateTime(card.refundedAt)}` : ""}
+                        {card.refundMethod ? ` · ${REFUND_METHOD_LABEL[card.refundMethod] ?? card.refundMethod}` : ""}
+                        {!card.refundMethod && card.stripePaymentId ? " · via Stripe" : ""}
+                      </span>
+                    </span>
+                  }
                 />
               )}
             </dl>
@@ -417,6 +432,7 @@ export default async function GiftCardDetailPage({
               status={card.status}
               expiresAtIso={card.expiresAt.toISOString()}
               hasStripePayment={!!card.stripePaymentId}
+              isSalonSale={card.creationMode === "ADMIN_SALE"}
               isIntact={isIntact}
               canResendEmail={
                 !!(card.recipientEmail ?? card.buyerEmail) &&

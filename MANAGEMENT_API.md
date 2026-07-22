@@ -148,7 +148,7 @@ Légende : ✅ émis aujourd'hui · 🚧 à ajouter
 | `gift_card.redeemed` | 🚧 | `applyGiftCardRedemption` | Utilisée sur booking ou ebook (avec `type`: BOOKING_DEPOSIT / BOOKING_SERVICE / EBOOK) |
 | `gift_card.reversed` | 🚧 | `reverseGiftCardRedemption` | Redemption inversée (refund booking) |
 | `gift_card.depleted` | 🚧 | `applyGiftCardRedemption` quand solde → 0 | Carte épuisée |
-| `gift_card.refunded` | 🚧 | server action refund GC | Refund de la vente initiale |
+| `gift_card.refunded` | ✅ | `refundGiftCardStripe` + `refundGiftCardOffline` + backfill | Refund de la vente (Stripe OU hors Stripe comptoir). Ligne négative datée côté ERP (kind `refund`, `-refundedAmountCents`, feeCents 0). Payload : `{ giftCardId, refundedAmountCents, refundedAt }` |
 | `gift_card.expired` | 🚧 | cron expiration (à créer) | Date d'expiration dépassée |
 
 ### Ebooks
@@ -157,7 +157,7 @@ Légende : ✅ émis aujourd'hui · 🚧 à ajouter
 |---|---|---|---|
 | `ebook.purchased` | 🚧 | webhook Stripe + action carte cadeau 100% | Achat confirmé, PDF livré |
 | `ebook.downloaded` | 🚧 | endpoint `/api/v1/ebooks/download/[token]` | Cliente télécharge (utile pour analytics — opt-in via setting ?) |
-| `ebook.refunded` | 🚧 | `refundEbookPurchase` | Refund + révocation accès |
+| `ebook.refunded` | ✅ | `refundEbookPurchase` + backfill | Refund de la portion CB + révocation accès. Ligne négative datée côté ERP (kind `refund`, `-stripeRefundedCents` ; la part carte cadeau est re-créditée, pas décaissée). Payload : `{ purchaseId, stripeRefundedCents, gcRefundedCents, refundedAt }` |
 | `ebook.reissued` | 🚧 | `reissueEbookDownload` | Admin réémet un nouveau lien (+1 DL) |
 
 ### Factures

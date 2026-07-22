@@ -223,6 +223,16 @@ export function TransactionsTable({ transactions, fromIso, toIso }: Props) {
         </p>
       </div>
 
+      {filtered.some((t) => t.refundedInGrossCents > 0) && (
+        <p
+          className="mb-3 text-xs text-[var(--color-ink-500)]"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          * Remboursement déjà déduit du brut : il porte sa propre ligne négative
+          à sa date. Ne pas le soustraire une seconde fois.
+        </p>
+      )}
+
       {exportError && (
         <p
           className="mb-3 text-sm text-[var(--color-danger)]"
@@ -328,9 +338,16 @@ export function TransactionsTable({ transactions, fromIso, toIso }: Props) {
                         </DetailItem>
                       )}
                       {t.refundedCents > 0 && (
-                        <DetailItem label="Remboursé">
+                        <DetailItem
+                          label={
+                            t.refundedInGrossCents > 0
+                              ? "Remboursé (déjà dans le brut)"
+                              : "Remboursé"
+                          }
+                        >
                           <span className="tabular-nums text-[var(--color-warning)]">
-                            −{formatEuro(t.refundedCents)}
+                            {t.refundedInGrossCents > 0 ? "" : "−"}
+                            {formatEuro(t.refundedCents)}
                           </span>
                         </DetailItem>
                       )}
@@ -432,8 +449,18 @@ export function TransactionsTable({ transactions, fromIso, toIso }: Props) {
                         </span>
                       </Td>
                       <Td align="right">
-                        <span className="tabular-nums text-[var(--color-warning)]">
+                        <span
+                          className="tabular-nums text-[var(--color-warning)]"
+                          title={
+                            t.refundedInGrossCents > 0
+                              ? "Déjà déduit du brut (ligne négative datée) — ne pas soustraire une seconde fois"
+                              : undefined
+                          }
+                        >
                           {t.refundedCents > 0 ? formatEuro(t.refundedCents) : "—"}
+                          {t.refundedInGrossCents > 0 && (
+                            <span className="text-[var(--color-ink-500)]"> *</span>
+                          )}
                         </span>
                       </Td>
                       <Td align="right">

@@ -287,6 +287,15 @@ export async function refundEbookPurchase(
           customReason: reason || "(non précisé)",
         },
       });
+      // Garde refund.status : ne compter le décaissement que si l'argent est
+      // parti. Un refund pending/failed/canceled ne doit pas produire de ligne
+      // négative en compta.
+      if (refund.status !== "succeeded") {
+        return {
+          ok: false,
+          error: `Remboursement Stripe non finalisé (statut : ${refund.status ?? "inconnu"}). Réessayez plus tard.`,
+        };
+      }
       stripeRefundedCents = refund.amount;
       stripeRefundId = refund.id;
     } catch (err) {
@@ -316,6 +325,7 @@ export async function refundEbookPurchase(
       paymentStatus: "REFUNDED",
       refundedAmount:
         (purchase.refundedAmount ?? 0) + stripeRefundedCents,
+      refundedAt: now, // date le décaissement pour la compta (ligne négative)
       tokenExpiresAt: now, // révoque l'accès download
     },
   });
@@ -333,6 +343,7 @@ export async function refundEbookPurchase(
     purchaseId: purchase.id,
     stripeRefundedCents,
     gcRefundedCents,
+    refundedAt: now.toISOString(),
   });
 
   // Avoir automatique si une facture avait été émise (joint au mail de remboursement)

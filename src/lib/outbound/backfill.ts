@@ -3,6 +3,14 @@
  * seede dans `OutboundEvent` (le worker les livre ensuite). Nécessaire car la
  * queue était log-only avant l'activation de l'ERP → sans ça l'ERP démarre vide.
  *
+ * ⚠️ Miroir EXACT de finances.ts, y compris sur les redemptions de carte cadeau :
+ * on ne filtre PAS sur `reversedAt` (une redemption est un événement daté, pas un
+ * état courant — cf. l'en-tête de finances.ts). Toute divergence entre ce fichier
+ * et finances.ts se traduirait par un écart entre le site et l'ERP.
+ * ⚠️ Ce backfill a été exécuté et réconcilié au centime le 18/07. Le RELANCER
+ * exige la procédure de purge complète de ce jour-là (purge outbound + incoming,
+ * re-dispatch, re-projection) — sinon double comptage côté ERP.
+ *
  * Modèle : compta d'ENCAISSEMENT, miroir EXACT de finances.ts (page corrigée) +
  * cycle de vie CRM complet. Un RDV génère jusqu'à 4 events (acompte, solde,
  * terminal, remboursement), chacun daté à SA date métier.
@@ -30,17 +38,27 @@ import { prisma } from "@/lib/prisma";
 
 export type BackfillDeps = { db?: PrismaClient; before?: Date };
 
-type RedemptionLite = { type: string; amountUsedCents: number; reversedAt: Date | null };
+type RedemptionLite = { type: string; amountUsedCents: number };
 
 function sumRedemptions(reds: RedemptionLite[], type: string): number {
   return reds
-    .filter((r) => r.type === type && r.reversedAt === null)
+    .filter((r) => r.type === type)
     .reduce((acc, r) => acc + r.amountUsedCents, 0);
 }
 
 export async function backfillOutbound(deps: BackfillDeps = {}) {
   const db = deps.db ?? prisma;
-  const before = deps.before ?? new Date();
+  const beforeInput = deps.before;
+  // Garde dure : sans date de cutover explicite, le filtre `occurredAt >= before`
+  // retombait sur « maintenant » et ne protégeait plus rien. Un re-run
+  // reconstruisait alors les faits POSTÉRIEURS à la bascule avec des eventId
+  // `backfill:*` que rien ne rapproche des eventId live → double comptage ERP.
+  if (!beforeInput || Number.isNaN(beforeInput.getTime())) {
+    throw new Error(
+      "backfillOutbound : date de cutover obligatoire (deps.before). Sans elle, un re-run double-compterait tout fait postérieur à la bascule côté ERP.",
+    );
+  }
+  const before: Date = beforeInput;
   const targetUrl = process.env.MANAGEMENT_API_URL ?? "";
   if (!targetUrl) {
     return { seeded: 0, skipped: 0, reason: "MANAGEMENT_API_URL non configuré" };
@@ -94,7 +112,7 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       clientEmail: true,
       clientPhone: true,
       service: { select: { slug: true, title: true } },
-      giftCardRedemptions: { select: { type: true, amountUsedCents: true, reversedAt: true } },
+      giftCardRedemptions: { select: { type: true, amountUsedCents: true } },
     },
   });
 
@@ -161,7 +179,7 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
   const cards = await db.giftCard.findMany({
     where: { creationMode: { in: ["PUBLIC", "ADMIN_SALE"] }, paymentStatus: "PAID", paidAt: { not: null } },
     orderBy: { paidAt: "asc" },
-    select: { id: true, initialAmountCents: true, stripeFeeCents: true, paidAt: true, creationMode: true },
+    select: { id: true, initialAmountCents: true, stripeFeeCents: true, paidAt: true, creationMode: true, refundedAmount: true, refundedAt: true },
   });
   for (const c of cards) {
     await seed("gift_card.purchased", c.id, c.paidAt!, {
@@ -172,6 +190,17 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       channel: c.creationMode === "PUBLIC" ? "public" : "admin_sale",
       paidAt: c.paidAt!.toISOString(),
     });
+    // Remboursement (décaissement daté) — miroir EXACT de la ligne « − » de
+    // finances.ts, qui exige refundedAt non-null (elle DROP sinon). Pas de
+    // fallback updatedAt ici : sinon l'ERP daterait un refund que finances écarte
+    // → écart de réconciliation. Les actions de refund posent toujours refundedAt.
+    if ((c.refundedAmount ?? 0) > 0 && c.refundedAt) {
+      await seed("gift_card.refunded", c.id, c.refundedAt, {
+        giftCardId: c.id,
+        refundedAmountCents: c.refundedAmount ?? 0,
+        refundedAt: c.refundedAt.toISOString(),
+      });
+    }
   }
 
   // ── 3. EBOOKS VENDUS (part Stripe hors GC ; la part GC est comptée à la vente de la carte).
@@ -183,17 +212,29 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       amount: true,
       stripeFeeCents: true,
       paidAt: true,
-      giftCardRedemption: { select: { amountUsedCents: true, reversedAt: true } },
+      refundedAmount: true,
+      refundedAt: true,
+      giftCardRedemption: { select: { amountUsedCents: true } },
     },
   });
   for (const p of ebooks) {
-    const gcUsed = p.giftCardRedemption && !p.giftCardRedemption.reversedAt ? p.giftCardRedemption.amountUsedCents : 0;
+    const gcUsed = p.giftCardRedemption?.amountUsedCents ?? 0;
     await seed("ebook.purchased", p.id, p.paidAt!, {
       purchaseId: p.id,
       amountPaidCents: Math.max(0, p.amount - gcUsed),
       stripeFeeCents: p.stripeFeeCents ?? 0,
       paidAt: p.paidAt!.toISOString(),
     });
+    // Remboursement de la portion CB (décaissement daté) — miroir EXACT de
+    // finances.ts (exige refundedAt non-null, pas de fallback updatedAt).
+    if ((p.refundedAmount ?? 0) > 0 && p.refundedAt) {
+      await seed("ebook.refunded", p.id, p.refundedAt, {
+        purchaseId: p.id,
+        stripeRefundedCents: p.refundedAmount ?? 0,
+        gcRefundedCents: 0,
+        refundedAt: p.refundedAt.toISOString(),
+      });
+    }
   }
 
   // ── 4. FACTURES ÉMISES (registre documentaire, HORS CA).
