@@ -47,14 +47,12 @@ export type FinanceTransaction = {
   stripeFeeCents: number; // frais Stripe (peut être null → 0)
   refundedCents: number; // remboursé
   /**
-   * Part du remboursement DÉJÀ portée par grossCents. Vaut refundedCents sur la
-   * ligne de remboursement d'un RDV (grossCents y est négatif : le décaissement
-   * est daté du jour du refund), et 0 pour les cartes cadeau et ebooks, dont le
-   * remboursement est déduit du net sans ligne datée (ni GiftCard ni
-   * EbookPurchase n'a de champ refundedAt au schéma).
-   *
-   * Sans cette distinction, l'équation « Net = Brut − GC − Frais − Remboursé »
-   * affichée à l'admin déduit deux fois les remboursements de RDV.
+   * Part du remboursement DÉJÀ portée par grossCents. Depuis que TOUS les
+   * remboursements (RDV, carte cadeau, ebook) sont des lignes négatives datées de
+   * refundedAt, cette valeur vaut refundedCents sur chaque ligne de remboursement
+   * (grossCents y est négatif) et 0 partout ailleurs → « Remboursé hors brut »
+   * (refundedCents − refundedInGrossCents) est désormais toujours 0. Champ
+   * conservé pour l'équation historique du Net ; à retirer lors d'un nettoyage.
    */
   refundedInGrossCents: number;
   netCents: number; // ce qui rentre vraiment au CA (gross − giftCardUsed − refunded − stripeFee)
@@ -696,16 +694,16 @@ async function loadTopServices(from: Date, to: Date): Promise<TopItem[]> {
       .filter((r) => r.type === "BOOKING_SERVICE")
       .reduce((s, r) => s + r.amountUsedCents, 0);
     const fee = b.stripeFeeCents ?? 0;
-    const refunded = b.refundedAmount ?? 0;
     const revenueCash = b.revenueCents ?? 0;
 
     // Brut total du RDV : tout ce qui a été encaissé (Stripe acompte + GC acompte
     // + cash/CB complément + GC complément)
     const gross = b.depositCents + revenueCash + gcService;
-    // Net qui rentre au CA pour CE RDV :
-    //   net acompte = depositCents − gcDeposit − fee − refunded
-    //   net complément = revenueCash (la GC ne re-compte pas)
-    const netAcompte = Math.max(0, b.depositCents - gcDeposit - fee - refunded);
+    // Net de VENTE du RDV : net acompte (depositCents − gcDeposit − fee) + net
+    // complément (revenueCash, la GC ne re-compte pas). Le remboursement n'est PAS
+    // déduit ici — ligne datée à part (append-only). NB : un RDV remboursé passe
+    // CANCELLED_BY_ADMIN → hors du filtre COMPLETED, il n'atteint jamais ce code.
+    const netAcompte = Math.max(0, b.depositCents - gcDeposit - fee);
     const net = netAcompte + revenueCash;
 
     existing.count += 1;
@@ -748,10 +746,12 @@ async function loadTopEbooks(from: Date, to: Date): Promise<TopItem[]> {
     };
     const gcUsed = p.giftCardRedemption?.amountUsedCents ?? 0;
     const fee = p.stripeFeeCents ?? 0;
-    const refunded = p.refundedAmount ?? 0;
+    // Top des ventes de la période : net de VENTE (portion Stripe nette). Le
+    // remboursement n'est PAS déduit ici — c'est une ligne datée à part dans le
+    // journal (append-only), qui peut tomber sur un autre mois.
     existing.count += 1;
     existing.grossCents += p.amount;
-    existing.netCents += Math.max(0, p.amount - gcUsed - refunded - fee);
+    existing.netCents += Math.max(0, p.amount - gcUsed - fee);
     agg.set(key, existing);
   }
 

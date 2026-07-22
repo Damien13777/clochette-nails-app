@@ -11,7 +11,7 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { db, truncateAll } from "../e2e/db";
-import { computeFinances } from "@/lib/finances";
+import { computeFinanceAnalytics, computeFinances } from "@/lib/finances";
 
 // Bornes de mois en calendrier PARIS (février = CET UTC+1 ; avril = CEST UTC+2 ;
 // bascule DST le 29 mars 2026).
@@ -149,5 +149,10 @@ describe("remboursement ebook (portion CB) → ligne négative datée", () => {
     expect(avril.totals.grossCents).toBe(-500); // portion CB rendue
     expect(avril.totals.netCents).toBe(-500);
     expect(avril.breakdown.ebooks.count).toBe(0); // pas une vente
+
+    // La modale « Top ebooks » (analytics) doit montrer le net de VENTE du mois,
+    // sans déduire un remboursement qui a lieu à une autre date (append-only).
+    const analyticsMars = await computeFinanceAnalytics(MARS.from, MARS.to);
+    expect(analyticsMars.topEbooks[0]?.netCents).toBe(470); // et non 0 (refund déduit)
   });
 });

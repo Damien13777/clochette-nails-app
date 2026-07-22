@@ -545,6 +545,19 @@ export async function refundGiftCardOffline(
     },
   });
   if (!card) return { ok: false, error: "Carte introuvable" };
+  // SEULES les cartes vendues au comptoir (ADMIN_SALE) se remboursent hors Stripe.
+  // PUBLIC = payée en ligne (refund Stripe). ADMIN_GIFT = geste commercial JAMAIS
+  // compté au CA → un remboursement inscrirait une ligne négative fantôme côté
+  // ERP, sans contrepartie de vente (à neutraliser via cancelGiftCard, sans refund).
+  if (card.creationMode !== "ADMIN_SALE") {
+    return {
+      ok: false,
+      error:
+        card.creationMode === "ADMIN_GIFT"
+          ? "Une carte offerte (geste commercial) ne se rembourse pas : utilisez « Annuler la carte »."
+          : "Cette carte a été payée en ligne : utilisez le remboursement Stripe.",
+    };
+  }
   if (card.stripePaymentId) {
     return {
       ok: false,

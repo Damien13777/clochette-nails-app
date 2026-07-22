@@ -179,7 +179,7 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
   const cards = await db.giftCard.findMany({
     where: { creationMode: { in: ["PUBLIC", "ADMIN_SALE"] }, paymentStatus: "PAID", paidAt: { not: null } },
     orderBy: { paidAt: "asc" },
-    select: { id: true, initialAmountCents: true, stripeFeeCents: true, paidAt: true, creationMode: true, refundedAmount: true, refundedAt: true, updatedAt: true },
+    select: { id: true, initialAmountCents: true, stripeFeeCents: true, paidAt: true, creationMode: true, refundedAmount: true, refundedAt: true },
   });
   for (const c of cards) {
     await seed("gift_card.purchased", c.id, c.paidAt!, {
@@ -190,13 +190,15 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       channel: c.creationMode === "PUBLIC" ? "public" : "admin_sale",
       paidAt: c.paidAt!.toISOString(),
     });
-    // Remboursement (décaissement daté) — miroir de la ligne « − » de finances.ts.
-    if ((c.refundedAmount ?? 0) > 0) {
-      const refundedAt = c.refundedAt ?? c.updatedAt;
-      await seed("gift_card.refunded", c.id, refundedAt, {
+    // Remboursement (décaissement daté) — miroir EXACT de la ligne « − » de
+    // finances.ts, qui exige refundedAt non-null (elle DROP sinon). Pas de
+    // fallback updatedAt ici : sinon l'ERP daterait un refund que finances écarte
+    // → écart de réconciliation. Les actions de refund posent toujours refundedAt.
+    if ((c.refundedAmount ?? 0) > 0 && c.refundedAt) {
+      await seed("gift_card.refunded", c.id, c.refundedAt, {
         giftCardId: c.id,
         refundedAmountCents: c.refundedAmount ?? 0,
-        refundedAt: refundedAt.toISOString(),
+        refundedAt: c.refundedAt.toISOString(),
       });
     }
   }
@@ -212,7 +214,6 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       paidAt: true,
       refundedAmount: true,
       refundedAt: true,
-      updatedAt: true,
       giftCardRedemption: { select: { amountUsedCents: true } },
     },
   });
@@ -224,13 +225,14 @@ export async function backfillOutbound(deps: BackfillDeps = {}) {
       stripeFeeCents: p.stripeFeeCents ?? 0,
       paidAt: p.paidAt!.toISOString(),
     });
-    // Remboursement de la portion CB (décaissement daté) — miroir de finances.ts.
-    if ((p.refundedAmount ?? 0) > 0) {
-      const refundedAt = p.refundedAt ?? p.updatedAt;
-      await seed("ebook.refunded", p.id, refundedAt, {
+    // Remboursement de la portion CB (décaissement daté) — miroir EXACT de
+    // finances.ts (exige refundedAt non-null, pas de fallback updatedAt).
+    if ((p.refundedAmount ?? 0) > 0 && p.refundedAt) {
+      await seed("ebook.refunded", p.id, p.refundedAt, {
         purchaseId: p.id,
         stripeRefundedCents: p.refundedAmount ?? 0,
-        refundedAt: refundedAt.toISOString(),
+        gcRefundedCents: 0,
+        refundedAt: p.refundedAt.toISOString(),
       });
     }
   }

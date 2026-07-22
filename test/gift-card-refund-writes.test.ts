@@ -181,4 +181,33 @@ describe("refundGiftCardOffline (carte vendue au comptoir)", () => {
     const updated = await db.giftCard.findUniqueOrThrow({ where: { id: card.id } });
     expect(updated.refundedAt).toBeNull();
   });
+
+  it("refuse une carte ADMIN_GIFT (geste commercial hors CA) — un refund serait fantôme côté ERP", async () => {
+    await makeAdmin();
+    const card = await db.giftCard.create({
+      data: {
+        code: `GC-${randomUUID().slice(0, 8)}`,
+        codeHash: `hash-${randomUUID()}`,
+        prefix: "GI12",
+        initialAmountCents: 5000,
+        remainingAmountCents: 5000,
+        amount: 5000,
+        deliveryMode: "EMAIL_TO_BUYER",
+        buyerName: "Cliente",
+        buyerEmail: "gift@test.local",
+        creationMode: "ADMIN_GIFT", // jamais comptée au CA, pas de stripePaymentId
+        paymentStatus: "PAID",
+        status: "ACTIVE",
+        expiresAt: new Date("2027-05-02T10:00:00.000Z"),
+      },
+    });
+
+    const res = await refundGiftCardOffline(card.id, "cash");
+    expect(res.ok).toBe(false);
+
+    const updated = await db.giftCard.findUniqueOrThrow({ where: { id: card.id } });
+    expect(updated.refundedAt).toBeNull();
+    expect(updated.status).toBe("ACTIVE");
+    expect(vi.mocked(emitOutboundEvent).mock.calls.find(([t]) => t === "gift_card.refunded")).toBeUndefined();
+  });
 });
