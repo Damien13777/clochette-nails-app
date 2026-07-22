@@ -99,6 +99,11 @@ export function KpiCards({
     >
       <Card
         label="CA brut"
+        sublabel={
+          current.giftCardUsedCents > 0
+            ? `dont ${formatEuro(current.giftCardUsedCents)} en cartes cadeau`
+            : null
+        }
         value={formatEuro(current.grossCents)}
         badge={
           comparison ? (
@@ -186,11 +191,13 @@ export function KpiCards({
 
 function Card({
   label,
+  sublabel,
   value,
   badge,
   highlight = false,
 }: {
   label: string;
+  sublabel?: React.ReactNode;
   value: string;
   badge: React.ReactNode;
   highlight?: boolean;
@@ -217,6 +224,14 @@ function Card({
       >
         {label}
       </p>
+      {sublabel && (
+        <p
+          className="text-[11px] text-[var(--color-ink-500)] mt-1"
+          style={{ fontFamily: "var(--font-ui)" }}
+        >
+          {sublabel}
+        </p>
+      )}
       {badge}
     </div>
   );
