@@ -1427,6 +1427,7 @@ export async function createBookingAdmin(
       serviceId: data.serviceId,
       serviceSlug: service.slug,
       serviceTitle: service.title,
+      optionsTitles: options.map((o) => o.title),
       date: data.date,
       startTime: data.startTime,
       endTime,
@@ -1898,6 +1899,9 @@ export async function updateBookingDetails(
       clientEmail: data.client.email,
       clientPhone: data.client.phone,
       serviceTitle: service.title,
+      // Les options peuvent CHANGER à l'édition → toujours les renvoyer (l'ERP
+      // remplace la liste, il ne fusionne pas).
+      optionsTitles: options.map((o) => o.title),
       date: booking.date.toISOString().slice(0, 10),
       startTime: booking.startTime,
       endTime,
