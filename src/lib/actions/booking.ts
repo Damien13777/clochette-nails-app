@@ -342,6 +342,7 @@ export async function createBookingAction(
       await emitOutboundEvent("booking.confirmed", {
         bookingId: booking.id,
         paidVia: "gift_card_full",
+        optionsTitles: options.map((o) => o.title),
         confirmedAt: now.toISOString(),
         depositCents: booking.depositCents,
         giftCardAmountUsed: giftCardAmountToUse,
@@ -445,6 +446,7 @@ export async function createBookingAction(
 
       await emitOutboundEvent("booking.created", {
         bookingId: booking.id,
+        optionsTitles: options.map((o) => o.title),
         serviceId: data.serviceId,
         serviceSlug: service.slug,
         serviceTitle: service.title,
@@ -496,6 +498,7 @@ export async function createBookingAction(
     await emitOutboundEvent("booking.confirmed", {
       bookingId: booking.id,
       paidVia: devPaidVia,
+      optionsTitles: options.map((o) => o.title),
       confirmedAt: new Date().toISOString(),
       depositCents: booking.depositCents,
       giftCardAmountUsed: giftCardId ? giftCardAmountToUse : 0,

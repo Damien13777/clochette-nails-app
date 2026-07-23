@@ -660,6 +660,7 @@ async function confirmBookingFromSession(
     clientPhone: booking.clientPhone,
     serviceSlug: booking.service.slug,
     serviceTitle: booking.service.title,
+    optionsTitles: booking.options.map((o) => o.serviceOption.title),
     date: booking.date.toISOString().slice(0, 10),
     startTime: booking.startTime,
     endTime: booking.endTime,
